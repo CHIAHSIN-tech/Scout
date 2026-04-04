@@ -13,6 +13,9 @@ init_db()
 
 
 # --- 登入 ---
+USERS = ["stanley", "chia"]
+
+
 def login():
     st.markdown(
         "<h1 style='text-align:center;'>🔍 Scout</h1>"
@@ -21,16 +24,11 @@ def login():
     )
     st.divider()
 
-    username = st.text_input("使用者名稱").strip().lower()
-    password = st.text_input("密碼", type="password")
+    username = st.selectbox("選擇使用者", USERS)
 
-    if st.button("登入", use_container_width=True):
-        passwords = st.secrets.get("passwords", {})
-        if username in passwords and passwords[username] == password:
-            st.session_state["user"] = username
-            st.rerun()
-        else:
-            st.error("帳號或密碼錯誤")
+    if st.button("進入", use_container_width=True):
+        st.session_state["user"] = username
+        st.rerun()
 
 
 # --- 主頁 ---
