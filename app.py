@@ -118,8 +118,8 @@ button[kind="primary"]:active { transform: scale(0.97) !important; }
 div[data-baseweb="popover"] * { font-family: 'Noto Sans TC', sans-serif !important; font-size: 14px !important; }
 
 /* ── 歡迎語 ── */
-.welcome-greeting { font-size: 30px; font-weight: 500; color: #3C3830; line-height: 1.3; margin-bottom: 0.2rem; }
-.welcome-sub { font-size: 18px; color: #A8A298; font-style: italic; }
+.welcome-greeting { font-size: 30px; font-weight: 500; color: #3C3830; line-height: 1.3; margin-bottom: 0.2rem; font-family: Georgia, 'Noto Serif TC', serif !important; }
+.welcome-sub { font-size: 18px; color: #A8A298; font-style: italic; font-family: Georgia, 'Noto Serif TC', serif !important; }
 </style>
 """, unsafe_allow_html=True)
 
