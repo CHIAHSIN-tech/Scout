@@ -17,7 +17,7 @@ st.markdown("""
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2.5rem; padding-bottom: 2.5rem; max-width: 640px; }
 html, body, [class*="css"], * {
-    font-family: Georgia, 'Noto Serif TC', serif !important;
+    font-family: 'Noto Sans TC', sans-serif !important;
     color: #3C3830;
 }
 .stApp { background-color: #F5F0EA; }
@@ -29,9 +29,9 @@ html, body, [class*="css"], * {
     width: 64px; height: 64px; border: 2px solid #3D6B54; border-radius: 50%;
     margin-bottom: 1rem; font-size: 1.8rem;
 }
-.scout-title  { font-size: 38px; font-weight: 600; color: #3C3830; margin-bottom: 0.4rem; }
-.scout-tagline { font-size: 20px; font-style: italic; color: #6B6558; line-height: 1.7; }
-.scout-label  { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #A8A298; margin-top: 0.6rem; }
+.scout-title  { font-size: 38px; font-weight: 600; color: #3C3830; margin-bottom: 0.4rem; font-family: Georgia, 'Noto Serif TC', serif !important; }
+.scout-tagline { font-size: 20px; font-style: italic; color: #6B6558; line-height: 1.7; font-family: Georgia, 'Noto Serif TC', serif !important; }
+.scout-label  { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #A8A298; margin-top: 0.6rem; font-family: Georgia, 'Noto Serif TC', serif !important; }
 
 /* ── 一般卡片 ── */
 .scout-card {
@@ -115,7 +115,7 @@ button[kind="primary"]:active { transform: scale(0.97) !important; }
     border: 1.5px solid #B8D4C4 !important; border-radius: 100px !important;
     background: #FFFFFF !important; font-size: 14px !important; padding: 2px 8px !important; color: #3C3830 !important;
 }
-div[data-baseweb="popover"] * { font-family: Georgia, serif !important; font-size: 14px !important; }
+div[data-baseweb="popover"] * { font-family: 'Noto Sans TC', sans-serif !important; font-size: 14px !important; }
 
 /* ── 歡迎語 ── */
 .welcome-greeting { font-size: 30px; font-weight: 500; color: #3C3830; line-height: 1.3; margin-bottom: 0.2rem; }
