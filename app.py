@@ -76,41 +76,47 @@ hr { border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }
 button[kind="primary"] {
     background: #EAF2ED !important;
     border: 1.5px solid #C2DDD1 !important;
-    border-radius: 24px !important;
-    height: 260px !important;
+    border-radius: 32px !important;
+    height: 320px !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
     gap: 16px !important;
-    padding: 32px 20px !important;
+    padding: 40px 16px !important;
     color: #5C8C72 !important;
-    transition: background 0.2s, border-color 0.2s, transform 0.15s, color 0.2s !important;
-    box-shadow: none !important;
+    transition: background 0.25s ease, border-color 0.25s ease,
+                transform 0.25s ease, box-shadow 0.25s ease, color 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(61,107,84,0.06) !important;
 }
-button[kind="primary"] * { color: #5C8C72 !important; }
+button[kind="primary"] * { color: #5C8C72 !important; transition: color 0.2s !important; }
 button[kind="primary"]::after { display: none !important; }
 
 /* emoji */
 button[kind="primary"] p:first-of-type {
     font-size: 64px !important; line-height: 1 !important; margin: 0 !important;
+    transition: transform 0.25s ease !important;
 }
 /* label */
 button[kind="primary"] p:last-of-type {
     font-size: 20px !important; font-weight: 700 !important; margin: 0 !important;
     font-family: 'Noto Sans TC', sans-serif !important;
-    color: #5C8C72 !important;
 }
 
-/* Hover：深綠 */
+/* Hover */
 button[kind="primary"]:hover {
     background: #3D6B54 !important;
     border-color: #3D6B54 !important;
-    transform: translateY(-4px) !important;
-    box-shadow: 0 8px 24px rgba(61,107,84,0.18) !important;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 16px 36px rgba(61,107,84,0.22) !important;
 }
 button[kind="primary"]:hover,
 button[kind="primary"]:hover * { color: #EAF2ED !important; }
-button[kind="primary"]:active { transform: scale(0.97) !important; }
+
+/* Active */
+button[kind="primary"]:active {
+    transform: translateY(-2px) scale(0.98) !important;
+    box-shadow: 0 4px 12px rgba(61,107,84,0.15) !important;
+}
 
 /* ── Selectbox ── */
 .stSelectbox label { font-size: 13px !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; color: #A8A298 !important; }
