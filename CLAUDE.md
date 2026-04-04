@@ -15,7 +15,7 @@
 - **語言**：Python
 - **前端框架**：Streamlit
 - **部署**：Streamlit Cloud（免費）
-- **AI 分析**：Claude API（貼連結自動整理內容）
+- **AI 分析**：Gemini API（google-genai SDK，貼連結自動整理內容）
 - **資料儲存**：SQLite（本地資料庫）
 
 ---
