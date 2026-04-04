@@ -89,7 +89,7 @@ button[kind="primary"] {
     box-shadow: 0 2px 8px rgba(61,107,84,0.06) !important;
 }
 button[kind="primary"] * { color: #5C8C72 !important; transition: color 0.2s !important; }
-button[kind="primary"]::after { display: none !important; }
+.stButton > button[kind="primary"]::after { display: none !important; content: none !important; }
 
 /* emoji */
 button[kind="primary"] p:first-of-type {
