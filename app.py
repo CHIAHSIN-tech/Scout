@@ -76,8 +76,8 @@ hr { border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }
 button[kind="primary"] {
     background: #EAF2ED !important;
     border: 1.5px solid #C2DDD1 !important;
-    border-radius: 32px !important;
-    height: 320px !important;
+    border-radius: 20px !important;
+    height: 960px !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
