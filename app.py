@@ -75,16 +75,16 @@ hr { border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }
 ══════════════════════════════════════ */
 button[kind="primary"] {
     background: #EAF2ED !important;
-    border: 1.5px solid #8AB8A0 !important;
-    border-radius: 20px !important;
-    height: 200px !important;
+    border: 1.5px solid #C2DDD1 !important;
+    border-radius: 24px !important;
+    height: 260px !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 10px !important;
-    padding: 20px !important;
+    gap: 16px !important;
+    padding: 32px 20px !important;
     color: #5C8C72 !important;
-    transition: background 0.2s, border-color 0.2s, transform 0.15s !important;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s, color 0.2s !important;
     box-shadow: none !important;
 }
 button[kind="primary"] * { color: #5C8C72 !important; }
@@ -92,18 +92,21 @@ button[kind="primary"]::after { display: none !important; }
 
 /* emoji */
 button[kind="primary"] p:first-of-type {
-    font-size: 52px !important; line-height: 1 !important; margin: 0 !important;
+    font-size: 64px !important; line-height: 1 !important; margin: 0 !important;
 }
 /* label */
 button[kind="primary"] p:last-of-type {
-    font-size: 18px !important; font-weight: 700 !important; margin: 0 !important;
+    font-size: 20px !important; font-weight: 700 !important; margin: 0 !important;
+    font-family: 'Noto Sans TC', sans-serif !important;
+    color: #5C8C72 !important;
 }
 
-/* Hover：深綠 + 上移 */
+/* Hover：深綠 */
 button[kind="primary"]:hover {
     background: #3D6B54 !important;
-    border-color: #2A4D3A !important;
-    transform: translateY(-3px) !important;
+    border-color: #3D6B54 !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 24px rgba(61,107,84,0.18) !important;
 }
 button[kind="primary"]:hover,
 button[kind="primary"]:hover * { color: #EAF2ED !important; }
