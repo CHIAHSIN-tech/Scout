@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scout — CIS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sage-50:  #EAF2ED;
+    --sage-200: #C2DDD1;
+    --sage-400: #8AB8A0;
+    --sage-600: #5C8C72;
+    --sage-800: #3D6B54;
+    --sage-900: #2A4D3A;
+    --linen-50:  #F5F0EA;
+    --linen-200: #DCD8D0;
+    --linen-400: #A8A298;
+    --linen-700: #6B6558;
+    --linen-900: #3C3830;
+    --wheat-50:  #FBF0E0;
+    --wheat-200: #E8C898;
+    --wheat-400: #C4915A;
+    --wheat-700: #7A5230;
+    --font-sans: 'Noto Sans TC', sans-serif;
+    --font-serif: Georgia, 'Noto Serif TC', serif;
+  }
+
+  body {
+    background: var(--linen-50);
+    font-family: var(--font-sans);
+    color: var(--linen-900);
+    padding: 3rem 2rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .sec-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--linen-400);
+    margin-bottom: 1rem;
+    font-family: var(--font-sans);
+  }
+  .section { margin-bottom: 3.5rem; }
+  hr { border: none; border-top: 0.5px solid var(--linen-200); margin: 3rem 0; }
+
+  /* ── Brand ── */
+  .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .brand-logo {
+    width: 44px; height: 44px; border: 2px solid var(--sage-800); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .brand-name { font-size: 32px; color: var(--linen-900); font-family: var(--font-serif); }
+  .tagline { font-size: 14px; font-style: italic; color: var(--linen-700); font-family: var(--font-serif); }
+  .brand-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--linen-400); margin-top: 4px; font-family: var(--font-serif); }
+
+  /* ── Font ── */
+  .font-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .font-card {
+    flex: 1; min-width: 200px;
+    background: #fff; border: 0.5px solid var(--linen-200);
+    border-radius: 16px; padding: 1.25rem;
+  }
+  .font-meta { font-size: 11px; color: var(--linen-400); margin-bottom: 10px; font-family: var(--font-sans); }
+  .font-divider { border: none; border-top: 0.5px solid var(--linen-200); margin: 10px 0; }
+
+  /* ── Colors ── */
+  .color-groups { display: flex; gap: 20px; flex-wrap: wrap; }
+  .color-group { flex: 1; min-width: 160px; }
+  .color-group-name { font-size: 12px; font-style: italic; color: var(--linen-700); margin-bottom: 6px; }
+  .swatches { display: flex; border-radius: 8px; overflow: hidden; }
+  .swatch { flex: 1; height: 48px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; }
+  .swatch span { font-size: 9px; font-family: var(--font-sans); }
+
+  /* ── Buttons ── */
+  .btn-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    border-radius: 100px; padding: 8px 8px 8px 22px;
+    font-size: 15px; font-family: var(--font-sans);
+    cursor: pointer; border: none; transition: background 0.15s;
+  }
+  .btn-primary { background: var(--sage-800); color: #fff; }
+  .btn-primary:hover { background: var(--sage-900); }
+  .btn-secondary { background: var(--sage-50); color: var(--sage-800); }
+  .btn-secondary:hover { background: var(--sage-200); }
+  .icon-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .ic-light { background: var(--sage-50); }
+  .ic-dark  { background: var(--sage-800); }
+
+  /* ── Input / Tag ── */
+  .comp-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .comp-box {
+    background: #fff; border: 0.5px solid var(--linen-200);
+    border-radius: 16px; padding: 1.25rem; min-width: 160px;
+  }
+  .comp-label { font-size: 11px; color: var(--linen-400); margin-bottom: 10px; }
+  .input-demo {
+    border: 1.5px solid var(--sage-400); border-radius: 100px;
+    padding: 10px 18px; font-size: 14px; font-family: var(--font-sans);
+    color: var(--linen-900); background: #fff; width: 100%; outline: none;
+  }
+  .input-demo:focus { border-color: var(--sage-800); box-shadow: 0 0 0 2px rgba(61,107,84,0.12); }
+  .tag { display: inline-block; border-radius: 100px; padding: 4px 14px; font-size: 12px; font-family: var(--font-sans); }
+  .tag-light { background: var(--sage-50); color: var(--sage-800); }
+  .tag-dark  { background: var(--sage-800); color: var(--sage-50); }
+
+  /* ── Category Cards ── */
+  .cards { display: flex; gap: 20px; flex-wrap: wrap; }
+  .card-wrap {
+    flex: 1; min-width: 140px; max-width: 200px;
+    background: var(--sage-50);
+    border: 1.5px solid var(--sage-200);
+    border-radius: 20px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 40px 16px;
+    cursor: pointer;
+    transition: background 0.25s ease, border-color 0.25s ease,
+                transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 2px 8px rgba(61,107,84,0.06);
+    height: 280px;
+  }
+  .card-wrap:hover {
+    background: var(--sage-800);
+    border-color: var(--sage-800);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(61,107,84,0.22);
+  }
+  .card-wrap:active { transform: translateY(-2px) scale(0.98); }
+  .card-icon { font-size: 64px; line-height: 1; transition: transform 0.25s ease; }
+  .card-lbl {
+    font-size: 20px; font-weight: 700;
+    font-family: var(--font-sans);
+    color: var(--sage-600);
+    transition: color 0.2s;
+  }
+  .card-wrap:hover .card-lbl { color: var(--sage-50); }
+
+  /* ── Content Card ── */
+  .content-card {
+    background: #fff; border: 0.5px solid var(--sage-200);
+    border-radius: 16px; padding: 28px;
+  }
+  .content-card-emoji { font-size: 28px; margin-bottom: 0.6rem; }
+  .content-card-title { font-size: 22px; font-weight: 500; color: var(--linen-900); margin-bottom: 0.4rem; font-family: var(--font-sans); }
+  .content-card-note { font-size: 14px; font-style: italic; color: var(--linen-700); font-family: var(--font-sans); }
+
+  /* ── Login Preview ── */
+  .login-preview {
+    background: var(--sage-50); border-radius: 20px;
+    padding: 3rem 2rem; display: flex; flex-direction: column;
+    align-items: center; gap: 1.5rem; max-width: 360px;
+  }
+  .login-header { text-align: center; }
+  .login-logo {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border: 2px solid var(--sage-800); border-radius: 50%;
+    font-size: 1.5rem; margin-bottom: 0.8rem;
+  }
+  .login-title { font-size: 32px; font-family: var(--font-serif); color: var(--linen-900); }
+  .login-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--linen-400); margin-top: 4px; font-family: var(--font-serif); }
+
+  /* ── Greeting ── */
+  .greeting { font-size: 30px; font-weight: 500; color: var(--linen-900); line-height: 1.3; font-family: var(--font-serif); }
+  .greeting-sub { font-size: 18px; color: var(--linen-400); font-style: italic; font-family: var(--font-serif); }
+
+  /* ── Principles ── */
+  .principles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  .principle { background: #fff; border: 0.5px solid var(--linen-200); border-radius: 12px; padding: 1rem; }
+  .principle-name { font-size: 14px; color: var(--linen-900); margin-bottom: 4px; font-family: var(--font-sans); }
+  .principle-desc { font-size: 12px; font-style: italic; color: var(--linen-700); line-height: 1.5; font-family: var(--font-sans); }
+</style>
+</head>
+<body>
+
+  <!-- Brand -->
+  <div class="section">
+    <p class="sec-label">Brand</p>
+    <div class="brand">
+      <div class="brand-logo">🔍</div>
+      <span class="brand-name">Scout</span>
+    </div>
+    <p class="tagline">你的生活探索夥伴</p>
+    <p class="brand-label">你的生活探索夥伴</p>
+  </div>
+
+  <hr>
+
+  <!-- Colors -->
+  <div class="section">
+    <p class="sec-label">主色 / 配色系統</p>
+    <div class="color-groups">
+      <div class="color-group">
+        <p class="color-group-name">Sage — 主色</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#2A4D3A"><span style="color:#8AB8A0">900</span></div>
+          <div class="swatch" style="background:#3D6B54"><span style="color:#C2DDD1">800</span></div>
+          <div class="swatch" style="background:#5C8C72"><span style="color:#EAF2ED">600</span></div>
+          <div class="swatch" style="background:#8AB8A0"><span style="color:#2A4D3A">400</span></div>
+          <div class="swatch" style="background:#C2DDD1"><span style="color:#3D6B54">200</span></div>
+          <div class="swatch" style="background:#EAF2ED"><span style="color:#5C8C72">50</span></div>
+        </div>
+      </div>
+      <div class="color-group">
+        <p class="color-group-name">Linen — 中性色</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#3C3830"><span style="color:#A8A298">900</span></div>
+          <div class="swatch" style="background:#6B6558"><span style="color:#DCD8D0">700</span></div>
+          <div class="swatch" style="background:#A8A298"><span style="color:#F5F0EA">400</span></div>
+          <div class="swatch" style="background:#DCD8D0"><span style="color:#6B6558">200</span></div>
+          <div class="swatch" style="background:#F5F0EA"><span style="color:#A8A298">50</span></div>
+        </div>
+      </div>
+      <div class="color-group">
+        <p class="color-group-name">Wheat — 強調色</p>
+        <div class="swatches">
+          <div class="swatch" style="background:#7A5230"><span style="color:#E8C898">700</span></div>
+          <div class="swatch" style="background:#C4915A"><span style="color:#FBF0E0">400</span></div>
+          <div class="swatch" style="background:#E8C898"><span style="color:#7A5230">200</span></div>
+          <div class="swatch" style="background:#FBF0E0"><span style="color:#C4915A">50</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Typography -->
+  <div class="section">
+    <p class="sec-label">字型選用</p>
+    <div class="font-row">
+      <div class="font-card">
+        <p class="font-meta">品牌標題 · Georgia Serif</p>
+        <p style="font-size:28px;color:#3C3830;line-height:1.25;font-family:Georgia,'Noto Serif TC',serif;">Scout</p>
+        <hr class="font-divider">
+        <p class="font-meta">Georgia · 28px · 品牌名、歡迎語</p>
+      </div>
+      <div class="font-card">
+        <p class="font-meta">副標 · Georgia Italic</p>
+        <p style="font-size:18px;font-style:italic;color:#A8A298;line-height:1.7;font-family:Georgia,'Noto Serif TC',serif;">今天想探索什麼？</p>
+        <hr class="font-divider">
+        <p class="font-meta">Georgia · italic · 18px · 歡迎語副文</p>
+      </div>
+      <div class="font-card">
+        <p class="font-meta">內文 · Noto Sans TC</p>
+        <p style="font-size:15px;color:#3C3830;line-height:1.8;font-family:'Noto Sans TC',sans-serif;">購物、餐廳、旅館<br>按鈕、標籤、輸入框</p>
+        <hr class="font-divider">
+        <p class="font-meta">Noto Sans TC · 15px · 全站 UI 文字</p>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Buttons -->
+  <div class="section">
+    <p class="sec-label">按鈕</p>
+    <div class="btn-row">
+      <button class="btn btn-primary">
+        進入
+        <span class="icon-circle ic-light">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2 11L11 2M11 2H4M11 2V9" stroke="#3D6B54" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>
+      <button class="btn btn-secondary">
+        登出 / 返回
+        <span class="icon-circle ic-dark">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2 6.5H11M11 6.5L7 2.5M11 6.5L7 10.5" stroke="#EAF2ED" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Input & Tags -->
+  <div class="section">
+    <p class="sec-label">元件</p>
+    <div class="comp-row">
+      <div class="comp-box" style="flex:1;min-width:220px">
+        <p class="comp-label">下拉選單（使用者選擇）</p>
+        <input class="input-demo" placeholder="Stanley">
+      </div>
+      <div class="comp-box">
+        <p class="comp-label">標籤</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="tag tag-light">餐廳</span>
+          <span class="tag tag-dark">已收藏</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Category Cards -->
+  <div class="section">
+    <p class="sec-label">分類卡片（hover 可互動）</p>
+    <div class="cards">
+      <div class="card-wrap">
+        <div class="card-icon">🛍️</div>
+        <span class="card-lbl">購物</span>
+      </div>
+      <div class="card-wrap">
+        <div class="card-icon">🍽️</div>
+        <span class="card-lbl">餐廳</span>
+      </div>
+      <div class="card-wrap">
+        <div class="card-icon">🏨</div>
+        <span class="card-lbl">旅館</span>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Content Card -->
+  <div class="section">
+    <p class="sec-label">內容卡片（模組頁面）</p>
+    <div class="content-card">
+      <div class="content-card-emoji">🛍️</div>
+      <div class="content-card-title">購物</div>
+      <div class="content-card-note">購物模組開發中…</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Login Preview -->
+  <div class="section">
+    <p class="sec-label">登入頁面</p>
+    <div class="login-preview">
+      <div class="login-header">
+        <div class="login-logo">🔍</div>
+        <div class="login-title">Scout</div>
+        <div class="login-label">你的生活探索夥伴</div>
+      </div>
+      <input class="input-demo" placeholder="Stanley" style="width:100%">
+      <button class="btn btn-primary" style="width:100%;justify-content:space-between;padding:10px 10px 10px 24px;">
+        進入
+        <span class="icon-circle ic-light" style="width:32px;height:32px;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 12L12 2M12 2H5M12 2V9" stroke="#3D6B54" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Greeting -->
+  <div class="section">
+    <p class="sec-label">主頁歡迎語</p>
+    <div style="padding:1rem 0;">
+      <div class="greeting">嗨，Stanley 👋</div>
+      <div class="greeting-sub">今天想探索什麼？</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Principles -->
+  <div class="section">
+    <p class="sec-label">設計原則</p>
+    <div class="principles">
+      <div class="principle">
+        <p class="principle-name">柔和 Gentle</p>
+        <p class="principle-desc">鼠尾草綠，自然不刺眼</p>
+      </div>
+      <div class="principle">
+        <p class="principle-name">文雅 Literary</p>
+        <p class="principle-desc">品牌用 Georgia Serif，UI 用 Noto Sans TC</p>
+      </div>
+      <div class="principle">
+        <p class="principle-name">溫暖 Warm</p>
+        <p class="principle-desc">亞麻中性色，帶出生活溫度</p>
+      </div>
+      <div class="principle">
+        <p class="principle-name">手機優先 Mobile First</p>
+        <p class="principle-desc">卡片大、間距寬，拇指易操作</p>
+      </div>
+      <div class="principle">
+        <p class="principle-name">簡單 Simple</p>
+        <p class="principle-desc">一次只做一個功能，不求完美</p>
+      </div>
+      <div class="principle">
+        <p class="principle-name">互動 Interactive</p>
+        <p class="principle-desc">hover 上浮 + 陰影，回饋直覺</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
