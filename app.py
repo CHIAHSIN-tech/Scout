@@ -1,5 +1,6 @@
 import streamlit as st
 from db import init_db
+from page_itinerary import page_itinerary
 
 st.set_page_config(
     page_title="Scout",
@@ -178,6 +179,38 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
     margin-bottom: 0.2rem; font-family: Georgia, 'Noto Serif TC', serif !important; }}
 .welcome-sub {{ font-size: 18px; color: #A8A298; font-style: italic;
     font-family: Georgia, 'Noto Serif TC', serif !important; }}
+
+/* ── 上移／下移按鈕：正圓形，無箭頭 ── */
+[class*="st-key-up_"] .stButton > button,
+[class*="st-key-down_"] .stButton > button {{
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+}}
+[class*="st-key-up_"] .stButton > button::after,
+[class*="st-key-down_"] .stButton > button::after {{
+    display: none !important;
+}}
+
+/* ── 刪除／編輯小按鈕：正圓形，無箭頭 ── */
+[class*="st-key-del_item_"] .stButton > button,
+[class*="st-key-edit_btn_"] .stButton > button {{
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+}}
+[class*="st-key-del_item_"] .stButton > button::after,
+[class*="st-key-edit_btn_"] .stButton > button::after {{
+    display: none !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -209,6 +242,11 @@ def home():
         <div class="welcome-sub">今天想探索什麼？</div>
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown('<div style="height:0.8rem"></div>', unsafe_allow_html=True)
+    if st.button("🗺️  行程規劃", use_container_width=True, key="btn_itinerary"):
+        st.session_state["page"] = "itinerary"
+        st.rerun()
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -262,4 +300,5 @@ else:
     if page == "shopping":     page_shopping()
     elif page == "restaurant": page_restaurant()
     elif page == "hotel":      page_hotel()
+    elif page == "itinerary":  page_itinerary()
     else:                      home()
