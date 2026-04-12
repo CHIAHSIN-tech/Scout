@@ -11,10 +11,7 @@ st.set_page_config(
 
 init_db()
 
-# SVG 箭頭（URL-encoded，直接嵌入 CSS background-image）
-# 進入按鈕：↗ 深綠色線條
 SVG_ENTER = 'url("data:image/svg+xml,%3Csvg width=\'13\' height=\'13\' viewBox=\'0 0 13 13\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M2 11L11 2M11 2H4M11 2V9\' stroke=\'%233D6B54\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")'
-# 登出/返回按鈕：→ 白色線條
 SVG_SECONDARY = 'url("data:image/svg+xml,%3Csvg width=\'13\' height=\'13\' viewBox=\'0 0 13 13\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M2 6.5H11M11 6.5L7 2.5M11 6.5L7 10.5\' stroke=\'%23EAF2ED\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")'
 
 st.markdown(f"""
@@ -49,7 +46,7 @@ html, body, [class*="css"], * {{
 hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 
 /* ══════════════════════════════════
-   全域按鈕基礎（進入）
+   全域按鈕基礎
 ══════════════════════════════════ */
 .stButton > button {{
     display: flex !important;
@@ -71,7 +68,7 @@ hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 .stButton > button * {{ color: #FFFFFF !important; }}
 .stButton > button:hover {{ background: #2A4D3A !important; }}
 
-/* 進入按鈕：圓圈淺綠底 + SVG ↗ 箭頭 */
+/* 全域箭頭 */
 .stButton > button::after {{
     content: "" !important;
     display: inline-flex !important;
@@ -88,7 +85,7 @@ hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 }}
 
 /* ══════════════════════════════════
-   分類卡片（st-key 穩定選擇器）
+   分類卡片
 ══════════════════════════════════ */
 .st-key-btn_shop .stButton > button,
 .st-key-btn_food .stButton > button,
@@ -108,11 +105,9 @@ hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 .st-key-btn_shop .stButton > button::after,
 .st-key-btn_food .stButton > button::after,
 .st-key-btn_hotel .stButton > button::after {{ display: none !important; }}
-
 .st-key-btn_shop .stButton > button *,
 .st-key-btn_food .stButton > button *,
 .st-key-btn_hotel .stButton > button * {{ color: #5C8C72 !important; }}
-
 .st-key-btn_shop .stButton > button p:first-of-type,
 .st-key-btn_food .stButton > button p:first-of-type,
 .st-key-btn_hotel .stButton > button p:first-of-type {{
@@ -142,7 +137,6 @@ hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 
 /* ══════════════════════════════════
    Secondary（登出 & 返回）
-   淺綠底 + SVG → 箭頭（深綠圓圈白線）
 ══════════════════════════════════ */
 .st-key-logout .stButton > button,
 .st-key-back .stButton > button {{
@@ -153,8 +147,6 @@ hr {{ border: none; border-top: 0.5px solid #DCD8D0; margin: 1.2rem 0; }}
 .st-key-back .stButton > button * {{ color: #3D6B54 !important; }}
 .st-key-logout .stButton > button:hover,
 .st-key-back .stButton > button:hover {{ background: #C2DDD1 !important; }}
-
-/* 登出/返回圓圈：深綠底 + SVG → 白箭頭 */
 .st-key-logout .stButton > button::after,
 .st-key-back .stButton > button::after {{
     background-color: #3D6B54 !important;
@@ -211,6 +203,70 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
 [class*="st-key-edit_btn_"] .stButton > button::after {{
     display: none !important;
 }}
+
+/* ── 旅程卡片按鈕：白底卡片風格，無箭頭 ── */
+[class*="st-key-open_"] .stButton > button {{
+    background: #FFFFFF !important;
+    border: 0.5px solid #C2DDD1 !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    color: #3C3830 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    height: auto !important;
+}}
+[class*="st-key-open_"] .stButton > button * {{ color: #3C3830 !important; }}
+[class*="st-key-open_"] .stButton > button:hover {{
+    background: #EAF2ED !important;
+    border-color: #3D6B54 !important;
+}}
+[class*="st-key-open_"] .stButton > button::after {{ display: none !important; }}
+
+/* ── 新增旅程 & 行程規劃按鈕：無箭頭 ── */
+.st-key-btn_new_trip .stButton > button::after,
+.st-key-btn_itinerary .stButton > button::after {{
+    display: none !important;
+}}
+
+/* ── 儲存／取消按鈕：無箭頭 ── */
+[class*="st-key-save_"] .stButton > button::after,
+[class*="st-key-cancel_edit_"] .stButton > button::after,
+[class*="st-key-confirm_"] .stButton > button::after {{
+    display: none !important;
+}}
+
+/* ── 返回按鈕：箭頭改為往左，放在左邊 ── */
+.st-key-back .stButton > button {{
+    flex-direction: row-reverse !important;
+    justify-content: flex-end !important;
+}}
+.st-key-back .stButton > button::after {{
+    background-color: #3D6B54 !important;
+    background-image: url("data:image/svg+xml,%3Csvg width='13' height='13' viewBox='0 0 13 13' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 6.5H2M2 6.5L6 2.5M2 6.5L6 10.5' stroke='%23EAF2ED' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 13px 13px !important;
+}}
+
+/* ── 進入按鈕：置中，無箭頭 ── */
+.st-key-btn_login .stButton > button {{
+    justify-content: center !important;
+}}
+.st-key-btn_login .stButton > button::after {{
+    display: none !important;
+}}
+
+/* ── 登出按鈕：置中，無箭頭 ── */
+.st-key-logout .stButton > button {{
+    justify-content: center !important;
+}}
+.st-key-logout .stButton > button::after {{
+    display: none !important;
+}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -228,7 +284,7 @@ def login():
     st.markdown('<p style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#A8A298;margin-bottom:0.4rem;text-align:center;">選擇使用者</p>', unsafe_allow_html=True)
     username = st.selectbox("選擇使用者", list(USERS.keys()), label_visibility="collapsed")
     st.markdown('<div style="height:0.8rem"></div>', unsafe_allow_html=True)
-    if st.button("進入", use_container_width=True):
+    if st.button("進入", use_container_width=True, key="btn_login"):
         st.session_state["user"] = username
         st.session_state["page"] = "home"
         st.rerun()

@@ -160,8 +160,17 @@ def page_ai_suggest(trip_id: int):
                     q["label"],
                     placeholder=q.get("placeholder", ""),
                     label_visibility="collapsed",
-                    key=f"{prefix}_input_{current_q}"
+                    key=f"{prefix}_input_{current_q}",
+                    on_change=None
                 )
+                # Enter 觸發：偵測輸入框有值且使用者按下 Enter
+                if answer and st.session_state.get(f"{prefix}_enter_{current_q}") != answer:
+                    st.session_state[f"{prefix}_enter_{current_q}"] = answer
+                    if not is_last:
+                        answers[q["key"]] = answer.strip()
+                        st.session_state[f"{prefix}_answers"] = answers
+                        st.session_state[f"{prefix}_q"] = current_q + 1
+                        st.rerun()
 
             if is_last:
                 col_next, col_skip = st.columns([3, 1])

@@ -5,6 +5,7 @@ import streamlit as st
 import datetime
 import re
 from datetime import date, timedelta
+from collections import defaultdict
 import db
 import itinerary
 from page_ai_suggest import page_ai_suggest
@@ -52,7 +53,14 @@ def _page_trip_list(user):
     </div>
     """, unsafe_allow_html=True)
 
-    if st.checkbox("＋ 新增旅程", key="show_new_trip"):
+    if "show_new_trip" not in st.session_state:
+        st.session_state["show_new_trip"] = False
+
+    if st.button("＋ 新增旅程", key="btn_new_trip", use_container_width=True):
+        st.session_state["show_new_trip"] = not st.session_state["show_new_trip"]
+        st.rerun()
+
+    if st.session_state["show_new_trip"]:
         with st.form("form_new_trip"):
             trip_name = st.text_input("旅程名稱", placeholder="例：2026 沖繩 5 天")
             col1, col2 = st.columns(2)
@@ -74,6 +82,7 @@ def _page_trip_list(user):
                         str(start_date), str(end_date), trip_notes
                     )
                     st.success(f"「{trip_name}」已建立！")
+                    st.session_state["show_new_trip"] = False
                     st.rerun()
 
     st.markdown('<div style="height:0.5rem"></div>', unsafe_allow_html=True)
@@ -82,7 +91,7 @@ def _page_trip_list(user):
     if not trips:
         st.markdown("""
         <div style="text-align:center;padding:3rem 0;color:#A8A298;font-style:italic;">
-            還沒有旅程，勾選上方「新增旅程」開始規劃吧 ✈️
+            還沒有旅程，點上方「新增旅程」開始規劃吧 ✈️
         </div>
         """, unsafe_allow_html=True)
         return
@@ -93,18 +102,13 @@ def _page_trip_list(user):
         days = (e - s).days + 1
         item_count = len(db.get_all_items(trip["id"]))
 
-        col_info, col_btn, col_del = st.columns([5, 2, 1])
+        col_info, col_del = st.columns([7, 1])
         with col_info:
-            st.markdown(f"""
-            <div class="scout-card" style="margin-bottom:0.5rem;">
-                <div style="font-size:17px;font-weight:600;color:#3C3830;">{trip['name']}</div>
-                <div style="font-size:13px;color:#A8A298;margin-top:4px;">
-                    {trip['start_date']} ～ {trip['end_date']}　·　{days} 天　·　{item_count} 個行程
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        with col_btn:
-            if st.button("開啟", key=f"open_{trip['id']}", use_container_width=True):
+            if st.button(
+                f"**{trip['name']}**\n\n{trip['start_date']} ～ {trip['end_date']}　·　{days} 天　·　{item_count} 個行程",
+                key=f"open_{trip['id']}",
+                use_container_width=True
+            ):
                 st.session_state["current_trip_id"] = trip["id"]
                 st.rerun()
         with col_del:
@@ -138,13 +142,10 @@ def _page_trip_detail(trip_id):
     </div>
     """, unsafe_allow_html=True)
 
-    tab_timeline, tab_add, tab_ai = st.tabs(["📅 時間軸", "＋ 新增行程", "✨ AI 建議"])
+    tab_timeline, tab_ai = st.tabs(["📅 時間軸", "✨ AI 建議"])
 
     with tab_timeline:
         _tab_timeline(trip_id, total_days, s)
-
-    with tab_add:
-        _tab_add_item(trip_id, total_days, s)
 
     with tab_ai:
         page_ai_suggest(trip_id)
@@ -155,27 +156,46 @@ def _page_trip_detail(trip_id):
 # ════════════════════════════════════════
 
 def _tab_timeline(trip_id, total_days, start_date):
-    day_options = {
-        f"Day {d}  ({(start_date + timedelta(days=d-1)).strftime('%m/%d')})": d
-        for d in range(1, total_days + 1)
-    }
-    selected_label = st.selectbox("選擇日期", list(day_options.keys()),
-                                  label_visibility="collapsed")
-    selected_day = day_options[selected_label]
 
-    items = db.get_items_by_day(trip_id, selected_day)
+    view_mode = st.radio(
+        "檢視模式",
+        ["單日檢視", "全覽所有天"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key=f"view_mode_{trip_id}"
+    )
+
+    if view_mode == "單日檢視":
+        day_options = {
+            f"Day {d}  ({(start_date + timedelta(days=d-1)).strftime('%m/%d')})": d
+            for d in range(1, total_days + 1)
+        }
+        selected_label = st.selectbox("選擇日期", list(day_options.keys()),
+                                      label_visibility="collapsed")
+        selected_day = day_options[selected_label]
+        items = db.get_items_by_day(trip_id, selected_day)
+
+        if st.checkbox("＋ 新增行程到這天", key=f"show_add_{selected_day}"):
+            _tab_add_item(trip_id, total_days, start_date, default_day=selected_day)
+
+    else:
+        selected_day = None
+        items = db.get_all_items(trip_id)
 
     if not items:
         st.markdown("""
         <div style="text-align:center;padding:2rem 0;color:#A8A298;font-style:italic;">
-            這天還沒有行程，到「新增行程」頁面加入吧
+            這天還沒有行程，展開上方「新增行程」加入吧
         </div>
         """, unsafe_allow_html=True)
         return
 
+    if view_mode == "全覽所有天":
+        _render_all_days(trip_id, total_days, start_date, items)
+        return
+
     st.markdown('<div style="height:0.5rem"></div>', unsafe_allow_html=True)
 
-    # ── 順序調整區（↑ ↓ 按鈕）──
     st.markdown(
         '<div style="font-size:13px;color:#A8A298;margin-bottom:0.6rem;">'
         '調整順序後自動重新計算時間</div>',
@@ -217,7 +237,59 @@ def _tab_timeline(trip_id, total_days, start_date):
 
     st.markdown("---")
 
-    # ── 時間軸卡片 ──
+    _render_items(trip_id, items)
+
+
+# ════════════════════════════════════════
+#  全覽模式：依天分組顯示
+# ════════════════════════════════════════
+
+def _render_all_days(trip_id, total_days, start_date, all_items):
+    days_dict = defaultdict(list)
+    for item in all_items:
+        days_dict[item["day_number"]].append(item)
+
+    for day_num in range(1, total_days + 1):
+        day_date = (start_date + timedelta(days=day_num - 1)).strftime("%m/%d")
+        st.markdown(
+            f'<div style="font-size:15px;font-weight:600;color:#3D6B54;'
+            f'margin:1.2rem 0 0.6rem;">Day {day_num}'
+            f'<span style="font-size:13px;color:#A8A298;font-weight:400;">'
+            f'　{day_date}</span></div>',
+            unsafe_allow_html=True
+        )
+
+        items = days_dict.get(day_num, [])
+        if not items:
+            st.markdown(
+                '<div style="font-size:13px;color:#A8A298;font-style:italic;'
+                'margin-bottom:0.8rem;">這天還沒有行程</div>',
+                unsafe_allow_html=True
+            )
+            continue
+
+        _render_items(trip_id, items)
+        st.markdown('<hr style="margin:0.5rem 0">', unsafe_allow_html=True)
+
+
+# ════════════════════════════════════════
+#  共用：渲染行程卡片清單
+# ════════════════════════════════════════
+
+def _render_items(trip_id, items):
+    # 取得旅程資訊，用於跨天移動的天數選單
+    trip_info = db.get_trip(trip_id)
+    if trip_info:
+        trip_s = date.fromisoformat(trip_info["start_date"])
+        trip_e = date.fromisoformat(trip_info["end_date"])
+        total_d = (trip_e - trip_s).days + 1
+        day_opts = {
+            f"Day {d}  ({(trip_s + timedelta(days=d-1)).strftime('%m/%d')})": d
+            for d in range(1, total_d + 1)
+        }
+    else:
+        day_opts = {}
+
     for item in items:
         end_min = (itinerary.time_str_to_minutes(item["start_time"])
                    + item["duration_minutes"])
@@ -280,6 +352,23 @@ def _tab_timeline(trip_id, total_days, start_date):
                             value=item["duration_minutes"], step=15,
                             key=f"e_dur_{item['id']}"
                         )
+
+                    # ── 跨天移動：第幾天選單 ──
+                    if day_opts:
+                        current_day_label = next(
+                            (k for k, v in day_opts.items() if v == item["day_number"]),
+                            list(day_opts.keys())[0]
+                        )
+                        new_day_label = st.selectbox(
+                            "移到第幾天",
+                            list(day_opts.keys()),
+                            index=list(day_opts.keys()).index(current_day_label),
+                            key=f"e_day_{item['id']}"
+                        )
+                        new_day = day_opts[new_day_label]
+                    else:
+                        new_day = item["day_number"]
+
                     new_category = st.selectbox(
                         "分類",
                         list(CATEGORIES.keys()),
@@ -292,7 +381,6 @@ def _tab_timeline(trip_id, total_days, start_date):
                         "地點 / 店名", value=item["location"],
                         key=f"e_loc_{item['id']}"
                     )
-                    # ── 修改一：編輯模式地址欄位名稱 ──
                     new_address = st.text_input(
                         "地址 / Google Map", value=item["address"],
                         key=f"e_addr_{item['id']}"
@@ -323,7 +411,7 @@ def _tab_timeline(trip_id, total_days, start_date):
                                         UPDATE itinerary_items
                                         SET name=?, category=?, start_time=?,
                                             duration_minutes=?, location=?, address=?,
-                                            booking_ref=?, notes=?
+                                            booking_ref=?, notes=?, day_number=?
                                         WHERE id=?
                                     """, (
                                         new_name.strip(), new_category, t,
@@ -332,6 +420,7 @@ def _tab_timeline(trip_id, total_days, start_date):
                                         new_address.strip(),
                                         new_booking.strip(),
                                         new_notes.strip(),
+                                        new_day,
                                         item["id"]
                                     ))
                                     conn.commit()
@@ -365,32 +454,26 @@ def _tab_timeline(trip_id, total_days, start_date):
 
 
 # ════════════════════════════════════════
-#  Tab 2：新增行程項目
+#  新增行程項目
 # ════════════════════════════════════════
 
-def _tab_add_item(trip_id, total_days, start_date):
-    # ── 修改二：加上 clear_on_submit=True ──
-    with st.form("form_add_item", clear_on_submit=True):
+def _tab_add_item(trip_id, total_days, start_date, default_day=1):
+    with st.form(f"form_add_item_{default_day}", clear_on_submit=True):
         name = st.text_input("名稱", placeholder="例：海膽蓋飯 根本")
         col1, col2 = st.columns(2)
         with col1:
-            day_options = {
-                f"Day {d}  ({(start_date + timedelta(days=d-1)).strftime('%m/%d')})": d
-                for d in range(1, total_days + 1)
-            }
-            day_label = st.selectbox("第幾天", list(day_options.keys()))
-            day_number = day_options[day_label]
-        with col2:
             category = st.selectbox("分類", list(CATEGORIES.keys()),
                                     format_func=lambda k: CATEGORIES[k])
-        col3, col4 = st.columns(2)
-        with col3:
+        with col2:
             new_time_input = st.text_input("開始時間（HH:MM）", value="09:00")
-        with col4:
-            duration = st.number_input("停留時間（分鐘）", min_value=15,
-                                       max_value=480, value=60, step=15)
+
+        duration = st.number_input(
+            "停留時間（分鐘）",
+            min_value=15, max_value=480,
+            value=60, step=15
+        )
+
         location    = st.text_input("地點 / 店名", placeholder="例：金澤市場")
-        # ── 修改三：新增模式地址欄位名稱 ──
         address     = st.text_input("地址 / Google Map（選填）")
         booking_ref = st.text_input("預約編號（選填）", placeholder="例：CONF-12345")
         notes       = st.text_area("備註（選填）", height=80)
@@ -410,7 +493,7 @@ def _tab_add_item(trip_id, total_days, start_date):
                     else:
                         db.add_item(
                             trip_id=trip_id,
-                            day_number=day_number,
+                            day_number=default_day,
                             name=name.strip(),
                             start_time=t,
                             duration_minutes=int(duration),
@@ -420,5 +503,5 @@ def _tab_add_item(trip_id, total_days, start_date):
                             booking_ref=booking_ref.strip(),
                             notes=notes.strip(),
                         )
-                        st.success(f"「{name}」已加入 Day {day_number}！")
+                        st.success(f"「{name}」已加入 Day {default_day}！")
                         st.rerun()
