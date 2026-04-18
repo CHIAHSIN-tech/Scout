@@ -1,6 +1,7 @@
 import streamlit as st
 from db import init_db
 from page_itinerary import page_itinerary
+from page_shopping import page_shopping
 
 st.set_page_config(
     page_title="Scout",
@@ -188,9 +189,11 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
     display: none !important;
 }}
 
-/* ── 刪除／編輯小按鈕：正圓形，無箭頭 ── */
+/* ── 刪除／編輯／購物清單小按鈕：正圓形，無箭頭 ── */
 [class*="st-key-del_item_"] .stButton > button,
-[class*="st-key-edit_btn_"] .stButton > button {{
+[class*="st-key-edit_btn_"] .stButton > button,
+[class*="st-key-del_wish_"] .stButton > button,
+[class*="st-key-toggle_"] .stButton > button {{
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
@@ -200,7 +203,9 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
     justify-content: center !important;
 }}
 [class*="st-key-del_item_"] .stButton > button::after,
-[class*="st-key-edit_btn_"] .stButton > button::after {{
+[class*="st-key-edit_btn_"] .stButton > button::after,
+[class*="st-key-del_wish_"] .stButton > button::after,
+[class*="st-key-toggle_"] .stButton > button::after {{
     display: none !important;
 }}
 
@@ -343,7 +348,6 @@ def page_with_back(emoji, title, note):
     """, unsafe_allow_html=True)
 
 
-def page_shopping():   page_with_back("🛍️", "購物", "購物模組開發中…")
 def page_restaurant(): page_with_back("🍽️", "餐廳", "餐廳模組開發中…")
 def page_hotel():      page_with_back("🏨", "旅館", "旅館模組開發中…")
 

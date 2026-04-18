@@ -215,3 +215,53 @@ def log_adjustment(trip_id, instruction, items_changed: list):
     )
     conn.commit()
     conn.close()
+
+
+# ── Wishlist CRUD ──
+
+def get_wishlist(user):
+    """取得某使用者的所有待買清單，按新增時間倒序"""
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT * FROM wishlist WHERE user=? ORDER BY added_date DESC",
+        (user,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_wishlist_item(user, name, category="", estimated_price=0.0, notes=""):
+    """新增一筆待買項目，回傳新項目的 id"""
+    from datetime import datetime
+    conn = get_conn()
+    cur = conn.execute(
+        """INSERT INTO wishlist (user, name, category, estimated_price, added_date, status, notes)
+           VALUES (?,?,?,?,?,?,?)""",
+        (user, name, category, estimated_price,
+         datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "pending", notes)
+    )
+    item_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return item_id
+
+
+def update_wishlist_status(item_id, status):
+    """更新待買項目的狀態（pending / purchased）"""
+    from datetime import datetime
+    conn = get_conn()
+    purchased_date = datetime.now().strftime("%Y-%m-%d") if status == "purchased" else None
+    conn.execute(
+        "UPDATE wishlist SET status=?, purchased_date=? WHERE id=?",
+        (status, purchased_date, item_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_wishlist_item(item_id):
+    """刪除單一待買項目"""
+    conn = get_conn()
+    conn.execute("DELETE FROM wishlist WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
