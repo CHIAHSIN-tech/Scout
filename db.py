@@ -1,185 +1,142 @@
-import sqlite3
-import os
+import streamlit as st
+from supabase import create_client, Client
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "scout.db")
-
-
-def get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")  # 確保外鍵約束生效
-    return conn
+# ── 建立 Supabase 連線 ──
+# 從 secrets.toml 讀取 URL 和 Key，建立全域 client
+# @st.cache_resource 確保整個 app 只建立一次連線，不會每次操作都重新連
+@st.cache_resource
+def get_client() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
 
 
 def init_db():
-    conn = get_conn()
-    conn.executescript("""
-        -- ── 原有表格（維持不變）──
-        CREATE TABLE IF NOT EXISTS wishlist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            name TEXT NOT NULL,
-            category TEXT DEFAULT '',
-            estimated_price REAL DEFAULT 0,
-            added_date TEXT NOT NULL,
-            status TEXT DEFAULT 'pending',
-            purchased_date TEXT,
-            notes TEXT DEFAULT ''
-        );
-
-        CREATE TABLE IF NOT EXISTS budget (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            year_month TEXT NOT NULL,
-            budget_limit REAL NOT NULL,
-            UNIQUE(user, year_month)
-        );
-
-        -- ── 旅程（最頂層，代表一整趟旅行）──
-        CREATE TABLE IF NOT EXISTS trips (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            name TEXT NOT NULL,
-            start_date TEXT NOT NULL,
-            end_date TEXT NOT NULL,
-            notes TEXT DEFAULT '',
-            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-        );
-
-        -- ── 行程項目（每一個景點 / 餐廳 / 活動）──
-        CREATE TABLE IF NOT EXISTS itinerary_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-            day_number INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            category TEXT DEFAULT 'other',
-            start_time TEXT NOT NULL,
-            duration_minutes INTEGER NOT NULL DEFAULT 60,
-            location TEXT DEFAULT '',
-            address TEXT DEFAULT '',
-            booking_ref TEXT DEFAULT '',
-            notes TEXT DEFAULT '',
-            source TEXT DEFAULT 'manual',
-            source_id INTEGER,
-            sort_order INTEGER NOT NULL DEFAULT 0
-        );
-
-        -- ── 調整紀錄（供日後查閱，現在先建起來）──
-        CREATE TABLE IF NOT EXISTS trip_adjustments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-            adjusted_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-            instruction TEXT NOT NULL,
-            items_changed TEXT NOT NULL DEFAULT '[]'
-        );
-    """)
-    conn.close()
+    # Supabase 版本不需要 init_db，表格已在 Supabase 介面建好
+    # 保留這個函式是為了讓 app.py 不需要修改
+    pass
 
 
 # ── Trips CRUD ──
 
-def create_trip(user, name, start_date, end_date, notes=""):
+def create_trip(username, name, start_date, end_date, notes=""):
     """建立新旅程，回傳新旅程的 id"""
-    conn = get_conn()
-    cur = conn.execute(
-        "INSERT INTO trips (user, name, start_date, end_date, notes) VALUES (?,?,?,?,?)",
-        (user, name, start_date, end_date, notes)
-    )
-    trip_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return trip_id
+    sb = get_client()
+    # .insert() 新增一筆資料，.execute() 送出請求
+    res = sb.table("trips").insert({
+        "username": username,
+        "name": name,
+        "start_date": start_date,
+        "end_date": end_date,
+        "notes": notes,
+    }).execute()
+    # res.data 是一個 list，第一筆就是剛新增的資料
+    return res.data[0]["id"]
 
 
-def get_trips(user):
+def get_trips(username):
     """取得某使用者的所有旅程，按開始日期排序"""
-    conn = get_conn()
-    rows = conn.execute(
-        "SELECT * FROM trips WHERE user=? ORDER BY start_date DESC",
-        (user,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    sb = get_client()
+    # .select("*") 選取所有欄位
+    # .eq("username", username) 等同於 WHERE username = username
+    # .order() 等同於 ORDER BY
+    res = sb.table("trips")\
+        .select("*")\
+        .eq("username", username)\
+        .order("start_date", desc=True)\
+        .execute()
+    return res.data
 
 
 def get_trip(trip_id):
     """取得單一旅程"""
-    conn = get_conn()
-    row = conn.execute("SELECT * FROM trips WHERE id=?", (trip_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    sb = get_client()
+    res = sb.table("trips")\
+        .select("*")\
+        .eq("id", trip_id)\
+        .execute()
+    # 找不到就回傳 None，找到就回傳第一筆
+    return res.data[0] if res.data else None
 
 
 def delete_trip(trip_id):
     """刪除旅程（行程項目會因 CASCADE 一起刪除）"""
-    conn = get_conn()
-    conn.execute("DELETE FROM trips WHERE id=?", (trip_id,))
-    conn.commit()
-    conn.close()
+    sb = get_client()
+    sb.table("trips").delete().eq("id", trip_id).execute()
 
 
 # ── Itinerary Items CRUD ──
 
 def get_items_by_day(trip_id, day_number):
     """取得某天的所有行程項目，按 start_time 排序"""
-    conn = get_conn()
-    rows = conn.execute(
-        """SELECT * FROM itinerary_items
-           WHERE trip_id=? AND day_number=?
-           ORDER BY start_time ASC, sort_order ASC""",
-        (trip_id, day_number)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    sb = get_client()
+    res = sb.table("itinerary_items")\
+        .select("*")\
+        .eq("trip_id", trip_id)\
+        .eq("day_number", day_number)\
+        .order("start_time")\
+        .order("sort_order")\
+        .execute()
+    return res.data
 
 
 def get_all_items(trip_id):
     """取得一趟旅程的所有行程項目，按天和時間排序"""
-    conn = get_conn()
-    rows = conn.execute(
-        """SELECT * FROM itinerary_items
-           WHERE trip_id=?
-           ORDER BY day_number ASC, start_time ASC, sort_order ASC""",
-        (trip_id,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    sb = get_client()
+    res = sb.table("itinerary_items")\
+        .select("*")\
+        .eq("trip_id", trip_id)\
+        .order("day_number")\
+        .order("start_time")\
+        .order("sort_order")\
+        .execute()
+    return res.data
 
 
 def add_item(trip_id, day_number, name, start_time, duration_minutes=60,
              category="other", location="", address="",
              booking_ref="", notes="", source="manual", source_id=None):
     """新增一個行程項目，回傳新項目的 id"""
-    conn = get_conn()
-    # sort_order 自動設為當天最後一個
-    max_order = conn.execute(
-        "SELECT COALESCE(MAX(sort_order), -1) FROM itinerary_items WHERE trip_id=? AND day_number=?",
-        (trip_id, day_number)
-    ).fetchone()[0]
-    cur = conn.execute(
-        """INSERT INTO itinerary_items
-           (trip_id, day_number, name, category, start_time, duration_minutes,
-            location, address, booking_ref, notes, source, source_id, sort_order)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-        (trip_id, day_number, name, category, start_time, duration_minutes,
-         location, address, booking_ref, notes, source, source_id, max_order + 1)
-    )
-    item_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return item_id
+    sb = get_client()
+
+    # 先查當天最大的 sort_order，新項目排在最後
+    existing = sb.table("itinerary_items")\
+        .select("sort_order")\
+        .eq("trip_id", trip_id)\
+        .eq("day_number", day_number)\
+        .order("sort_order", desc=True)\
+        .limit(1)\
+        .execute()
+
+    # 如果當天沒有項目，從 0 開始；否則最大值 +1
+    max_order = existing.data[0]["sort_order"] if existing.data else -1
+
+    res = sb.table("itinerary_items").insert({
+        "trip_id": trip_id,
+        "day_number": day_number,
+        "name": name,
+        "category": category,
+        "start_time": start_time,
+        "duration_minutes": duration_minutes,
+        "location": location,
+        "address": address,
+        "booking_ref": booking_ref,
+        "notes": notes,
+        "source": source,
+        "source_id": source_id,
+        "sort_order": max_order + 1,
+    }).execute()
+    return res.data[0]["id"]
 
 
 def update_item_time(item_id, new_start_time):
     """更新單一項目的開始時間"""
-    conn = get_conn()
-    conn.execute(
-        "UPDATE itinerary_items SET start_time=? WHERE id=?",
-        (new_start_time, item_id)
-    )
-    conn.commit()
-    conn.close()
+    sb = get_client()
+    # .update() 等同於 UPDATE SET，.eq() 指定要更新哪一筆
+    sb.table("itinerary_items")\
+        .update({"start_time": new_start_time})\
+        .eq("id", item_id)\
+        .execute()
 
 
 def update_items_bulk(updates: list[dict]):
@@ -187,81 +144,29 @@ def update_items_bulk(updates: list[dict]):
     批次更新多個項目的時間，用於串聯調整。
     updates 格式：[{"id": 3, "start_time": "11:00"}, ...]
     """
-    conn = get_conn()
+    sb = get_client()
+    # Supabase 沒有原生批次 update，逐筆更新
+    # 筆數少（通常一天不超過 10 筆），效能可接受
     for u in updates:
-        conn.execute(
-            "UPDATE itinerary_items SET start_time=? WHERE id=?",
-            (u["start_time"], u["id"])
-        )
-    conn.commit()
-    conn.close()
+        sb.table("itinerary_items")\
+            .update({"start_time": u["start_time"]})\
+            .eq("id", u["id"])\
+            .execute()
 
 
 def delete_item(item_id):
     """刪除單一行程項目"""
-    conn = get_conn()
-    conn.execute("DELETE FROM itinerary_items WHERE id=?", (item_id,))
-    conn.commit()
-    conn.close()
+    sb = get_client()
+    sb.table("itinerary_items").delete().eq("id", item_id).execute()
 
 
 def log_adjustment(trip_id, instruction, items_changed: list):
     """記錄一次調整歷史"""
     import json
-    conn = get_conn()
-    conn.execute(
-        "INSERT INTO trip_adjustments (trip_id, instruction, items_changed) VALUES (?,?,?)",
-        (trip_id, instruction, json.dumps(items_changed, ensure_ascii=False))
-    )
-    conn.commit()
-    conn.close()
-
-
-# ── Wishlist CRUD ──
-
-def get_wishlist(user):
-    """取得某使用者的所有待買清單，按新增時間倒序"""
-    conn = get_conn()
-    rows = conn.execute(
-        "SELECT * FROM wishlist WHERE user=? ORDER BY added_date DESC",
-        (user,)
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def add_wishlist_item(user, name, category="", estimated_price=0.0, notes=""):
-    """新增一筆待買項目，回傳新項目的 id"""
-    from datetime import datetime
-    conn = get_conn()
-    cur = conn.execute(
-        """INSERT INTO wishlist (user, name, category, estimated_price, added_date, status, notes)
-           VALUES (?,?,?,?,?,?,?)""",
-        (user, name, category, estimated_price,
-         datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "pending", notes)
-    )
-    item_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return item_id
-
-
-def update_wishlist_status(item_id, status):
-    """更新待買項目的狀態（pending / purchased）"""
-    from datetime import datetime
-    conn = get_conn()
-    purchased_date = datetime.now().strftime("%Y-%m-%d") if status == "purchased" else None
-    conn.execute(
-        "UPDATE wishlist SET status=?, purchased_date=? WHERE id=?",
-        (status, purchased_date, item_id)
-    )
-    conn.commit()
-    conn.close()
-
-
-def delete_wishlist_item(item_id):
-    """刪除單一待買項目"""
-    conn = get_conn()
-    conn.execute("DELETE FROM wishlist WHERE id=?", (item_id,))
-    conn.commit()
-    conn.close()
+    sb = get_client()
+    sb.table("trip_adjustments").insert({
+        "trip_id": trip_id,
+        "instruction": instruction,
+        # Supabase 不支援直接存 list，轉成 JSON 字串存
+        "items_changed": json.dumps(items_changed, ensure_ascii=False),
+    }).execute()

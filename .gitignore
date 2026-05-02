@@ -1,6 +1,13 @@
 .streamlit/secrets.toml
+secrets.toml
 __pycache__/
 *.pyc
+*.pyo
 *.db
+*.db-shm
+*.db-wal
 .env
 .venv/
+.DS_Store
+.claude/
+test_gemini.py
