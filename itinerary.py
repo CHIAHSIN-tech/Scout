@@ -71,6 +71,9 @@ def adjust_with_cascade(
     target = next((i for i in all_items if i["id"] == target_item_id), None)
     if not target:
         raise ValueError(f"找不到 item_id={target_item_id}")
+    # 候選項目沒有時段，不能當作串聯調整的基準
+    if not target.get("start_time"):
+        raise ValueError("候選項目沒有時段，請先排入某天某時段再做串聯調整")
 
     delta = (
         time_str_to_minutes(new_start_time)
@@ -80,7 +83,8 @@ def adjust_with_cascade(
     updates = [{"id": target_item_id, "start_time": new_start_time}]
 
     for item in all_items:
-        if item["id"] in cascade_item_ids:
+        # 只平移有時段的項目；候選項目（start_time 為 NULL）直接跳過，避免 NULL 計算出錯
+        if item["id"] in cascade_item_ids and item.get("start_time"):
             shifted = shift_time(item["start_time"], delta)
             updates.append({"id": item["id"], "start_time": shifted})
 
@@ -111,22 +115,28 @@ def reorder_and_recalculate(trip_id: int, day_number: int, new_order_ids: list[i
     all_items = db.get_items_by_day(trip_id, day_number)
     id_to_item = {i["id"]: i for i in all_items}
 
-    # 找出這天最早的開始時間作為基準
-    earliest = min(
-        time_str_to_minutes(i["start_time"]) for i in all_items
-    )
+    # 只用「有開始時間」的項目來算基準；候選項目（無時段）不參與時間重算。
+    # 這保護 min() 不會因為 NULL start_time 而出錯（spec AC-2）。
+    scheduled = [i for i in all_items if i.get("start_time")]
+    if not scheduled:
+        return []
+
+    earliest = min(time_str_to_minutes(i["start_time"]) for i in scheduled)
     cursor = earliest
 
     updates = []
     for order_idx, item_id in enumerate(new_order_ids):
-        item = id_to_item[item_id]
+        item = id_to_item.get(item_id)
+        # 跳過不存在、或沒有時段的項目，確保候選項目不會被誤排
+        if item is None or not item.get("start_time"):
+            continue
         new_start = minutes_to_time_str(cursor)
         updates.append({
             "id": item_id,
             "start_time": new_start,
             "sort_order": order_idx
         })
-        cursor += item["duration_minutes"]
+        cursor += item.get("duration_minutes") or 0
 
     return updates
 
@@ -134,16 +144,12 @@ def reorder_and_recalculate(trip_id: int, day_number: int, new_order_ids: list[i
 def apply_reorder(trip_id: int, day_number: int, new_order_ids: list[int]):
     """
     把重排結果寫入資料庫，同時更新 start_time 和 sort_order。
+    透過 db.update_items_schedule 走 Supabase，不再直接用 sqlite 連線。
     """
     updates = reorder_and_recalculate(trip_id, day_number, new_order_ids)
-    conn = db.get_conn()
-    for u in updates:
-        conn.execute(
-            "UPDATE itinerary_items SET start_time=?, sort_order=? WHERE id=?",
-            (u["start_time"], u["sort_order"], u["id"])
-        )
-    conn.commit()
-    conn.close()
+    if not updates:
+        return
+    db.update_items_schedule(updates)
     db.log_adjustment(
         trip_id,
         f"重新排序 Day {day_number}",

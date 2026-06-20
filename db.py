@@ -93,13 +93,8 @@ def get_all_items(trip_id):
     return res.data
 
 
-def add_item(trip_id, day_number, name, start_time, duration_minutes=60,
-             category="other", location="", address="",
-             booking_ref="", notes="", source="manual", source_id=None):
-    """新增一個行程項目，回傳新項目的 id"""
-    sb = get_client()
-
-    # 先查當天最大的 sort_order，新項目排在最後
+def _next_sort_order(sb, trip_id, day_number):
+    """查某天目前最大的 sort_order，回傳「排在最後」應使用的值（空的話 0，否則最大值 +1）"""
     existing = sb.table("itinerary_items")\
         .select("sort_order")\
         .eq("trip_id", trip_id)\
@@ -107,9 +102,15 @@ def add_item(trip_id, day_number, name, start_time, duration_minutes=60,
         .order("sort_order", desc=True)\
         .limit(1)\
         .execute()
+    return (existing.data[0]["sort_order"] + 1) if existing.data else 0
 
-    # 如果當天沒有項目，從 0 開始；否則最大值 +1
-    max_order = existing.data[0]["sort_order"] if existing.data else -1
+
+def add_item(trip_id, day_number, name, start_time, duration_minutes=60,
+             category="other", location="", address="",
+             booking_ref="", notes="", source="manual", source_id=None,
+             confirm_required=False):
+    """新增一個「已排定」行程項目（指定了某天某時段），回傳新項目的 id"""
+    sb = get_client()
 
     res = sb.table("itinerary_items").insert({
         "trip_id": trip_id,
@@ -124,7 +125,37 @@ def add_item(trip_id, day_number, name, start_time, duration_minutes=60,
         "notes": notes,
         "source": source,
         "source_id": source_id,
-        "sort_order": max_order + 1,
+        # 排在當天最後
+        "sort_order": _next_sort_order(sb, trip_id, day_number),
+        "confirm_required": confirm_required,
+    }).execute()
+    return res.data[0]["id"]
+
+
+def add_candidate(trip_id, name, duration_minutes=60, category="other",
+                  location="", address="", booking_ref="", notes="",
+                  source="manual", source_id=None, confirm_required=False):
+    """
+    新增一個「候選中」項目：不指定日期/時段（day_number / start_time 皆為 NULL）。
+    對應 spec：候選中狀態支援所有項目類型（景點/住宿/餐廳），不會出現在 Day-based Kanban。
+    回傳新項目的 id。
+    """
+    sb = get_client()
+    res = sb.table("itinerary_items").insert({
+        "trip_id": trip_id,
+        "day_number": None,      # NULL = 候選中
+        "name": name,
+        "category": category,
+        "start_time": None,      # 候選中無時段
+        "duration_minutes": duration_minutes,
+        "location": location,
+        "address": address,
+        "booking_ref": booking_ref,
+        "notes": notes,
+        "source": source,
+        "source_id": source_id,
+        "sort_order": 0,
+        "confirm_required": confirm_required,
     }).execute()
     return res.data[0]["id"]
 
@@ -154,10 +185,166 @@ def update_items_bulk(updates: list[dict]):
             .execute()
 
 
+def update_items_schedule(updates: list[dict]):
+    """
+    批次更新項目的 start_time 與 sort_order，用於同一天的重新排序。
+    updates 格式：[{"id": 3, "start_time": "11:00", "sort_order": 0}, ...]
+    （取代舊版 itinerary.apply_reorder 直接用 sqlite get_conn 的寫法。）
+    """
+    sb = get_client()
+    for u in updates:
+        sb.table("itinerary_items")\
+            .update({"start_time": u["start_time"], "sort_order": u["sort_order"]})\
+            .eq("id", u["id"])\
+            .execute()
+
+
+def update_item_full(item_id, fields: dict):
+    """
+    更新單一項目的多個欄位（編輯畫面用）。
+    fields 只放要更新的欄位，例如 name / category / start_time / day_number 等。
+    （取代 page_itinerary 編輯儲存時直接用 sqlite get_conn 的寫法。）
+    """
+    sb = get_client()
+    sb.table("itinerary_items").update(fields).eq("id", item_id).execute()
+
+
+# ── 候選 / 已排定 查詢 ──
+
+def get_candidates(trip_id):
+    """取得一趟旅程的所有「候選中」項目（day_number IS NULL）"""
+    sb = get_client()
+    res = sb.table("itinerary_items")\
+        .select("*")\
+        .eq("trip_id", trip_id)\
+        .is_("day_number", "null")\
+        .order("id")\
+        .execute()
+    return res.data
+
+
+def get_scheduled_items(trip_id):
+    """取得一趟旅程所有「已排定」項目（day_number 不為 NULL），按天/時間排序"""
+    sb = get_client()
+    res = sb.table("itinerary_items")\
+        .select("*")\
+        .eq("trip_id", trip_id)\
+        .not_.is_("day_number", "null")\
+        .order("day_number")\
+        .order("start_time")\
+        .order("sort_order")\
+        .execute()
+    return res.data
+
+
+def get_unconfirmed_required(trip_id):
+    """
+    取得「必須確認且尚未確認」的項目（優先儀表板的核心查詢）。
+    對應 spec AC-3：標記為必須確認、若未確認就要被標示出來。
+    候選或已排定都可能在內。
+    """
+    sb = get_client()
+    res = sb.table("itinerary_items")\
+        .select("*")\
+        .eq("trip_id", trip_id)\
+        .eq("confirm_required", True)\
+        .eq("is_confirmed", False)\
+        .order("day_number")\
+        .order("start_time")\
+        .execute()
+    return res.data
+
+
+# ── 候選 ↔ 已排定 的狀態切換 ──
+
+def schedule_item(item_id, trip_id, day_number, start_time):
+    """把一個候選項目排入某天某時段（候選中 → 已排定），排在當天最後"""
+    sb = get_client()
+    sb.table("itinerary_items").update({
+        "day_number": day_number,
+        "start_time": start_time,
+        "sort_order": _next_sort_order(sb, trip_id, day_number),
+    }).eq("id", item_id).execute()
+
+
+def unschedule_item(item_id):
+    """把一個已排定項目退回候選中（清掉日期/時段）"""
+    sb = get_client()
+    sb.table("itinerary_items").update({
+        "day_number": None,
+        "start_time": None,
+        "sort_order": 0,
+    }).eq("id", item_id).execute()
+
+
+# ── 確認狀態（兩軸）──
+
+def set_confirm_required(item_id, required: bool):
+    """設定「必須確認 / 可以彈性」"""
+    sb = get_client()
+    sb.table("itinerary_items")\
+        .update({"confirm_required": required})\
+        .eq("id", item_id)\
+        .execute()
+
+
+def set_confirmed(item_id, confirmed: bool):
+    """設定「已確認 / 未確認」"""
+    sb = get_client()
+    sb.table("itinerary_items")\
+        .update({"is_confirmed": confirmed})\
+        .eq("id", item_id)\
+        .execute()
+
+
 def delete_item(item_id):
     """刪除單一行程項目"""
     sb = get_client()
     sb.table("itinerary_items").delete().eq("id", item_id).execute()
+
+
+# ── Wishlist CRUD（購物待買清單）──
+# Supabase 重構時這組函式被漏掉，但 page_shopping.py 仍在呼叫，
+# 導致首頁「購物」一進去就崩潰。這裡補回來，全部走 Supabase。
+
+def add_wishlist_item(username, name, category="", estimated_price=0, notes=""):
+    """新增一筆待買項目，回傳新項目的 id"""
+    from datetime import date
+    sb = get_client()
+    res = sb.table("wishlist").insert({
+        "username": username,
+        "name": name,
+        "category": category,
+        "estimated_price": estimated_price,
+        "notes": notes,
+        "status": "pending",
+        # 既有 wishlist 表的 added_date 是 NOT NULL，這裡帶入今天日期
+        "added_date": date.today().isoformat(),
+    }).execute()
+    return res.data[0]["id"]
+
+
+def get_wishlist(username):
+    """取得某使用者的所有待買項目（含已購買），依加入順序"""
+    sb = get_client()
+    res = sb.table("wishlist")\
+        .select("*")\
+        .eq("username", username)\
+        .order("id")\
+        .execute()
+    return res.data
+
+
+def update_wishlist_status(item_id, status):
+    """更新待買項目狀態（pending / purchased）"""
+    sb = get_client()
+    sb.table("wishlist").update({"status": status}).eq("id", item_id).execute()
+
+
+def delete_wishlist_item(item_id):
+    """刪除一筆待買項目"""
+    sb = get_client()
+    sb.table("wishlist").delete().eq("id", item_id).execute()
 
 
 def log_adjustment(trip_id, instruction, items_changed: list):
