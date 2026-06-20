@@ -6,8 +6,9 @@ Chia 出的每一份 spec 都是一份**格式嚴謹的 `.md`**，放在這個�
 
 > **Chia 思考/出題（寫 spec `.md`）→ Stanley 用 Claude Code 執行。**
 
-1. **Chia** 把寫好的 spec `.md` 放進這個 `specs/` 資料夾
-   （GitHub 網頁「Add file → Upload files / Create new file」即可，不一定要本機 git）。
+1. **Chia** 把寫好的 spec `.md` 放進這個 `specs/` 資料夾，二選一（結果一樣）：
+   - **本機 git**：`.md` 放進 `specs/` → `git add` → `git commit` → `git push`。
+   - **GitHub 網頁**（免本機 git）：repo 頁 → 進 `specs/` → 「Add file → Upload files / Create new file」→ Commit。
 2. **Stanley** 用 Claude Code 讀該檔 → 執行落地（小步 commit、先看 diff 再進）。
 3. 完成後產一份**給 Chia 看的回報**（範例：repo 根 `for-chia.md`），說明實際做了什麼、與 spec 有無出入。
 
