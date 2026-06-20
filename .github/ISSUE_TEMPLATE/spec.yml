@@ -1,0 +1,44 @@
+name: Spec / 需求
+description: 提出一個完整的功能或修改需求（給 Chia 出題用）
+title: "[Spec] "
+labels: ["spec"]
+body:
+  - type: markdown
+    attributes:
+      value: "謝謝你出題 🙌 能填多少算多少，不確定的留白沒關係；Stanley 會在 Claude Code 端執行。"
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解決什麼問題？
+      placeholder: 現在的痛點 / 為什麼要做這個
+    validations:
+      required: true
+  - type: textarea
+    id: user
+    attributes:
+      label: 誰會用？想完成什麼？（JTBD）
+      placeholder: "「當我…的時候，我想要…，這樣我就能…」"
+  - type: textarea
+    id: success
+    attributes:
+      label: 怎樣算成功？
+      placeholder: 做到哪些事，就算這次成功
+  - type: textarea
+    id: scope
+    attributes:
+      label: 範圍（這版要做 / 不做）
+      placeholder: |
+        要做（Must）：
+        可以做（Could）：
+        這版先不做（Won't）：
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 驗收條件（逐條，越具體越好）
+      placeholder: |
+        - [ ] AC-1 …
+        - [ ] AC-2 …
+  - type: textarea
+    id: notes
+    attributes:
+      label: 其他 / 相關連結 / 已知風險（選填）
