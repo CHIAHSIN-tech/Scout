@@ -65,8 +65,14 @@ create table if not exists wishlist (
     estimated_price numeric default 0,
     status          text    default 'pending',    -- pending / purchased
     notes           text    default '',
+    added_date      date    default current_date, -- 加入日期（沿用既有欄位，給預設值避免 NOT NULL 卡住）
     created_at      timestamptz default now()
 );
+
+-- 既有 wishlist 表（SQLite 時代留下）可能有 added_date NOT NULL 但無預設，
+-- 補上預設值，讓沒帶 added_date 的 insert 也能成功。
+alter table wishlist add column if not exists added_date date default current_date;
+alter table wishlist alter column added_date set default current_date;
 
 -- ──────────────────────────────────────────────
 -- 3. trip_adjustments（調整歷史，沿用既有）

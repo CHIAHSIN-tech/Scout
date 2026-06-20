@@ -309,6 +309,7 @@ def delete_item(item_id):
 
 def add_wishlist_item(username, name, category="", estimated_price=0, notes=""):
     """新增一筆待買項目，回傳新項目的 id"""
+    from datetime import date
     sb = get_client()
     res = sb.table("wishlist").insert({
         "username": username,
@@ -317,6 +318,8 @@ def add_wishlist_item(username, name, category="", estimated_price=0, notes=""):
         "estimated_price": estimated_price,
         "notes": notes,
         "status": "pending",
+        # 既有 wishlist 表的 added_date 是 NOT NULL，這裡帶入今天日期
+        "added_date": date.today().isoformat(),
     }).execute()
     return res.data[0]["id"]
 
