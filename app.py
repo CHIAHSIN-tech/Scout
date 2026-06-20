@@ -193,6 +193,7 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
 [class*="st-key-del_item_"] .stButton > button,
 [class*="st-key-edit_btn_"] .stButton > button,
 [class*="st-key-del_wish_"] .stButton > button,
+[class*="st-key-cand_del_"] .stButton > button,
 [class*="st-key-toggle_"] .stButton > button {{
     width: 36px !important;
     height: 36px !important;
@@ -240,6 +241,11 @@ div[data-baseweb="popover"] * {{ font-family: 'Noto Sans TC', sans-serif !import
 [class*="st-key-save_"] .stButton > button::after,
 [class*="st-key-cancel_edit_"] .stButton > button::after,
 [class*="st-key-confirm_"] .stButton > button::after {{
+    display: none !important;
+}}
+
+/* ── 候選 / 確認頁按鈕（排入、確認切換、刪除）：無箭頭 ── */
+[class*="st-key-cand_"] .stButton > button::after {{
     display: none !important;
 }}
 

@@ -100,12 +100,17 @@ def _page_trip_list(user):
         s = date.fromisoformat(trip["start_date"])
         e = date.fromisoformat(trip["end_date"])
         days = (e - s).days + 1
-        item_count = len(db.get_all_items(trip["id"]))
+        all_items = db.get_all_items(trip["id"])
+        sched_count = sum(1 for i in all_items if i.get("day_number") is not None)
+        cand_count = len(all_items) - sched_count
+        meta = f"{days} 天　·　{sched_count} 個行程"
+        if cand_count:
+            meta += f"　·　{cand_count} 候選"
 
         col_info, col_del = st.columns([7, 1])
         with col_info:
             if st.button(
-                f"**{trip['name']}**\n\n{trip['start_date']} ～ {trip['end_date']}　·　{days} 天　·　{item_count} 個行程",
+                f"**{trip['name']}**\n\n{trip['start_date']} ～ {trip['end_date']}　·　{meta}",
                 key=f"open_{trip['id']}",
                 use_container_width=True
             ):
@@ -142,13 +147,181 @@ def _page_trip_detail(trip_id):
     </div>
     """, unsafe_allow_html=True)
 
-    tab_timeline, tab_ai = st.tabs(["📅 時間軸", "✨ AI 建議"])
+    tab_timeline, tab_candidates, tab_ai = st.tabs(
+        ["📅 時間軸", "📋 候選 / 確認", "✨ AI 建議"]
+    )
 
     with tab_timeline:
         _tab_timeline(trip_id, total_days, s)
 
+    with tab_candidates:
+        _tab_candidates(trip_id, total_days, s)
+
     with tab_ai:
         page_ai_suggest(trip_id)
+
+
+# ════════════════════════════════════════
+#  Tab 2：候選 / 確認（優先儀表板 + 候選清單）
+# ════════════════════════════════════════
+
+def _tab_candidates(trip_id, total_days, start_date):
+    # ── 1. 優先儀表板：必須確認且尚未確認的項目 ──
+    pending = db.get_unconfirmed_required(trip_id)
+    st.markdown(
+        '<div style="font-size:15px;font-weight:600;color:#3D6B54;'
+        'margin:0.4rem 0 0.6rem;">🔔 優先提醒</div>',
+        unsafe_allow_html=True
+    )
+    if pending:
+        st.markdown(
+            f'<div style="font-size:13px;color:#A85C32;font-weight:600;'
+            f'margin-bottom:6px;">⚠️ 有 {len(pending)} 個「必須確認」項目還沒確認</div>',
+            unsafe_allow_html=True
+        )
+        for it in pending:
+            where = (f"Day {it['day_number']} {it['start_time']}"
+                     if it.get("day_number") else "候選中")
+            col_a, col_b = st.columns([4, 1.6])
+            with col_a:
+                st.markdown(
+                    f'<div style="font-size:14px;padding-top:8px;">'
+                    f'{CATEGORIES.get(it["category"], "📌 其他")}　{it["name"]}'
+                    f'<span style="color:#A8A298;font-size:12px;">　·　{where}</span></div>',
+                    unsafe_allow_html=True
+                )
+            with col_b:
+                if st.button("✅ 標記已確認", key=f"confirm_pending_{it['id']}",
+                             use_container_width=True):
+                    db.set_confirmed(it["id"], True)
+                    st.rerun()
+    else:
+        st.markdown(
+            '<div style="background:#EAF2ED;border-radius:12px;padding:10px 16px;'
+            'font-size:13px;color:#3D6B54;">✅ 目前沒有待確認的必訂項目</div>',
+            unsafe_allow_html=True
+        )
+
+    st.markdown('<hr>', unsafe_allow_html=True)
+
+    # ── 2. 候選清單 ──
+    st.markdown(
+        '<div style="font-size:15px;font-weight:600;color:#3D6B54;margin:0.4rem 0 0.6rem;">'
+        '🗂️ 候選清單'
+        '<span style="font-size:12px;color:#A8A298;font-weight:400;">'
+        '　還沒決定排哪天的點子</span></div>',
+        unsafe_allow_html=True
+    )
+
+    # 新增候選（不需指定日期/時段）
+    with st.expander("＋ 新增候選項目"):
+        with st.form("form_add_candidate", clear_on_submit=True):
+            c_name = st.text_input("名稱", placeholder="例：美麗海水族館、某家燒肉")
+            col1, col2 = st.columns(2)
+            with col1:
+                c_cat = st.selectbox("分類", list(CATEGORIES.keys()),
+                                     format_func=lambda k: CATEGORIES[k])
+            with col2:
+                c_dur = st.number_input("預估停留（分鐘）", min_value=15,
+                                        max_value=480, value=60, step=15)
+            c_notes = st.text_area("備註（選填）", height=70)
+            c_required = st.checkbox("必須確認（需要訂位 / 預約）")
+            if st.form_submit_button("加入候選", use_container_width=True):
+                if not c_name.strip():
+                    st.error("請輸入名稱")
+                else:
+                    db.add_candidate(
+                        trip_id, c_name.strip(),
+                        duration_minutes=int(c_dur), category=c_cat,
+                        notes=c_notes.strip(), confirm_required=c_required,
+                    )
+                    st.success(f"「{c_name}」已加入候選")
+                    st.rerun()
+
+    candidates = db.get_candidates(trip_id)
+    if not candidates:
+        st.markdown(
+            '<div style="text-align:center;padding:1.5rem 0;color:#A8A298;'
+            'font-style:italic;">還沒有候選項目，先把想去但還沒定日期的點子丟進來吧</div>',
+            unsafe_allow_html=True
+        )
+        return
+
+    # 排入行程用的天數選單
+    day_opts = {
+        f"Day {d}  ({(start_date + timedelta(days=d-1)).strftime('%m/%d')})": d
+        for d in range(1, total_days + 1)
+    }
+
+    for it in candidates:
+        cat_label = CATEGORIES.get(it["category"], "📌 其他")
+        required = bool(it.get("confirm_required"))
+        confirmed = bool(it.get("is_confirmed"))
+
+        # 確認徽章
+        badge = ""
+        if required:
+            if confirmed:
+                badge = ('<span style="font-size:11px;color:#3D6B54;background:#EAF2ED;'
+                         'border-radius:10px;padding:1px 8px;margin-left:6px;">✅ 已確認</span>')
+            else:
+                badge = ('<span style="font-size:11px;color:#A85C32;background:#F6E8DD;'
+                         'border-radius:10px;padding:1px 8px;margin-left:6px;">⚠️ 待確認</span>')
+
+        with st.container(border=True):
+            notes_html = (f'<div style="font-size:12px;color:#A8A298;margin-top:2px;">'
+                          f'{it["notes"]}</div>' if it.get("notes") else "")
+            st.markdown(
+                f'<div style="font-size:11px;color:#A8A298;">{cat_label}　'
+                f'<span style="color:#C2DDD1;">⏱ {it["duration_minutes"]} 分</span></div>'
+                f'<div style="font-size:16px;font-weight:600;">{it["name"]}{badge}</div>'
+                f'{notes_html}',
+                unsafe_allow_html=True
+            )
+
+            # 排入某天某時段
+            with st.expander("📅 排入行程"):
+                col_d, col_t = st.columns(2)
+                with col_d:
+                    sched_label = st.selectbox(
+                        "排到第幾天", list(day_opts.keys()),
+                        key=f"cand_day_{it['id']}"
+                    )
+                with col_t:
+                    sched_time = st.text_input(
+                        "開始時間（HH:MM）", value="09:00",
+                        key=f"cand_time_{it['id']}"
+                    )
+                if st.button("確定排入", key=f"cand_sched_{it['id']}",
+                             use_container_width=True):
+                    t = sched_time.strip()
+                    if not itinerary.is_valid_time(t):
+                        st.error("時間格式錯誤，請輸入 HH:MM，例如 09:30")
+                    else:
+                        db.schedule_item(it["id"], trip_id, day_opts[sched_label], t)
+                        st.success(f"「{it['name']}」已排入 {sched_label}")
+                        st.rerun()
+
+            # 確認狀態快速切換 + 刪除
+            col_req, col_conf, col_del = st.columns([2, 2, 1])
+            with col_req:
+                req_label = "取消必須確認" if required else "設為必須確認"
+                if st.button(req_label, key=f"cand_req_{it['id']}",
+                             use_container_width=True):
+                    db.set_confirm_required(it["id"], not required)
+                    st.rerun()
+            with col_conf:
+                if required:
+                    conf_label = "改未確認" if confirmed else "標記已確認"
+                    if st.button(conf_label, key=f"cand_conf_{it['id']}",
+                                 use_container_width=True):
+                        db.set_confirmed(it["id"], not confirmed)
+                        st.rerun()
+            with col_del:
+                if st.button("✕", key=f"cand_del_{it['id']}",
+                             help="刪除此候選", use_container_width=True):
+                    db.delete_item(it["id"])
+                    st.rerun()
 
 
 # ════════════════════════════════════════
@@ -308,6 +481,17 @@ def _render_items(trip_id, items):
             f'<div style="font-size:11px;color:#C2DDD1;margin-top:6px;">'
             f'⏱ {item["duration_minutes"]} 分鐘</div>'
         )
+        # 確認狀態徽章：只有「必須確認」的項目才顯示
+        confirm_html = ""
+        if item.get("confirm_required"):
+            if item.get("is_confirmed"):
+                confirm_html = ('<span style="display:inline-block;font-size:11px;'
+                                'color:#3D6B54;background:#EAF2ED;border-radius:10px;'
+                                'padding:1px 8px;margin-top:4px;">✅ 已確認</span>')
+            else:
+                confirm_html = ('<span style="display:inline-block;font-size:11px;'
+                                'color:#A85C32;background:#F6E8DD;border-radius:10px;'
+                                'padding:1px 8px;margin-top:4px;">⚠️ 待確認</span>')
 
         edit_key = f"editing_{item['id']}"
         is_editing = st.session_state.get(edit_key, False)
@@ -330,6 +514,7 @@ def _render_items(trip_id, items):
                     <div style="font-size:16px;font-weight:600;">{item['name']}</div>
                     <div style="font-size:12px;color:#6B6558;">{item['location']}</div>
                     {booking_html}{notes_html}{duration_html}
+                    <div>{confirm_html}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
@@ -394,6 +579,20 @@ def _render_items(trip_id, items):
                         key=f"e_notes_{item['id']}"
                     )
 
+                    # ── 確認狀態兩軸 ──
+                    col_c1, col_c2 = st.columns(2)
+                    with col_c1:
+                        new_required = st.checkbox(
+                            "必須確認", value=bool(item.get("confirm_required")),
+                            key=f"e_req_{item['id']}",
+                            help="需要訂位/預約等，未確認會出現在優先提醒"
+                        )
+                    with col_c2:
+                        new_confirmed = st.checkbox(
+                            "已確認", value=bool(item.get("is_confirmed")),
+                            key=f"e_conf_{item['id']}"
+                        )
+
                     col_save, col_cancel = st.columns(2)
                     with col_save:
                         if st.button("✅ 儲存", use_container_width=True,
@@ -406,25 +605,20 @@ def _render_items(trip_id, items):
                                 if not (0 <= h <= 23 and 0 <= m <= 59):
                                     st.error("時間超出範圍，請輸入 00:00 ~ 23:59")
                                 else:
-                                    conn = db.get_conn()
-                                    conn.execute("""
-                                        UPDATE itinerary_items
-                                        SET name=?, category=?, start_time=?,
-                                            duration_minutes=?, location=?, address=?,
-                                            booking_ref=?, notes=?, day_number=?
-                                        WHERE id=?
-                                    """, (
-                                        new_name.strip(), new_category, t,
-                                        int(new_duration),
-                                        new_location.strip(),
-                                        new_address.strip(),
-                                        new_booking.strip(),
-                                        new_notes.strip(),
-                                        new_day,
-                                        item["id"]
-                                    ))
-                                    conn.commit()
-                                    conn.close()
+                                    # 透過 Supabase 更新（取代舊版 sqlite get_conn 寫法）
+                                    db.update_item_full(item["id"], {
+                                        "name": new_name.strip(),
+                                        "category": new_category,
+                                        "start_time": t,
+                                        "duration_minutes": int(new_duration),
+                                        "location": new_location.strip(),
+                                        "address": new_address.strip(),
+                                        "booking_ref": new_booking.strip(),
+                                        "notes": new_notes.strip(),
+                                        "day_number": new_day,
+                                        "confirm_required": new_required,
+                                        "is_confirmed": new_confirmed,
+                                    })
                                     db.log_adjustment(
                                         trip_id, f"編輯：{item['name']}",
                                         [{"id": item["id"], "start_time": t}]
