@@ -3,7 +3,7 @@
 > **Status**: ✅ done（2026-06-20 落地）
 > **實作 commits**: `55c429c` … `38522bd`（main）
 > **回報**: 見 repo 根 [`for-chia.md`](../for-chia.md)、[`HANDOFF_itinerary_confirm.md`](../HANDOFF_itinerary_confirm.md)
-> **這份是範例**：示範一份格式嚴謹的 spec 長怎樣（由 Chia 撰寫，Stanley 執行）。
+> **這份是範例**：示範一份 spec 長怎樣（由 Chia 撰寫，Stanley 執行）。
 
 ---
 
