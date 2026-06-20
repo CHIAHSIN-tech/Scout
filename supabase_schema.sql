@@ -113,11 +113,19 @@ create index if not exists idx_wishlist_user      on wishlist (username);
 -- 預設先「停用 RLS」最簡單可動（符合 spec 對簡單性的取捨）。若要稍微收斂，
 -- 可改成啟用 RLS + 對 anon 開放 policy（下方註解版本）。二擇一，不要同時。
 
--- 版本 A（預設，最簡單）：停用 RLS，anon key 即可讀寫。
+-- 版本 A（預設，最簡單）：停用 RLS ＋ 授權 anon/authenticated，publishable key 即可讀寫。
+-- 注意：停用 RLS 還不夠，角色本身要有 table 權限（GRANT），否則會 42501 permission denied。
 alter table trips            disable row level security;
 alter table itinerary_items  disable row level security;
 alter table trip_adjustments disable row level security;
 alter table wishlist         disable row level security;
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete
+    on trips, itinerary_items, trip_adjustments, wishlist
+    to anon, authenticated;
+-- identity 欄位的序列，授權後 anon 才能 insert
+grant usage, select on all sequences in schema public to anon, authenticated;
 
 -- 版本 B（可選，啟用 RLS 並對 anon 全開；效果與 A 相近但語意上更明確）：
 -- alter table trips            enable row level security;
