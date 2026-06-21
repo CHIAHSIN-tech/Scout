@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuyList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F8; --card:#FFFFFF; --ink:#1A1C1F; --muted:#6B7079; --faint:#9AA0A8;
+  --line:#E7E9ED; --line-soft:#EFF1F4; --blue:#29ABE2; --blue-d:#1f8fc0;
+  --r-lg:18px; --r-md:12px;
+  --font:'Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  min-height:100vh;display:flex;justify-content:center;padding:28px 16px 48px;}
+.wrap{width:100%;max-width:560px;}
+.head{margin-bottom:18px;}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.28em;color:var(--faint);text-transform:uppercase;margin-bottom:8px;}
+.title{font-weight:700;font-size:26px;letter-spacing:-.01em;}
+.status{font-size:12px;color:var(--muted);margin-top:6px;}
+.status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--faint);margin-right:6px;vertical-align:middle;}
+.status.live .dot{background:#21A67A;}
+.status.err .dot{background:#C0392B;}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 1px 2px rgba(20,22,28,.05),0 8px 28px rgba(20,22,28,.05);
+  padding:20px 20px 22px;}
+.add{display:flex;gap:9px;margin-bottom:16px;}
+.add input{flex:1;font-family:var(--font);font-size:14.5px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:11px;padding:12px 14px;outline:none;transition:border-color .16s,box-shadow .16s;}
+.add input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.16);}
+.add button{font-family:var(--font);font-weight:600;font-size:14px;padding:0 18px;border-radius:999px;cursor:pointer;
+  border:none;background:var(--blue);color:#fff;white-space:nowrap;transition:background .16s,transform .08s;}
+.add button:hover{background:var(--blue-d);}
+.add button:active{transform:translateY(1px);}
+
+.list{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;}
+.row{padding:13px 16px;font-size:14.5px;}
+.row + .row{border-top:1px solid var(--line-soft);}
+.empty{padding:42px 16px;text-align:center;font-size:13px;color:var(--faint);line-height:1.8;}
+.foot{font-size:11px;color:var(--faint);margin-top:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">兩人即時共用</div>
+    <div class="title">買物清單</div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">連線中…</span></div>
+  </div>
+  <div class="card">
+    <div class="add">
+      <input type="text" id="input" placeholder="想買什麼？（這版先只填名字）" autocomplete="off">
+      <button id="add">＋ 加入</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+  <div class="foot">Tracer bullet：只驗證「新增名字 → 另一端即時看到」。兩人共用同一網址即可一起編輯。</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  "use strict";
+  // 與 Scout 共用同一個 Supabase 專案（單一後端）；publishable key 可公開。
+  const SUPABASE_URL='https://uarkccyqcqvgxukjcrey.supabase.co';
+  const SUPABASE_KEY='sb_publishable_CPg7D4iO0uBA0gnfd-rlFA_2Ia-9P4V';
+
+  const listEl=document.getElementById('list');
+  const inputEl=document.getElementById('input');
+  const addBtn=document.getElementById('add');
+  const statusEl=document.getElementById('status');
+  const statusText=document.getElementById('statusText');
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  function setStatus(t,cls){statusText.textContent=t;statusEl.className='status'+(cls?' '+cls:'');}
+
+  if(!window.supabase||!window.supabase.createClient){setStatus('Supabase 函式庫未載入','err');return;}
+  const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+  function render(items){
+    if(!items||!items.length){listEl.innerHTML='<div class="empty">還沒有東西，加一個試試。<br>另一個視窗會即時看到。</div>';return;}
+    listEl.innerHTML=items.map(i=>'<div class="row">'+esc(i.name)+'</div>').join('');
+  }
+  async function refresh(){
+    const {data,error}=await sb.from('buylist_items').select('*').order('id');
+    if(error){setStatus('讀取失敗：'+error.message,'err');return;}
+    render(data);
+  }
+  async function add(){
+    const name=(inputEl.value||'').trim();if(!name)return;
+    inputEl.value='';inputEl.focus();
+    const {error}=await sb.from('buylist_items').insert({name});
+    if(error)setStatus('新增失敗：'+error.message,'err');
+  }
+  addBtn.addEventListener('click',add);
+  inputEl.addEventListener('keydown',e=>{if(e.key==='Enter')add();});
+
+  // 即時訂閱：任何端 insert/update/delete → 各端數秒內自動 refresh（不需重整）
+  sb.channel('buylist-realtime')
+    .on('postgres_changes',{event:'*',schema:'public',table:'buylist_items'},refresh)
+    .subscribe(st=>{
+      if(st==='SUBSCRIBED')setStatus('即時同步已連線','live');
+      else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')setStatus('即時連線異常：'+st,'err');
+    });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
