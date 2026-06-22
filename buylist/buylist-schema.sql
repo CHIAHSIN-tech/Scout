@@ -13,6 +13,8 @@ create table if not exists buylist_items (
     added_by      text     default '',          -- 誰加的
     note          text     default '',
     link          text     default '',
+    category      text     default '其他',       -- 物品分類
+    recurring_cost numeric default 0,            -- 後續成本（耗材/訂閱，每月）
     created_at    timestamptz default now()     -- 冷卻期「想買 N 天」用
 );
 alter table buylist_items add column if not exists price         numeric default 0;
@@ -23,13 +25,17 @@ alter table buylist_items add column if not exists bought        boolean default
 alter table buylist_items add column if not exists added_by      text default '';
 alter table buylist_items add column if not exists note          text default '';
 alter table buylist_items add column if not exists link          text default '';
+alter table buylist_items add column if not exists category       text default '其他';
+alter table buylist_items add column if not exists recurring_cost numeric default 0;
 
 -- 2. 月預算（兩人共用一個：固定 id=1 的單列）
 create table if not exists buylist_budget (
     id             int primary key default 1,
-    monthly_budget numeric default 0
+    monthly_budget numeric default 0,
+    last_cleared   text default ''               -- 月初自動清已買用的「上次清除月份」YYYY-MM
 );
 insert into buylist_budget (id, monthly_budget) values (1, 0) on conflict (id) do nothing;
+alter table buylist_budget add column if not exists last_cleared text default '';
 
 -- 3. 權限（無登入，anon 全開）
 alter table buylist_items  enable row level security;

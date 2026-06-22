@@ -10,16 +10,14 @@
 :root{
   --bg:#F5F6F8; --card:#FFFFFF; --ink:#1A1C1F; --muted:#6B7079; --faint:#9AA0A8;
   --line:#E7E9ED; --line-soft:#EFF1F4; --blue:#29ABE2; --blue-d:#1f8fc0;
-  --green:#21A67A; --amber:#E08A4A; --red:#C0392B; --red-soft:#FBEDEA;
+  --green:#21A67A; --amber:#E08A4A; --red:#C0392B;
   --need:#C0392B; --want:#E08A4A; --maybe:#9AA0A8;
   --r-lg:18px; --r-md:12px; --font:'Noto Sans TC',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
   min-height:100vh;display:flex;justify-content:center;padding:24px 14px 60px;}
-.wrap{width:100%;max-width:620px;}
-
-/* 頁首 */
+.wrap{width:100%;max-width:640px;}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
 .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.26em;color:var(--faint);text-transform:uppercase;margin-bottom:6px;}
 .title{font-weight:700;font-size:26px;letter-spacing:-.01em;}
@@ -30,11 +28,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .me .who{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);}
 .me .who button{font-family:inherit;font-size:12px;padding:6px 11px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
 .me .who button.on{background:var(--ink);color:#fff;}
-
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
   box-shadow:0 1px 2px rgba(20,22,28,.05),0 8px 28px rgba(20,22,28,.05);}
 
-/* 預算列 */
 .budget{padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
 .budget .blk{display:flex;flex-direction:column;gap:3px;}
 .budget label{font-size:11px;color:var(--faint);font-weight:600;}
@@ -45,32 +41,35 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .budget .sep{flex:1;}
 .budget .remain.ok{color:var(--green);} .budget .remain.over{color:var(--red);}
 .budget .hint{font-size:10.5px;color:var(--faint);width:100%;}
+.budget .recur{font-size:11px;color:var(--amber);width:100%;font-weight:600;}
 
-/* 新增表單 */
 .addbox{padding:16px 18px;margin-bottom:14px;}
 .addrow{display:flex;gap:9px;margin-bottom:11px;flex-wrap:wrap;}
-.addrow input[type=text],.addrow input[type=number]{font-family:inherit;font-size:14.5px;color:var(--ink);
-  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;outline:none;}
-.addrow input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.15);}
-#bl-name{flex:1;min-width:150px;} #bl-price{width:120px;}
+.addbox input,.addbox select{font-family:inherit;font-size:14px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
+.addbox input:focus,.addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.15);}
+#bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-cat{width:120px;} #bl-recur{width:140px;}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg);}
 .seg button{font-family:inherit;font-size:12.5px;padding:8px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
 .seg button.on{background:var(--ink);color:#fff;}
 .seg.urg button.on[data-v=need]{background:var(--need);} .seg.urg button.on[data-v=want]{background:var(--want);}
-.fieldlabel{font-size:11px;color:var(--faint);font-weight:600;margin:0 8px 5px 2px;align-self:center;}
-.segline{display:flex;gap:12px;align-items:center;margin-bottom:11px;flex-wrap:wrap;}
+.fieldlabel{font-size:11px;color:var(--faint);font-weight:600;margin:0 6px 0 2px;align-self:center;}
+.segline{display:flex;gap:10px;align-items:center;margin-bottom:11px;flex-wrap:wrap;}
 .tmtoggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);cursor:pointer;}
 .tmtoggle input{width:16px;height:16px;}
-.addbtn{font-family:inherit;font-weight:600;font-size:14px;padding:11px 22px;border-radius:999px;cursor:pointer;
-  border:none;background:var(--blue);color:#fff;}
+.addbtn{font-family:inherit;font-weight:600;font-size:14px;padding:11px 22px;border-radius:999px;cursor:pointer;border:none;background:var(--blue);color:#fff;}
 .addbtn:hover{background:var(--blue-d);}
+.addbox .wide{width:100%;}
 
-/* 檢視切換 */
-.viewtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);margin-bottom:12px;}
-.viewtabs button{font-family:inherit;font-weight:600;font-size:13px;padding:8px 18px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
+/* 篩選 / 排序列 */
+.filters{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+.filters .seg button{font-size:12.5px;padding:7px 13px;}
+.filters .seg button.on{background:var(--blue);color:#fff;}
+.filters select{font-family:inherit;font-size:12.5px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;outline:none;cursor:pointer;}
+.viewtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);margin-left:auto;}
+.viewtabs button{font-family:inherit;font-weight:600;font-size:12.5px;padding:7px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
 .viewtabs button.on{background:var(--blue);color:#fff;}
 
-/* 清單 */
 .list{display:flex;flex-direction:column;gap:9px;}
 .item{padding:13px 15px;display:flex;align-items:flex-start;gap:12px;}
 .item.bought .iname{text-decoration:line-through;color:var(--faint);}
@@ -85,21 +84,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .tag{font-size:10.5px;font-weight:600;border-radius:7px;padding:2px 8px;}
 .tag.u-need{background:#FBEAE8;color:var(--need);} .tag.u-want{background:#FCEFDD;color:#A8602A;} .tag.u-maybe{background:#EEF0F2;color:var(--muted);}
 .tag.a-easy{background:#E6F2EA;color:#1B7A52;} .tag.a-os{background:#EAF1FB;color:#2B6CB0;} .tag.a-rare{background:#F3E8F5;color:#8E44AD;}
+.tag.cat{background:#F0EFEA;color:#7A6A2A;}
 .tag.tm{background:#EAF1FB;color:#2B6CB0;} .tag.later{background:#EEF0F2;color:var(--muted);}
 .tag.days{background:transparent;color:var(--faint);padding-left:0;}
-.imeta{font-size:11px;color:var(--faint);margin-top:5px;}
+.imeta{font-size:11px;color:var(--faint);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.imeta a{color:var(--blue);text-decoration:none;} .imeta a:hover{text-decoration:underline;}
+.irecur{color:var(--amber);font-weight:600;}
 .inote{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word;}
 .idel{flex:none;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:2px 4px;margin-top:2px;}
 .idel:hover{color:var(--red);}
 .empty{padding:42px 16px;text-align:center;font-size:13px;color:var(--faint);line-height:1.8;}
-.sechead{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin:16px 2px 8px;}
 
-/* 2×2 */
 .matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;min-height:340px;margin-top:4px;}
 .quad{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;background:var(--card);}
 .quad .qh{font-size:11px;font-weight:700;color:var(--muted);}
-.quad.q-hi-need{background:#FBEEEC;border-color:#F0D5D0;}
-.quad.q-lo-need{background:#FCF4ED;border-color:#F2E2D0;}
+.quad.q-hi-need{background:#FBEEEC;border-color:#F0D5D0;} .quad.q-lo-need{background:#FCF4ED;border-color:#F2E2D0;}
 .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 9px;display:flex;justify-content:space-between;gap:8px;}
 .chip .cp{color:var(--muted);font-weight:600;}
 .maxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px;padding:0 4px;}
@@ -114,50 +113,46 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
       <div class="title">買物清單</div>
       <div class="status" id="status"><span class="dot"></span><span id="statusText">連線中…</span></div>
     </div>
-    <div class="me">我是
-      <span class="who" id="whoSel"><button data-me="Stanley">Stanley</button><button data-me="Chia">Chia</button></span>
-    </div>
+    <div class="me">我是 <span class="who" id="whoSel"><button data-me="Stanley">Stanley</button><button data-me="Chia">Chia</button></span></div>
   </div>
 
-  <!-- 預算列 -->
   <div class="card budget">
-    <div class="blk"><label>月預算（兩人共用）</label>
-      <input type="number" id="bl-budget" min="0" step="100" placeholder="0"></div>
+    <div class="blk"><label>月預算（兩人共用）</label><input type="number" id="bl-budget" min="0" step="100" placeholder="0"></div>
     <div class="blk"><label>本月想買 · 未購總價</label><div class="big" id="bl-total">NT$ 0</div></div>
     <div class="sep"></div>
     <div class="blk" style="text-align:right;"><label>剩餘額度</label><div class="big remain" id="bl-remain">—</div></div>
-    <div class="hint">只加總「本月想買 且 未購」的項目。標記已買＝移出總價（不留帳）。</div>
+    <div class="recur" id="bl-recur"></div>
+    <div class="hint">只加總「本月想買 且 未購」。標記已買＝移出總價（不留帳）。每月初自動清掉上月「已買」。</div>
   </div>
 
-  <!-- 新增 -->
   <div class="card addbox">
     <div class="addrow">
       <input type="text" id="bl-name" placeholder="想買什麼？（必填）" autocomplete="off">
       <input type="number" id="bl-price" placeholder="價格" min="0" step="1">
+      <select id="bl-cat"></select>
     </div>
     <div class="segline">
       <span class="fieldlabel">迫切度</span>
-      <span class="seg urg" id="seg-urg">
-        <button data-v="need">需要</button><button data-v="want">想要</button><button data-v="maybe" class="on">再看看</button>
-      </span>
+      <span class="seg urg" id="seg-urg"><button data-v="need">需要</button><button data-v="want">想要</button><button data-v="maybe" class="on">再看看</button></span>
+      <span class="fieldlabel">取得</span>
+      <span class="seg acc" id="seg-acc"><button data-v="tw_easy" class="on">台灣易</button><button data-v="overseas">需國外</button><button data-v="rare">稀有</button></span>
     </div>
-    <div class="segline">
-      <span class="fieldlabel">取得難易</span>
-      <span class="seg acc" id="seg-acc">
-        <button data-v="tw_easy" class="on">台灣容易</button><button data-v="overseas">需國外</button><button data-v="rare">稀有難找</button>
-      </span>
+    <div class="addrow">
+      <input type="number" id="bl-recur" placeholder="後續成本/月（選填）" min="0" step="1">
+      <input type="text" id="bl-link" placeholder="連結（選填）" autocomplete="off" style="flex:1;min-width:160px;">
     </div>
+    <input type="text" id="bl-note" class="wide" placeholder="備註（選填）" autocomplete="off" style="margin-bottom:11px;">
     <div class="segline" style="justify-content:space-between;">
       <label class="tmtoggle"><input type="checkbox" id="bl-tm" checked>本月想買（取消＝之後再說）</label>
       <button class="addbtn" id="bl-add">＋ 加入</button>
     </div>
-    <input type="text" id="bl-note" placeholder="備註 / 連結（選填）" autocomplete="off"
-      style="width:100%;font-family:inherit;font-size:13.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;">
   </div>
 
-  <div class="viewtabs" id="viewtabs">
-    <button data-view="list" class="on">清單</button>
-    <button data-view="matrix">2×2</button>
+  <div class="filters">
+    <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button></span>
+    <select id="f-cat"></select>
+    <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
+    <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
   </div>
 
   <div id="view-list" class="card" style="padding:6px 0;"><div class="list" id="list"></div></div>
@@ -176,6 +171,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 
   const URG={need:{label:'需要',cls:'u-need'},want:{label:'想要',cls:'u-want'},maybe:{label:'再看看',cls:'u-maybe'}};
   const ACC={tw_easy:{label:'台灣容易',cls:'a-easy'},overseas:{label:'需國外',cls:'a-os'},rare:{label:'稀有難找',cls:'a-rare'}};
+  const CATS=['3C','家電','服飾','美妝','食品','生活','書籍','其他'];
 
   const $=id=>document.getElementById(id);
   const statusEl=$('status'), statusText=$('statusText');
@@ -183,134 +179,148 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
   function money(n){return 'NT$ '+(Math.round(+n||0)).toLocaleString('en-US');}
   function daysSince(iso){const d=Math.floor((Date.now()-new Date(iso).getTime())/86400000);return d<=0?'今天加入':('想買了 '+d+' 天');}
+  function ageDays(iso){return Math.floor((Date.now()-new Date(iso).getTime())/86400000);}
 
   if(!window.supabase||!window.supabase.createClient){setStatus('Supabase 函式庫未載入','err');return;}
   const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
   let items=[], budget=0, view='list';
-  // 我是誰（給 added_by 用）
   let me=localStorage.getItem('buylist_me')||'';
-  // 新增表單暫存
   let addUrg='maybe', addAcc='tw_easy';
+  let fStatus='all', fCat='all', fSort='default';
+
+  // 下拉選單填充
+  $('bl-cat').innerHTML=CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  $('bl-cat').value='其他';
+  $('f-cat').innerHTML='<option value="all">全部分類</option>'+CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
 
   function renderWho(){document.querySelectorAll('#whoSel button').forEach(b=>b.classList.toggle('on',b.dataset.me===me));}
 
-  // ── 載入 ──
+  // ── 載入（含月初自動清已買）──
   async function loadAll(){
-    const [r1,r2]=await Promise.all([
-      sb.from('buylist_items').select('*').order('created_at'),
-      sb.from('buylist_budget').select('monthly_budget').eq('id',1).maybeSingle()
-    ]);
+    const r2=await sb.from('buylist_budget').select('*').eq('id',1).maybeSingle();
+    let brow=(r2 && !r2.error)?r2.data:null;
+    const ym=new Date().toISOString().slice(0,7);
+    if(brow){
+      const lc=brow.last_cleared||'';
+      if(lc && lc!==ym){ await sb.from('buylist_items').delete().eq('bought',true); }   // 跨月→清掉上月已買
+      if(lc!==ym){ await sb.from('buylist_budget').update({last_cleared:ym}).eq('id',1); brow.last_cleared=ym; }
+    }
+    budget=brow?(+brow.monthly_budget||0):0;
+    const r1=await sb.from('buylist_items').select('*').order('created_at');
     if(r1.error){setStatus('讀取失敗：'+r1.error.message,'err');return;}
     items=r1.data||[];
-    if(r2 && !r2.error && r2.data) budget=+r2.data.monthly_budget||0;
     renderAll();
   }
 
   function thisMonthUnbought(){return items.filter(i=>i.this_month && !i.bought);}
 
   function renderBudget(){
-    const total=thisMonthUnbought().reduce((s,i)=>s+(+i.price||0),0);
+    const tmu=thisMonthUnbought();
+    const total=tmu.reduce((s,i)=>s+(+i.price||0),0);
     $('bl-total').textContent=money(total);
     const bInput=$('bl-budget');
     if(document.activeElement!==bInput) bInput.value=budget?budget:'';
     const rem=$('bl-remain');
-    if(!budget){rem.textContent='—';rem.className='big remain';return;}
-    const diff=budget-total;
-    if(diff>=0){rem.textContent=money(diff);rem.className='big remain ok';}
-    else{rem.textContent='超支 '+money(-diff);rem.className='big remain over';}
+    if(!budget){rem.textContent='—';rem.className='big remain';}
+    else{const diff=budget-total; if(diff>=0){rem.textContent=money(diff);rem.className='big remain ok';}
+      else{rem.textContent='超支 '+money(-diff);rem.className='big remain over';}}
+    const recur=tmu.reduce((s,i)=>s+(+i.recurring_cost||0),0);
+    $('bl-recur').textContent=recur?('＋ 這些買下去每月後續成本約 '+money(recur)):'';
   }
 
   function tag(cls,txt){return '<span class="tag '+cls+'">'+txt+'</span>';}
-  function renderList(){
-    const box=$('list');
-    if(!items.length){box.innerHTML='<div class="empty">還沒有東西，上面加一個試試。<br>另一個人會即時看到。</div>';return;}
-    // 排序：本月未購優先 → 迫切(need>want>maybe) → 新到舊
+  function visibleItems(){
+    let arr=items.filter(i=>{
+      if(fStatus==='month' && !(i.this_month && !i.bought)) return false;
+      if(fStatus==='bought' && !i.bought) return false;
+      if(fCat!=='all' && (i.category||'其他')!==fCat) return false;
+      return true;
+    });
     const urgRank={need:0,want:1,maybe:2};
-    const sorted=[...items].sort((a,b)=>{
+    if(fSort==='price') arr.sort((a,b)=>(+b.price||0)-(+a.price||0));
+    else if(fSort==='days') arr.sort((a,b)=>ageDays(b.created_at)-ageDays(a.created_at));
+    else arr.sort((a,b)=>{
       if((a.this_month&&!a.bought)!==(b.this_month&&!b.bought)) return (b.this_month&&!b.bought)-(a.this_month&&!a.bought);
       if(a.bought!==b.bought) return a.bought-b.bought;
-      if(urgRank[a.urgency]!==urgRank[b.urgency]) return (urgRank[a.urgency]??9)-(urgRank[b.urgency]??9);
+      if((urgRank[a.urgency]??9)!==(urgRank[b.urgency]??9)) return (urgRank[a.urgency]??9)-(urgRank[b.urgency]??9);
       return new Date(b.created_at)-new Date(a.created_at);
     });
-    box.innerHTML=sorted.map(i=>{
+    return arr;
+  }
+  function renderList(){
+    const box=$('list'); const arr=visibleItems();
+    if(!arr.length){box.innerHTML='<div class="empty">沒有符合的項目。<br>上面加一個，或換個篩選看看。</div>';return;}
+    box.innerHTML=arr.map(i=>{
       const u=URG[i.urgency]||URG.maybe, a=ACC[i.accessibility]||ACC.tw_easy;
-      const tags=tag(u.cls,u.label)+tag(a.cls,a.label)
-        +(i.this_month?tag('tm','本月想買'):tag('later','之後再說'))
-        +tag('days',daysSince(i.created_at));
-      const meta=(i.added_by?esc(i.added_by)+' 加的':'')+(i.price?(i.added_by?' · ':'')+'':'');
+      const tags=tag(u.cls,u.label)+tag(a.cls,a.label)+tag('cat',esc(i.category||'其他'))
+        +(i.this_month?tag('tm','本月想買'):tag('later','之後再說'))+tag('days',daysSince(i.created_at));
+      const meta=[];
+      if(i.added_by) meta.push(esc(i.added_by)+' 加的');
+      if(+i.recurring_cost>0) meta.push('<span class="irecur">每月後續 '+money(i.recurring_cost)+'</span>');
+      if(i.link) meta.push('<a href="'+esc(i.link)+'" target="_blank" rel="noopener">🔗 連結</a>');
       return '<div class="item '+(i.bought?'bought':'')+'">'
         +'<button class="chk '+(i.bought?'on':'')+'" data-id="'+i.id+'" data-b="'+(i.bought?1:0)+'" title="標記已買">'+(i.bought?'✓':'')+'</button>'
         +'<div class="ibody">'
           +'<div class="itop"><span class="iname">'+esc(i.name)+'</span>'+(i.price?'<span class="iprice">'+money(i.price)+'</span>':'')+'</div>'
           +'<div class="itags">'+tags+'</div>'
-          +(meta?'<div class="imeta">'+meta+'</div>':'')
+          +(meta.length?'<div class="imeta">'+meta.join('')+'</div>':'')
           +(i.note?'<div class="inote">'+esc(i.note)+'</div>':'')
-        +'</div>'
-        +'<button class="idel" data-del="'+i.id+'" title="刪除">✕</button>'
-      +'</div>';
+        +'</div><button class="idel" data-del="'+i.id+'" title="刪除">✕</button></div>';
     }).join('');
     box.querySelectorAll('.chk').forEach(b=>b.addEventListener('click',()=>toggleBought(b.dataset.id,b.dataset.b!=='1')));
     box.querySelectorAll('.idel').forEach(b=>b.addEventListener('click',()=>delItem(b.dataset.del)));
   }
-
   function renderMatrix(){
     const data=thisMonthUnbought();
     const prices=data.map(i=>+i.price||0).sort((a,b)=>a-b);
     const med=prices.length?prices[Math.floor(prices.length/2)]:0;
     const hiUrg=i=>i.urgency==='need'||i.urgency==='want';
     const hiPrice=i=>(+i.price||0)>=med && med>0;
-    const cells={ 'lo-need':[], 'hi-need':[], 'lo-low':[], 'hi-low':[] };
-    data.forEach(i=>{ const k=(hiPrice(i)?'hi':'lo')+'-'+(hiUrg(i)?'need':'low'); cells[k].push(i); });
-    function quad(key,title,cls){
-      const list=cells[key].map(i=>'<div class="chip"><span>'+esc(i.name)+'</span><span class="cp">'+(i.price?money(i.price):'')+'</span></div>').join('')||'<div style="font-size:11px;color:var(--faint);">（空）</div>';
-      return '<div class="quad '+cls+'"><div class="qh">'+title+'</div>'+list+'</div>';
-    }
-    // 上排 = 迫切高；下排 = 迫切低。左 = 價格低；右 = 價格高
-    $('matrix').innerHTML=
-      quad('lo-need','迫切高 · 價格低',' q-lo-need')+quad('hi-need','迫切高 · 價格高',' q-hi-need')
-     +quad('lo-low','迫切低 · 價格低','')+quad('hi-low','迫切低 · 價格高','');
+    const cells={'lo-need':[],'hi-need':[],'lo-low':[],'hi-low':[]};
+    data.forEach(i=>cells[(hiPrice(i)?'hi':'lo')+'-'+(hiUrg(i)?'need':'low')].push(i));
+    const q=(k,t,c)=>{const l=cells[k].map(i=>'<div class="chip"><span>'+esc(i.name)+'</span><span class="cp">'+(i.price?money(i.price):'')+'</span></div>').join('')||'<div style="font-size:11px;color:var(--faint);">（空）</div>';return '<div class="quad'+c+'"><div class="qh">'+t+'</div>'+l+'</div>';};
+    $('matrix').innerHTML=q('lo-need','迫切高 · 價格低',' q-lo-need')+q('hi-need','迫切高 · 價格高',' q-hi-need')+q('lo-low','迫切低 · 價格低','')+q('hi-low','迫切低 · 價格高','');
   }
-
   function renderAll(){renderBudget();renderList();renderMatrix();}
 
   // ── 動作 ──
   async function addItem(){
     const name=($('bl-name').value||'').trim(); if(!name)return;
-    const price=parseFloat($('bl-price').value)||0;
-    const note=($('bl-note').value||'').trim();
-    const this_month=$('bl-tm').checked;
-    $('bl-name').value='';$('bl-price').value='';$('bl-note').value='';$('bl-name').focus();
-    const {error}=await sb.from('buylist_items').insert({
-      name, price, urgency:addUrg, accessibility:addAcc, this_month, bought:false, added_by:me||'', note
-    });
+    const rec={name, price:parseFloat($('bl-price').value)||0, urgency:addUrg, accessibility:addAcc,
+      category:$('bl-cat').value||'其他', this_month:$('bl-tm').checked, bought:false,
+      added_by:me||'', note:($('bl-note').value||'').trim(), link:($('bl-link').value||'').trim(),
+      recurring_cost:parseFloat($('bl-recur').value)||0};
+    ['bl-name','bl-price','bl-note','bl-link','bl-recur'].forEach(id=>$(id).value=''); $('bl-name').focus();
+    const {error}=await sb.from('buylist_items').insert(rec);
     if(error)setStatus('新增失敗：'+error.message,'err');
   }
-  async function toggleBought(id,val){ const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id); if(error)setStatus('更新失敗：'+error.message,'err'); }
-  async function delItem(id){ const {error}=await sb.from('buylist_items').delete().eq('id',id); if(error)setStatus('刪除失敗：'+error.message,'err'); }
-  async function saveBudget(v){ budget=+v||0; const {error}=await sb.from('buylist_budget').upsert({id:1,monthly_budget:budget}); if(error)setStatus('預算儲存失敗：'+error.message,'err'); }
+  async function toggleBought(id,val){const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
+  async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
+  async function saveBudget(v){budget=+v||0;const {error}=await sb.from('buylist_budget').upsert({id:1,monthly_budget:budget});if(error)setStatus('預算儲存失敗：'+error.message,'err');}
 
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
   $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
-  $('bl-price').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
   $('seg-urg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addUrg=b.dataset.v;$('seg-urg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $('seg-acc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addAcc=b.dataset.v;$('seg-acc').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $('bl-budget').addEventListener('change',e=>saveBudget(e.target.value));
   $('bl-budget').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
   $('whoSel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;me=b.dataset.me;localStorage.setItem('buylist_me',me);renderWho();});
+  $('f-status').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fStatus=b.dataset.v;$('f-status').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderList();});
+  $('f-cat').addEventListener('change',e=>{fCat=e.target.value;renderList();});
+  $('f-sort').addEventListener('change',e=>{fSort=e.target.value;renderList();});
   $('viewtabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
     document.querySelectorAll('#viewtabs button').forEach(x=>x.classList.toggle('on',x===b));
     $('view-list').classList.toggle('hidden',view!=='list');$('view-matrix').classList.toggle('hidden',view!=='matrix');});
 
-  // ── 即時訂閱（物品 + 預算）──
+  // ── 即時訂閱 ──
   sb.channel('buylist-all')
     .on('postgres_changes',{event:'*',schema:'public',table:'buylist_items'},loadAll)
     .on('postgres_changes',{event:'*',schema:'public',table:'buylist_budget'},loadAll)
     .subscribe(st=>{ if(st==='SUBSCRIBED')setStatus('即時同步已連線','live'); else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')setStatus('即時連線異常：'+st,'err'); });
 
-  renderWho();
-  loadAll();
+  renderWho(); loadAll();
 })();
 </script>
 </body>

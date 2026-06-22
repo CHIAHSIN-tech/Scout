@@ -37,6 +37,7 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
   - **Stanley 決定 one-shot 全做**，有意識覆寫 Chia spec「一次一步、做完停、等 Chia 檢查」的流程。
   - 實測：即時同步、新增(價格/迫切度/取得難易/本月)+標籤、月預算「本月未購總價」+爆預算紅字、標已買移出總價(不留帳)、想買N天、2×2 分群、誰加的——全部正確；中文新增/顯示正常。
 - 後端：Supabase 專案 `kdmmjlaajqxjmiahfvos`（Stanley 的）；表 `buylist_items`(11 欄) + `buylist_budget`，schema 見 `buylist/buylist-schema.sql`（已執行）。DDL 由 Claude 用 DB 連線直接套用（密碼已重設可用）。
+- ✅ **spec Could 也全做完**：分類、篩選(狀態/分類)、排序(價格/想最久)、月初自動清上月已買(用 `buylist_budget.last_cleared` 月份標記)、後續成本(訂閱/耗材)欄位、連結欄位。`buylist_items` 已擴到 13 欄。
 - 測試資料已清空，兩人可從零開始用。
 
 ## 6. Build Order（from spec §7）— 全部完成
@@ -48,8 +49,9 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 4. ✅「已買」打勾 → 移出本月未購總價（AC-4）
 5. ✅ 冷卻期「想買 N 天」（AC-6）
 6. ✅（Should）2×2 視覺、誰加的、備註（AC-7）
+7. ✅（Could，本輪一併做）物品**分類**、狀態/分類**篩選**、價格/想最久**排序**、**月初自動清**上月已買、**後續成本**(訂閱/耗材)欄位、**連結**欄位 UI。
 
-> 後續可做（spec Could，未做）：物品分類/排序/篩選、月初自動清已買、後續成本欄位、連結欄位 UI。
+> Must / Should / Could **全部完成**。spec §4 **Won't 維持不做**（不做記帳帳本、登入、自動抓價、降價追蹤）。
 
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。
