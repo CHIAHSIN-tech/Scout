@@ -33,20 +33,23 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 - ✅ 落點/執行已定：private `Scout/buylist/`，雙擊啟動檔本機跑，桌面、不公開。
 - ✅ 已退役公開的 `scout-checklist` repo（改 private）；Scout 內重複的 `checklist/` 已刪。
 - ✅ `decision-focus-graph`：只當 UI 參考，未改動。
-- ✅ **Build Order step 1（tracer bullet）完成並驗收通過**：表 `buylist_items` 已建在 Stanley 的專案；
-  **AC-1 即時同步實測 OK**（從 API 端插入一筆 → 開著的 app 不重整、數秒內即顯示；app UI 端新增中文也正確存入並同步）。
-- 後端：Supabase 專案 `kdmmjlaajqxjmiahfvos`（Stanley 的）；表 `buylist_items`（schema 見 `buylist/buylist-schema.sql`，已執行）。
-- **下一步等 Chia 檢查後再做 step 2**（照 spec「一次一步、做完停」）。
+- ✅ **整個 app 完成、AC-1～AC-7 全綠（實測通過）**。
+  - **Stanley 決定 one-shot 全做**，有意識覆寫 Chia spec「一次一步、做完停、等 Chia 檢查」的流程。
+  - 實測：即時同步、新增(價格/迫切度/取得難易/本月)+標籤、月預算「本月未購總價」+爆預算紅字、標已買移出總價(不留帳)、想買N天、2×2 分群、誰加的——全部正確；中文新增/顯示正常。
+- 後端：Supabase 專案 `kdmmjlaajqxjmiahfvos`（Stanley 的）；表 `buylist_items`(11 欄) + `buylist_budget`，schema 見 `buylist/buylist-schema.sql`（已執行）。DDL 由 Claude 用 DB 連線直接套用（密碼已重設可用）。
+- 測試資料已清空，兩人可從零開始用。
 
-## 6. 下一步（Build Order，from spec §7）
-> 紀律：**一次只做一步、做完就停、附證據、等 Chia 檢查**。不要一口氣做完整個 app。
+## 6. Build Order（from spec §7）— 全部完成
+> spec 原要求「一次一步、做完停、等 Chia 檢查」；**Stanley 選擇 one-shot 全做**（有意識覆寫）。
 
-1. ✅ **tracer bullet**：即時同步（AC-1）—— 已驗收通過
-2. ⬜ 新增表單（價格 / 迫切度 / 取得難易 / 本月想買）＋ 清單顯示 ＋ 刪除（AC-2、AC-5）
-3. ⬜ 月預算 ＋「本月未購總價」加總 ＋ 爆預算提示（AC-3）
-4. ⬜「已買」打勾 → 移出本月未購總價（AC-4）
-5. ⬜ 冷卻期「想買 N 天」（AC-6）
-6. ⬜（Should）2×2 視覺、誰加的、連結/備註（AC-7）
+1. ✅ tracer bullet：即時同步（AC-1）
+2. ✅ 新增表單（價格 / 迫切度 / 取得難易 / 本月想買）＋ 清單 ＋ 刪除（AC-2、AC-5）
+3. ✅ 月預算 ＋「本月未購總價」加總 ＋ 爆預算提示（AC-3）
+4. ✅「已買」打勾 → 移出本月未購總價（AC-4）
+5. ✅ 冷卻期「想買 N 天」（AC-6）
+6. ✅（Should）2×2 視覺、誰加的、備註（AC-7）
+
+> 後續可做（spec Could，未做）：物品分類/排序/篩選、月初自動清已買、後續成本欄位、連結欄位 UI。
 
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。
