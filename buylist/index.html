@@ -187,6 +187,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   let items=[], budget=0, view='list';
   let me=localStorage.getItem('buylist_me')||'';
   let addUrg='maybe', addAcc='tw_easy';
+  let addingItem=false;
   let fStatus='all', fCat='all', fSort='default';
 
   // 下拉選單填充
@@ -286,7 +287,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 
   // ── 動作 ──
   async function addItem(){
+    if(addingItem) return;
     const name=($('bl-name').value||'').trim(); if(!name)return;
+    addingItem=true;
     const rec={name, price:parseFloat($('bl-price').value)||0, urgency:addUrg, accessibility:addAcc,
       category:$('bl-cat').value||'其他', this_month:$('bl-tm').checked, bought:false,
       added_by:me||'', note:($('bl-note').value||'').trim(), link:($('bl-link').value||'').trim(),
@@ -294,6 +297,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     ['bl-name','bl-price','bl-note','bl-link','bl-recur'].forEach(id=>$(id).value=''); $('bl-name').focus();
     const {error}=await sb.from('buylist_items').insert(rec);
     if(error)setStatus('新增失敗：'+error.message,'err');
+    addingItem=false;
   }
   async function toggleBought(id,val){const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
@@ -301,7 +305,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
-  $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
+  $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addItem();}});
   $('seg-urg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addUrg=b.dataset.v;$('seg-urg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $('seg-acc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addAcc=b.dataset.v;$('seg-acc').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $('bl-budget').addEventListener('change',e=>saveBudget(e.target.value));
