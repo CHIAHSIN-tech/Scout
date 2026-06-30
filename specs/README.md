@@ -22,3 +22,5 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 | 編號 | 標題 | 狀態 |
 |------|------|------|
 | 001 | 候選＋確認狀態整合（行程/待辦/餐廳） | ✅ done |
+| buylist | BuyList 待買清單 | ✅ done |
+| scout-checklist-itinerary-view | 完整行程表 + AI 匯入 + UI 翻新 | ✅ done |
