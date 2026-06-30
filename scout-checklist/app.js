@@ -86,6 +86,12 @@ function minToTime(min) {
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 }
 
+// 合法的 24 小時制 HH:MM（00:00–23:59）。AI / 文字匯入可能吐出 25:99 之類的怪值，
+// 需要把關，否則會被算成 1599 分而渲染到時間軸可視範圍之外。
+function isValidTime(t) {
+  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(String(t || ""));
+}
+
 function whereLabel(it) {
   // 已排定顯示 Day N HH:MM；候選中沒有日期/時段
   if (it.day_number != null) {
@@ -185,18 +191,24 @@ async function patchItem(itemId, fields) {
 }
 
 // AI 匯入：一次新增多筆項目
+// 把關 day/time：AI 可能吐出超出旅程天數的 day，或 25:99 之類的怪時間。
+// 不合法時退回候選 / 未排時間（day_number / start_time 設 null），不硬塞錯誤值（對齊 Open Q3 fallback）。
 async function insertItems(tripId, recs) {
-  const rows = recs.map((r) => ({
-    trip_id: Number(tripId),
-    day_number: (r.day === undefined ? null : r.day),
-    name: r.name || "未命名",
-    category: r.category || "other",
-    start_time: r.start_time || null,
-    duration_minutes: Number(r.duration_minutes) || 60,
-    location: r.location || "",
-    notes: r.notes || "",
-    source: "ai",
-  }));
+  const totalDays = TRIP_CTX.totalDays || 0;
+  const rows = recs.map((r) => {
+    const dayOk = Number.isInteger(r.day) && r.day >= 1 && (!totalDays || r.day <= totalDays);
+    return {
+      trip_id: Number(tripId),
+      day_number: dayOk ? r.day : null,
+      name: r.name || "未命名",
+      category: CATEGORY_LABEL[r.category] ? r.category : "other",
+      start_time: isValidTime(r.start_time) ? r.start_time : null,
+      duration_minutes: Number(r.duration_minutes) || 60,
+      location: r.location || "",
+      notes: r.notes || "",
+      source: "ai",
+    };
+  });
   if (DEMO) {
     let nid = Math.max(0, ...DEMO_ITEMS.map((i) => i.id)) + 1;
     rows.forEach((r) => {
