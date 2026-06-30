@@ -132,9 +132,137 @@ details.sched summary::-webkit-details-marker { display: none; }
 }
 .unsched-btn:hover { color: var(--green); }
 
-/* 已確認區可折疊 */
-details.done-group summary {
+/* 已確認 / 可以彈性 區可折疊 */
+details.done-group summary,
+details.flex-group summary {
     cursor: pointer; list-style: none; color: var(--green);
-    font-size: 14px; font-weight: 600; padding: 0.3rem 0;
+    font-size: 14px; font-weight: 600; padding: 0.5rem 0; margin-top: 0.6rem;
 }
-details.done-group summary::-webkit-details-marker { display: none; }
+details.done-group summary::-webkit-details-marker,
+details.flex-group summary::-webkit-details-marker { display: none; }
+details.done-group summary::before,
+details.flex-group summary::before { content: "▸ "; }
+details.done-group[open] summary::before,
+details.flex-group[open] summary::before { content: "▾ "; }
+
+/* ── 頂層視圖導覽（確認清單 / 行程表）── */
+.nav {
+    display: flex; gap: 6px; margin: 0.2rem 0 0.2rem;
+    background: var(--green-soft); border-radius: 100px; padding: 4px;
+}
+.nav-tab {
+    flex: 1; font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; border-radius: 100px; padding: 8px 10px;
+    background: transparent; color: var(--green); transition: background .15s;
+}
+.nav-tab.active { background: var(--green); color: #fff; }
+
+/* ── 清單 / 時間軸 分段切換 ── */
+.seg {
+    display: flex; gap: 6px; margin: 0.6rem 0 1rem;
+    border: 1px solid var(--border); border-radius: 100px; padding: 3px; width: fit-content;
+}
+.seg-btn {
+    font-family: inherit; font-size: 13px; cursor: pointer; border: none;
+    border-radius: 100px; padding: 5px 16px; background: transparent; color: var(--sub);
+}
+.seg-btn.active { background: var(--green); color: #fff; }
+
+/* ── 行程表：Day 分組清單 ── */
+.day-head {
+    font-family: 'Noto Serif TC', serif; font-size: 17px; font-weight: 600;
+    color: var(--green); margin: 1.2rem 0 0.5rem; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+.day-head.today { color: var(--amber); border-bottom-color: var(--amber); }
+.today-pill {
+    font-size: 11px; font-weight: 700; color: #fff; background: var(--amber);
+    border-radius: 100px; padding: 1px 9px;
+}
+
+.ti-card {
+    background: var(--card); border: 0.5px solid var(--border); border-radius: 12px;
+    padding: 11px 14px; margin-bottom: 0.5rem; display: flex; gap: 12px; align-items: flex-start;
+}
+.ti-time {
+    flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--green);
+    min-width: 46px; padding-top: 1px;
+}
+.ti-time.notime { color: var(--muted); font-weight: 500; font-size: 12px; }
+.ti-main { flex: 1; min-width: 0; }
+.ti-name { font-size: 15px; font-weight: 600; word-break: break-word; }
+.ti-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ti-notes { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: break-word; }
+
+/* ── 時間軸 ── */
+.day-chips {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 0.6rem;
+    -webkit-overflow-scrolling: touch;
+}
+.day-chip {
+    flex-shrink: 0; font-family: inherit; font-size: 13px; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 100px; padding: 5px 13px;
+    background: #fff; color: var(--sub); white-space: nowrap;
+}
+.day-chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+.day-chip.is-today { border-color: var(--amber); }
+.day-chip.is-today.active { background: var(--amber); border-color: var(--amber); }
+
+.tl-untimed {
+    background: var(--green-soft); border-radius: 10px; padding: 8px 12px;
+    margin-bottom: 0.8rem; font-size: 12px; color: var(--sub);
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.tl-untimed > span:first-child { font-weight: 600; color: var(--green); }
+.tl-chip { background: #fff; border: 1px solid var(--border); border-radius: 100px; padding: 2px 10px; }
+
+.tl-hint { font-size: 12px; color: var(--muted); margin-bottom: 0.5rem; }
+
+.tl { position: relative; padding-left: 46px; box-sizing: content-box; }
+.tl-hour {
+    position: absolute; left: 0; width: 40px; text-align: right;
+    font-size: 11px; color: var(--muted); transform: translateY(-6px);
+}
+.tl-track { position: relative; }
+.tl-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); }
+
+.tl-item {
+    position: absolute; box-sizing: border-box; overflow: hidden;
+    background: var(--card); border: 1px solid var(--green-line); border-left: 3px solid var(--green);
+    border-radius: 8px; padding: 4px 8px; cursor: grab; touch-action: none;
+    box-shadow: 0 1px 3px rgba(60,56,48,.08); user-select: none;
+}
+.tl-item:active, .tl-item.dragging { cursor: grabbing; box-shadow: 0 4px 12px rgba(60,56,48,.22); z-index: 20; opacity: .95; }
+.tl-item-time { font-size: 11px; font-weight: 700; color: var(--green); }
+.tl-item-name { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; }
+.tl-item-cat { font-size: 10px; color: var(--muted); }
+.tl-item.conflict { border-color: var(--amber); border-left-color: var(--amber); background: #FFFDFB; }
+.tl-flag { font-size: 10px; color: var(--amber); font-weight: 600; margin-top: 1px; }
+
+/* ── AI 匯入 ── */
+.ai-toggle {
+    width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    background: var(--green-soft); color: var(--green); border: 1px dashed var(--green-line);
+    border-radius: 12px; padding: 11px; margin-bottom: 1rem;
+}
+.ai-toggle:hover { background: var(--border); }
+.ai-panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-bottom: 1rem;
+}
+.ai-title { font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 0.6rem; }
+.ai-text {
+    width: 100%; font-family: inherit; font-size: 14px; color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px; resize: vertical;
+}
+.ai-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 0.7rem; }
+.ai-cancel {
+    font-family: inherit; font-size: 13px; cursor: pointer; background: none;
+    border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px; color: var(--sub);
+}
+.ai-submit {
+    font-family: inherit; font-size: 13px; cursor: pointer; background: var(--green);
+    color: #fff; border: none; border-radius: 100px; padding: 6px 18px;
+}
+.ai-submit:disabled { opacity: .5; cursor: default; }
+.ai-status { font-size: 12px; color: var(--sub); margin-top: 0.5rem; min-height: 1em; }
