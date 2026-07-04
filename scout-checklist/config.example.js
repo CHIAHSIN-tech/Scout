@@ -12,4 +12,5 @@
 window.SCOUT_CONFIG = {
   SUPABASE_URL: "https://your-project.supabase.co",
   SUPABASE_ANON_KEY: "your-anon-key",
+  GEMINI_API_KEY: "your-gemini-key",  // AI 匯入行程用（Google AI Studio），放前端已接受風險
 };
