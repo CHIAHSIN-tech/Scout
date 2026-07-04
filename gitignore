@@ -1,0 +1,21 @@
+# 機密設定（絕對不能上傳）
+.streamlit/secrets.toml
+checklist/config.js
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+
+# 資料庫本地檔案
+*.db
+*.sqlite
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# IDE
+.cursor/
+.vscode/
