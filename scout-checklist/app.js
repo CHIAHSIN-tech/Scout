@@ -17,6 +17,14 @@ const CATEGORY_LABEL = {
 
 const app = document.getElementById("app");
 
+// ── Supabase 連線（寫死；anon key 可公開）──
+// 目的：一 pull 就能用，不必自己弄 config.js。
+// 若本機有 config.js（gitignored），它可覆寫這裡、或補上 GEMINI_API_KEY（AI 匯入要用）。
+window.SCOUT_CONFIG = Object.assign({
+  SUPABASE_URL: "https://uarkccyqcqvgxukjcrey.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_CPg7D4iO0uBA0gnfd-rlFA_2Ia-9P4V",
+}, window.SCOUT_CONFIG || {});
+
 // ── 持久全域狀態（供三個 view 共用；load() 後填入）──
 let curTrip = null;
 let curItems = [];
