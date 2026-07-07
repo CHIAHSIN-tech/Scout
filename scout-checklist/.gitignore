@@ -1,4 +1,0 @@
-# 實際的 Supabase 連線設定不進版本控制（請由 config.example.js 複製產生）。
-# 注意：要部署到 GitHub Pages 時，config.js 仍需存在於部署內容中。
-# anon key 可公開，若你選擇直接 commit 它來部署，請自行把這行移除。
-config.js
