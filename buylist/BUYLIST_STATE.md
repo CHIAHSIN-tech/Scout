@@ -74,6 +74,13 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 - 🔴 **上線前必做（BLOCKER）**：到 Supabase 專案 `kdmmjlaajqxjmiahfvos` 的 SQL Editor 執行 `buylist-schema-add-starred.sql`（就一行 `alter table … add column if not exists starred …`，冪等）。**沒跑這行，星號一點就噴「更新失敗」紅字、「已買・星號」篩選永遠空白。** 程式碼本身對缺欄位容錯（`select *` 不會炸、既有功能不受影響），只有寫入星號會失敗。
 - 🟡 視覺 NOTE（spec 已定案的色值，留給 Chia 決定要不要微調）：`cat` 分類標籤文字 linen-400 on linen-50 對比僅 2.24:1（可辨但吃力，建議改用 `--muted` 可拉到 5.11:1）；`u-maybe`／`later`／`cat` 三種標籤換色後底色相近、只能靠文字區分。
 
+### ✅ 追加：貼連結自動帶入（2026-07-12，Stanley 直接指示，非 Chia spec）
+- 「＋加入」右邊新增「🔗 貼連結帶入」按鈕：把商品連結貼到「連結」欄 → 按按鈕 → 呼叫 Gemini（`url_context` 工具實際讀網頁）抽出名稱+價格填進表單，**不自動送出**，使用者確認後自己按加入（防 AI 抓錯灌垃圾）。
+- Gemini 金鑰放 **gitignored 的 `buylist/config.js`**（`window.BUYLIST_CONFIG`），**不進版控**；`.gitignore` 已加 `buylist/config.js`。換機器要自己補一份（同一把金鑰，或去 `scout-checklist/config.js` 拿）。
+- 模型 `gemini-2.5-flash` + `url_context` tool，可在 config.js 換模型。
+- 已實測 iHerb 連結：正確抽出「Mike's Hot Honey 含辣椒」+ 換算台幣 454，未自動送出。
+- 失敗路徑：連結欄空 / 無金鑰 / API 錯 / 解析失敗 都會在狀態列顯示對應紅字，不靜默失敗。
+
 
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。

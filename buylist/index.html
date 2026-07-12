@@ -60,6 +60,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .tmtoggle input{width:16px;height:16px;}
 .addbtn{font-family:inherit;font-weight:600;font-size:14px;padding:11px 22px;border-radius:999px;cursor:pointer;border:none;background:var(--blue);color:#fff;}
 .addbtn:hover{background:var(--blue-d);}
+/* 次要按鈕（貼連結帶入）：白底 sage 描邊，跟主要「加入」區隔 */
+.addbtn.ghost{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);padding:9.5px 18px;}
+.addbtn.ghost:hover{background:#EAF2ED;}
+.addbtn:disabled{opacity:.55;cursor:default;}
+.btngroup{display:inline-flex;gap:8px;flex-wrap:wrap;}
 .addbox .wide{width:100%;}
 
 /* 篩選 / 排序列 */
@@ -151,7 +156,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     <input type="text" id="bl-note" class="wide" placeholder="備註（選填）" autocomplete="off" style="margin-bottom:11px;">
     <div class="segline" style="justify-content:space-between;">
       <label class="tmtoggle"><input type="checkbox" id="bl-tm" checked>本月想買（取消＝之後再說）</label>
-      <button class="addbtn" id="bl-add">＋ 加入</button>
+      <span class="btngroup">
+        <button class="addbtn" id="bl-add">＋ 加入</button>
+        <button class="addbtn ghost" id="bl-import" title="把商品連結貼到上面「連結」欄，按這裡自動帶入名稱與價格">🔗 貼連結帶入</button>
+      </span>
     </div>
   </div>
 
@@ -169,12 +177,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   </div>
 </div>
 
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   "use strict";
   const SUPABASE_URL='https://kdmmjlaajqxjmiahfvos.supabase.co';
   const SUPABASE_KEY='sb_publishable_iuUz3RtUoTErjeAunr0FJw_31jB7AAu';
+  // Gemini 金鑰從 gitignored 的 config.js 讀（不寫死進版控）
+  const GEMINI_KEY=(window.BUYLIST_CONFIG&&window.BUYLIST_CONFIG.GEMINI_API_KEY)||'';
+  const GEMINI_MODEL=(window.BUYLIST_CONFIG&&window.BUYLIST_CONFIG.GEMINI_MODEL)||'gemini-2.5-flash';
 
   const URG={need:{label:'需要',cls:'u-need'},want:{label:'想要',cls:'u-want'},maybe:{label:'再看看',cls:'u-maybe'}};
   const ACC={tw_easy:{label:'台灣容易',cls:'a-easy'},overseas:{label:'需國外',cls:'a-os'},rare:{label:'稀有難找',cls:'a-rare'}};
@@ -314,8 +326,45 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
   async function saveBudget(v){budget=+v||0;const {error}=await sb.from('buylist_budget').upsert({id:1,monthly_budget:budget});if(error)setStatus('預算儲存失敗：'+error.message,'err');}
 
+  // ── 貼連結自動帶入：呼叫 Gemini 讀商品頁，抽出名稱+價格填進表單（不自動送出，讓使用者確認後再按加入）──
+  let importing=false;
+  async function importFromLink(){
+    if(importing) return;
+    const url=($('bl-link').value||'').trim();
+    if(!url){ setStatus('請先把商品連結貼到「連結」欄','err'); $('bl-link').focus(); return; }
+    if(!GEMINI_KEY){ setStatus('尚未設定 Gemini 金鑰（buylist/config.js）','err'); return; }
+    importing=true;
+    const btn=$('bl-import'), old=btn.textContent;
+    btn.disabled=true; btn.textContent='讀取中…'; setStatus('讀取商品資訊中…','');
+    try{
+      const prompt='你是購物助手。請讀取這個商品網址的內容，抽出「商品名稱」與「售價」。\n網址：'+url+
+        '\n只回一個 JSON 物件，不要 markdown、不要多餘文字，格式：{"name":"商品名稱（簡潔、去掉行銷贅字）","price":售價數字}。'+
+        'price 請填新台幣整數；若原頁是外幣請概略換算成台幣；抓不到價格就填 0。若讀不到該頁，name 盡量從網址推斷、price 填 0。';
+      const body={contents:[{parts:[{text:prompt}]}],tools:[{url_context:{}}]};
+      const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+encodeURIComponent(GEMINI_KEY),
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!resp.ok){ const t=await resp.text(); throw new Error('API '+resp.status+'：'+t.slice(0,120)); }
+      const data=await resp.json();
+      const cand=(data.candidates&&data.candidates[0])||{};
+      const parts=(cand.content&&cand.content.parts)||[];
+      const text=parts.map(p=>(p&&p.text)||'').join('');
+      const m=text.match(/\{[\s\S]*\}/);
+      if(!m) throw new Error('無法解析回應');
+      const obj=JSON.parse(m[0]);
+      if(obj.name) $('bl-name').value=String(obj.name).trim();
+      if(+obj.price>0) $('bl-price').value=Math.round(+obj.price);
+      setStatus('已帶入，請確認後按「＋ 加入」','live');
+      $('bl-name').focus();
+    }catch(e){
+      setStatus('抓取失敗：'+e.message,'err');
+    }finally{
+      importing=false; btn.disabled=false; btn.textContent=old;
+    }
+  }
+
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
+  $('bl-import').addEventListener('click',importFromLink);
   $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addItem();}});
   $('seg-urg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addUrg=b.dataset.v;$('seg-urg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $('seg-acc').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addAcc=b.dataset.v;$('seg-acc').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});

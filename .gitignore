@@ -1,6 +1,7 @@
 .streamlit/secrets.toml
 secrets.toml
 checklist/config.js
+buylist/config.js
 __pycache__/
 *.pyc
 *.pyo
