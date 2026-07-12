@@ -1,0 +1,12 @@
+// config.js.example — 設定範本（這個檔會進版控、不含金鑰）。
+//
+// 用法：把這個檔「複製一份」成同資料夾的 config.js，再填入你的 Gemini 金鑰。
+//   Windows：copy config.js.example config.js
+//   Mac：    cp config.js.example config.js
+// config.js 已被 .gitignore 擋住，不會進版控（金鑰不外流）。
+//
+// 這只有「🔗 貼連結帶入」功能會用到；不用那個功能的話可以不建 config.js，其餘功能照常。
+window.BUYLIST_CONFIG = {
+  GEMINI_API_KEY: "",               // ← 填你的 Gemini 金鑰（向 Stanley 拿，或用 scout-checklist 那把）
+  GEMINI_MODEL: "gemini-2.5-flash", // 讀網址用的模型（可自行更換）
+};

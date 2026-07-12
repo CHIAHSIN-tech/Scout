@@ -76,7 +76,7 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 
 ### ✅ 追加：貼連結自動帶入（2026-07-12，Stanley 直接指示，非 Chia spec）
 - 「＋加入」右邊新增「🔗 貼連結帶入」按鈕：把商品連結貼到「連結」欄 → 按按鈕 → 呼叫 Gemini（`url_context` 工具實際讀網頁）抽出名稱+價格填進表單，**不自動送出**，使用者確認後自己按加入（防 AI 抓錯灌垃圾）。
-- Gemini 金鑰放 **gitignored 的 `buylist/config.js`**（`window.BUYLIST_CONFIG`），**不進版控**；`.gitignore` 已加 `buylist/config.js`。換機器要自己補一份（同一把金鑰，或去 `scout-checklist/config.js` 拿）。
+- Gemini 金鑰放 **gitignored 的 `buylist/config.js`**（`window.BUYLIST_CONFIG`），**不進版控**；`.gitignore` 已加 `buylist/config.js`。換機器：把 committed 的 `buylist/config.js.example` 複製成 `config.js` 再填金鑰（同一把金鑰，或去 `scout-checklist/config.js` 拿）。
 - 模型 `gemini-2.5-flash` + `url_context` tool，可在 config.js 換模型。
 - 已實測 iHerb 連結：正確抽出「Mike's Hot Honey 含辣椒」+ 換算台幣 454，未自動送出。
 - 失敗路徑：連結欄空 / 無金鑰 / API 錯 / 解析失敗 都會在狀態列顯示對應紅字，不靜默失敗。
