@@ -53,6 +53,20 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 
 > Must / Should / Could **全部完成**。spec §4 **Won't 維持不做**（不做記帳帳本、登入、自動抓價、降價追蹤）。
 
+## 6.1 下一步（新任務，2026-07-12 起）
+
+**已買星號收藏（可再買）＋ 全站改用 Scout CIS 配色** — 完整規格見 `specs/buylist-starred.md`（由 Chia 撰寫，狀態 **approved**）。
+
+- **Part A（星號功能）**：已買項目可加星號，代表「值得回購」；星號只有打勾（已買）後才能標記，並新增「已買・星號」篩選選項
+  - Schema 增量：`buylist_items` 新增 `starred boolean default false`（見 `buylist-schema-add-starred.sql`）
+  - 改動範圍：僅 `index.html`（CSS + JS + HTML，共 6 處小改動）+ schema 一行
+- **Part B（全站換色，範圍較大）**：`index.html` 現行的 blue/green/amber 配色改為 Scout 品牌 CIS 的 sage/linen/wheat 配色（對照 `scout_cis.html`）
+  - 改動範圍：`:root` 變數區塊、focus 光暈 rgba 值、6 種標籤的寫死 hex 色碼、2×2 矩陣格底色——完整對照表與逐行改法見 spec 的 Part B
+  - 語意取捨：CIS 只有 3 色系，裝不下原本 6 種語意分類，已與 Chia 討論定案「迫切度」與「取得難易度」各自成深淺階梯，唯獨保留「需要」與「稀有難找」同色系（語意相近，文字標籤已可區分）
+- 顏色：星號沿用既有 `--amber` 討論後改為 CIS 的 `wheat-400`（已確認），全站換色詳見 Part B 對照表
+- Stanley 可直接照 spec 第 7 節（Part A）與 B.3 節（Part B）的逐行改動指引動手，不需另外的 Kickoff 文件；兩部分可一併做或分開做
+
+
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。
 - **接手**：新 chat → 貼「這份 `BUYLIST_STATE.md` ＋ `specs/buylist-handoff.md`」→ 說「做下一步」。
