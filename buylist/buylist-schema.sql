@@ -27,6 +27,7 @@ alter table buylist_items add column if not exists note          text default ''
 alter table buylist_items add column if not exists link          text default '';
 alter table buylist_items add column if not exists category       text default '其他';
 alter table buylist_items add column if not exists recurring_cost numeric default 0;
+alter table buylist_items add column if not exists starred        boolean default false;   -- 已買星號收藏（可回購）
 
 -- 2. 月預算（兩人共用一個：固定 id=1 的單列）
 create table if not exists buylist_budget (

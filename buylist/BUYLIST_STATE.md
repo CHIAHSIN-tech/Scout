@@ -2,7 +2,7 @@
 
 > **用途**：新開一個 chat 時，把這份 `.md`（＋ Chia 的 spec）貼進去，就能完整理解專案、接著做。
 > **維護原則**：每完成一步，就更新 §5 現狀 與 §6 下一步。只記架構/決策/進度，不記瑣碎過程。
-> **最後更新**：2026-06-22
+> **最後更新**：2026-07-12
 
 ---
 
@@ -39,6 +39,7 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 - 後端：Supabase 專案 `kdmmjlaajqxjmiahfvos`（Stanley 的）；表 `buylist_items`(11 欄) + `buylist_budget`，schema 見 `buylist/buylist-schema.sql`（已執行）。DDL 由 Claude 用 DB 連線直接套用（密碼已重設可用）。
 - ✅ **spec Could 也全做完**：分類、篩選(狀態/分類)、排序(價格/想最久)、月初自動清上月已買(用 `buylist_budget.last_cleared` 月份標記)、後續成本(訂閱/耗材)欄位、連結欄位。`buylist_items` 已擴到 13 欄。
 - 測試資料已清空，兩人可從零開始用。
+- ✅（2026-07-12）已買星號收藏 ＋ 全站 CIS 換色 完成（詳見 §6.1）；`starred` 欄位 DDL 待在 Supabase 執行。
 
 ## 6. Build Order（from spec §7）— 全部完成
 > spec 原要求「一次一步、做完停、等 Chia 檢查」；**Stanley 選擇 one-shot 全做**（有意識覆寫）。
@@ -65,6 +66,13 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
   - 語意取捨：CIS 只有 3 色系，裝不下原本 6 種語意分類，已與 Chia 討論定案「迫切度」與「取得難易度」各自成深淺階梯，唯獨保留「需要」與「稀有難找」同色系（語意相近，文字標籤已可區分）
 - 顏色：星號沿用既有 `--amber` 討論後改為 CIS 的 `wheat-400`（已確認），全站換色詳見 Part B 對照表
 - Stanley 可直接照 spec 第 7 節（Part A）與 B.3 節（Part B）的逐行改動指引動手，不需另外的 Kickoff 文件；兩部分可一併做或分開做
+
+### ✅ 完工（2026-07-12）
+- **Part A（星號）＋ Part B（全站 CIS 換色）皆已實作**，改動全在 `buylist/index.html`；schema 增量已寫進 `buylist-schema.sql`（新增 `starred` 那行）。
+- 廢棄的 `spec-buylist-want-bought.md` 與其 kickoff 已刪除（那份假設 Vue+Firebase，與真實 app 不符）。
+- 過了一輪 3-persona 對抗式審查（部署現實／視覺對比／JS 邏輯）：JS 邏輯與視覺皆 PASS（視覺留幾個低對比 NOTE，見下）；唯一 BLOCKER 是部署順序。
+- 🔴 **上線前必做（BLOCKER）**：到 Supabase 專案 `kdmmjlaajqxjmiahfvos` 的 SQL Editor 執行 `buylist-schema-add-starred.sql`（就一行 `alter table … add column if not exists starred …`，冪等）。**沒跑這行，星號一點就噴「更新失敗」紅字、「已買・星號」篩選永遠空白。** 程式碼本身對缺欄位容錯（`select *` 不會炸、既有功能不受影響），只有寫入星號會失敗。
+- 🟡 視覺 NOTE（spec 已定案的色值，留給 Chia 決定要不要微調）：`cat` 分類標籤文字 linen-400 on linen-50 對比僅 2.24:1（可辨但吃力，建議改用 `--muted` 可拉到 5.11:1）；`u-maybe`／`later`／`cat` 三種標籤換色後底色相近、只能靠文字區分。
 
 
 ## 7. 怎麼跑 / 怎麼繼續

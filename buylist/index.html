@@ -8,10 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F6F8; --card:#FFFFFF; --ink:#1A1C1F; --muted:#6B7079; --faint:#9AA0A8;
-  --line:#E7E9ED; --line-soft:#EFF1F4; --blue:#29ABE2; --blue-d:#1f8fc0;
-  --green:#21A67A; --amber:#E08A4A; --red:#C0392B;
-  --need:#C0392B; --want:#E08A4A; --maybe:#9AA0A8;
+  /* Scout CIS 配色（sage/linen/wheat）— 對照 scout_cis.html */
+  --bg:#F5F0EA; --card:#FFFFFF; --ink:#3C3830; --muted:#6B6558; --faint:#A8A298;
+  --line:#DCD8D0; --line-soft:#F5F0EA; --blue:#3D6B54; --blue-d:#2A4D3A;
+  --green:#5C8C72; --amber:#C4915A; --red:#7A5230;
+  --need:#7A5230; --want:#C4915A; --maybe:#6B6558;
   --r-lg:18px; --r-md:12px; --font:'Noto Sans TC',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -36,7 +37,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .budget label{font-size:11px;color:var(--faint);font-weight:600;}
 .budget input{width:120px;font-family:inherit;font-size:15px;color:var(--ink);background:var(--bg);
   border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none;}
-.budget input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.15);}
+.budget input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
 .budget .big{font-size:20px;font-weight:700;letter-spacing:-.01em;}
 .budget .sep{flex:1;}
 .budget .remain.ok{color:var(--green);} .budget .remain.over{color:var(--red);}
@@ -47,7 +48,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .addrow{display:flex;gap:9px;margin-bottom:11px;flex-wrap:wrap;}
 .addbox input,.addbox select{font-family:inherit;font-size:14px;color:var(--ink);
   background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
-.addbox input:focus,.addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,171,226,.15);}
+.addbox input:focus,.addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
 #bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-cat{width:120px;} #bl-recur{width:140px;}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg);}
 .seg button{font-family:inherit;font-size:12.5px;padding:8px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
@@ -76,16 +77,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .chk{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:#fff;cursor:pointer;
   display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;padding:0;margin-top:2px;}
 .chk:hover{border-color:var(--green);} .chk.on{background:var(--green);border-color:var(--green);color:#fff;}
+/* 星號收藏：只在已買項目顯示（.item.bought）；空心＝未收藏、實心 wheat＝值得回購 */
+.star{flex:none;width:22px;height:22px;border:none;background:none;cursor:pointer;
+  color:var(--faint);font-size:18px;padding:0;margin-top:2px;display:none;line-height:1;}
+.item.bought .star{display:inline-flex;align-items:center;justify-content:center;}
+.star.on{color:var(--amber);}
+.star:hover{color:var(--amber);}
 .ibody{flex:1;min-width:0;}
 .itop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
 .iname{font-size:15.5px;font-weight:600;word-break:break-word;}
 .iprice{font-size:14px;font-weight:700;color:var(--ink);}
 .itags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .tag{font-size:10.5px;font-weight:600;border-radius:7px;padding:2px 8px;}
-.tag.u-need{background:#FBEAE8;color:var(--need);} .tag.u-want{background:#FCEFDD;color:#A8602A;} .tag.u-maybe{background:#EEF0F2;color:var(--muted);}
-.tag.a-easy{background:#E6F2EA;color:#1B7A52;} .tag.a-os{background:#EAF1FB;color:#2B6CB0;} .tag.a-rare{background:#F3E8F5;color:#8E44AD;}
-.tag.cat{background:#F0EFEA;color:#7A6A2A;}
-.tag.tm{background:#EAF1FB;color:#2B6CB0;} .tag.later{background:#EEF0F2;color:var(--muted);}
+.tag.u-need{background:#E8C898;color:var(--need);} .tag.u-want{background:#FBF0E0;color:var(--want);} .tag.u-maybe{background:#F5F0EA;color:var(--muted);}
+.tag.a-easy{background:#EAF2ED;color:#5C8C72;} .tag.a-os{background:#F5F0EA;color:#3C3830;} .tag.a-rare{background:#FBF0E0;color:#7A5230;}
+.tag.cat{background:#F5F0EA;color:#A8A298;}
+.tag.tm{background:#EAF2ED;color:var(--blue);} .tag.later{background:#F5F0EA;color:var(--muted);}
 .tag.days{background:transparent;color:var(--faint);padding-left:0;}
 .imeta{font-size:11px;color:var(--faint);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .imeta a{color:var(--blue);text-decoration:none;} .imeta a:hover{text-decoration:underline;}
@@ -98,7 +105,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;min-height:340px;margin-top:4px;}
 .quad{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;background:var(--card);}
 .quad .qh{font-size:11px;font-weight:700;color:var(--muted);}
-.quad.q-hi-need{background:#FBEEEC;border-color:#F0D5D0;} .quad.q-lo-need{background:#FCF4ED;border-color:#F2E2D0;}
+.quad.q-hi-need{background:#E8C898;border-color:#C4915A;} .quad.q-lo-need{background:#FBF0E0;border-color:#E8C898;}
 .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 9px;display:flex;justify-content:space-between;gap:8px;}
 .chip .cp{color:var(--muted);font-weight:600;}
 .maxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px;padding:0 4px;}
@@ -149,7 +156,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   </div>
 
   <div class="filters">
-    <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button></span>
+    <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button><button data-v="starred">已買・星號</button></span>
     <select id="f-cat"></select>
     <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
     <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
@@ -235,6 +242,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     let arr=items.filter(i=>{
       if(fStatus==='month' && !(i.this_month && !i.bought)) return false;
       if(fStatus==='bought' && !i.bought) return false;
+      if(fStatus==='starred' && !(i.bought && i.starred)) return false;   // 已買且加星
       if(fCat!=='all' && (i.category||'其他')!==fCat) return false;
       return true;
     });
@@ -262,6 +270,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
       if(i.link) meta.push('<a href="'+esc(i.link)+'" target="_blank" rel="noopener">🔗 連結</a>');
       return '<div class="item '+(i.bought?'bought':'')+'">'
         +'<button class="chk '+(i.bought?'on':'')+'" data-id="'+i.id+'" data-b="'+(i.bought?1:0)+'" title="標記已買">'+(i.bought?'✓':'')+'</button>'
+        +(i.bought?'<button class="star '+(i.starred?'on':'')+'" data-id="'+i.id+'" data-s="'+(i.starred?1:0)+'" title="標記可回購">★</button>':'')
         +'<div class="ibody">'
           +'<div class="itop"><span class="iname">'+esc(i.name)+'</span>'+(i.price?'<span class="iprice">'+money(i.price)+'</span>':'')+'</div>'
           +'<div class="itags">'+tags+'</div>'
@@ -270,6 +279,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
         +'</div><button class="idel" data-del="'+i.id+'" title="刪除">✕</button></div>';
     }).join('');
     box.querySelectorAll('.chk').forEach(b=>b.addEventListener('click',()=>toggleBought(b.dataset.id,b.dataset.b!=='1')));
+    box.querySelectorAll('.star').forEach(b=>b.addEventListener('click',()=>toggleStarred(b.dataset.id,b.dataset.s!=='1')));
     box.querySelectorAll('.idel').forEach(b=>b.addEventListener('click',()=>delItem(b.dataset.del)));
   }
   function renderMatrix(){
@@ -300,6 +310,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     addingItem=false;
   }
   async function toggleBought(id,val){const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
+  async function toggleStarred(id,val){const {error}=await sb.from('buylist_items').update({starred:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
   async function saveBudget(v){budget=+v||0;const {error}=await sb.from('buylist_budget').upsert({id:1,monthly_budget:budget});if(error)setStatus('預算儲存失敗：'+error.message,'err');}
 
