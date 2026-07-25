@@ -66,6 +66,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .addbtn:disabled{opacity:.55;cursor:default;}
 .btngroup{display:inline-flex;gap:8px;flex-wrap:wrap;}
 .addbox .wide{width:100%;}
+/* 批次貼多行：原生 details 可展開，不擠壓單筆表單 */
+.bulkbox{border-top:1px solid var(--line-soft);margin-top:6px;padding-top:12px;}
+.bulkbox summary{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;list-style:none;user-select:none;}
+.bulkbox summary::-webkit-details-marker{display:none;}
+.bulkbox summary::before{content:'＋ ';}
+.bulkbox[open] summary::before{content:'－ ';}
+.bulkbox textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;resize:vertical;min-height:78px;margin:10px 0;}
+.bulkbox textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
 
 /* 篩選 / 排序列 */
 .filters{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
@@ -163,6 +172,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
         <button class="addbtn ghost" id="bl-import" title="把商品連結貼到上面「連結」欄，按這裡自動帶入名稱與價格">🔗 貼連結帶入</button>
       </span>
     </div>
+    <details class="bulkbox">
+      <summary>一次貼多行批次新增</summary>
+      <textarea id="bl-bulk" placeholder="一行一項，或用 、 , 分隔。例：衛生紙、洗髮精、咖啡豆"></textarea>
+      <button class="addbtn ghost" id="bl-bulk-add">批次新增</button>
+    </details>
   </div>
 
   <div class="filters">
@@ -325,6 +339,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     if(error)setStatus('新增失敗：'+error.message,'err');
     addingItem=false;
   }
+  // ── 批次貼多行新增：以換行/頓號/逗號拆分，每筆只帶名稱走預設，一次 insert 陣列 ──
+  let bulking=false;
+  async function bulkAdd(){
+    if(bulking) return;
+    const raw=$('bl-bulk').value||'';
+    // 分隔符：換行、頓號、半形逗號、全形逗號（可混用、連續視為一個）
+    const names=raw.split(/[\n,、，]+/).map(s=>s.trim()).filter(Boolean);
+    // 本次貼上內部去重（保序）；不與清單既有項目比對
+    const seen=new Set(), uniq=[];
+    for(const n of names){ if(!seen.has(n)){ seen.add(n); uniq.push(n); } }
+    if(!uniq.length){ setStatus('沒有可新增的項目（內容是空的）','err'); return; }
+    bulking=true;
+    const rows=uniq.map(name=>({name, price:0, urgency:'maybe', accessibility:'tw_easy',
+      category:'其他', this_month:true, bought:false, added_by:me||'', note:'', link:'', recurring_cost:0, quantity:1}));
+    const {error}=await sb.from('buylist_items').insert(rows);
+    if(error) setStatus('批次新增失敗：'+error.message,'err');
+    else { $('bl-bulk').value=''; setStatus('已加入 '+rows.length+' 筆','live'); }
+    bulking=false;
+  }
   async function toggleBought(id,val){const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function toggleStarred(id,val){const {error}=await sb.from('buylist_items').update({starred:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
@@ -368,6 +401,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
+  $('bl-bulk-add').addEventListener('click',bulkAdd);
   $('bl-import').addEventListener('click',importFromLink);
   $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addItem();}});
   $('seg-urg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;addUrg=b.dataset.v;$('seg-urg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
