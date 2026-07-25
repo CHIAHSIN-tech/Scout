@@ -116,6 +116,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .imeta a{color:var(--blue);text-decoration:none;} .imeta a:hover{text-decoration:underline;}
 .irecur{color:var(--amber);font-weight:600;}
 .inote{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word;}
+/* 實付金額：只在已買項目顯示，填了看省/超差額 */
+.actual{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ainput{width:88px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;outline:none;}
+.ainput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+.pdiff{font-weight:600;} .pdiff.save{color:var(--green);} .pdiff.over{color:var(--red);} .pdiff.even{color:var(--faint);}
 .idel{flex:none;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:2px 4px;margin-top:2px;}
 .idel:hover{color:var(--red);}
 .empty{padding:42px 16px;text-align:center;font-size:13px;color:var(--faint);line-height:1.8;}
@@ -295,6 +300,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     });
     return arr;
   }
+  // 差額文字：實付 vs 估價（未填＝不顯示；省=綠、超=紅、持平=灰）
+  function diffText(price,actual){
+    if(actual==null) return '';
+    const p=+price||0, a=+actual||0;
+    if(a===p) return '<span class="pdiff even">持平</span>';
+    return a<p ? '<span class="pdiff save">省 '+money(p-a)+'</span>'
+              : '<span class="pdiff over">超 '+money(a-p)+'</span>';
+  }
+  // 已買項目的「實付」inline 輸入＋差額；預設帶入估價（降低誤填 0）
+  function actualPriceHtml(i){
+    const val=(i.actual_price!=null? i.actual_price : (+i.price||0));
+    return '<div class="actual">實付 <input type="number" class="ainput" data-id="'+i.id+'" value="'+val+'" min="0" step="1">'
+      +diffText(i.price,i.actual_price)+'</div>';
+  }
   function renderList(){
     const box=$('list'); const arr=visibleItems();
     if(!arr.length){box.innerHTML='<div class="empty">沒有符合的項目。<br>上面加一個，或換個篩選看看。</div>';return;}
@@ -315,10 +334,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
           +'<div class="itags">'+tags+'</div>'
           +(meta.length?'<div class="imeta">'+meta.join('')+'</div>':'')
           +(i.note?'<div class="inote">'+esc(i.note)+'</div>':'')
+          +(i.bought?actualPriceHtml(i):'')
         +'</div><button class="idel" data-del="'+i.id+'" title="刪除">✕</button></div>';
     }).join('');
     box.querySelectorAll('.chk').forEach(b=>b.addEventListener('click',()=>toggleBought(b.dataset.id,b.dataset.b!=='1')));
     box.querySelectorAll('.star').forEach(b=>b.addEventListener('click',()=>toggleStarred(b.dataset.id,b.dataset.s!=='1')));
+    box.querySelectorAll('.ainput').forEach(inp=>inp.addEventListener('change',()=>updateActualPrice(inp.dataset.id,inp.value)));
     box.querySelectorAll('.idel').forEach(b=>b.addEventListener('click',()=>delItem(b.dataset.del)));
   }
   function renderMatrix(){
@@ -380,6 +401,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   }
   async function toggleBought(id,val){const {error}=await sb.from('buylist_items').update({bought:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function toggleStarred(id,val){const {error}=await sb.from('buylist_items').update({starred:val}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
+  // 實付寫回：空字串＝null（未填）、其餘存數字（0＝真的免費）；不影響總價加總
+  async function updateActualPrice(id,val){const num=(val===''||val==null)?null:(+val||0);const {error}=await sb.from('buylist_items').update({actual_price:num}).eq('id',id);if(error)setStatus('更新失敗：'+error.message,'err');}
   async function delItem(id){const {error}=await sb.from('buylist_items').delete().eq('id',id);if(error)setStatus('刪除失敗：'+error.message,'err');}
   async function saveBudget(v){budget=+v||0;const {error}=await sb.from('buylist_budget').upsert({id:1,monthly_budget:budget});if(error)setStatus('預算儲存失敗：'+error.message,'err');}
 

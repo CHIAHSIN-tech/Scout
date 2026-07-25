@@ -30,6 +30,7 @@ alter table buylist_items add column if not exists recurring_cost numeric defaul
 alter table buylist_items add column if not exists starred        boolean default false;   -- 已買星號收藏（可回購）
 alter table buylist_items add column if not exists quantity       int default 1;           -- 數量（純記錄，不進總價加總）
 alter table buylist_items add column if not exists tag            text default '';         -- 情境標籤（單一自由文字，如 日本/Costco）
+alter table buylist_items add column if not exists actual_price   numeric;                 -- 實付金額（null=未填、0=免費得到；不進總價加總，不留帳）
 
 -- 2. 月預算（兩人共用一個：固定 id=1 的單列）
 create table if not exists buylist_budget (
