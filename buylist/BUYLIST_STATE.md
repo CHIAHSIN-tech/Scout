@@ -23,11 +23,21 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 | 項目 | 決定 | 與 spec 差異 / 理由 |
 |---|---|---|
 | **落點** | **private 的 `Scout` repo**，放在 `buylist/` 資料夾。**不開自己的 repo、也不放公開 repo。** | spec 原寫「全新獨立專案」。改放既有 private repo：全程 private、不增 repo、Chia 是 Scout 協作者也拿得到。 |
-| **執行/分享** | **桌面本機跑**：雙擊 `run.bat`（Win）/ `run.command`（Mac）→ 起本機伺服器 → 瀏覽器開 `localhost`。**兩人各自在自己電腦跑，靠 Supabase 同步**。 | 暫**不做手機**（Stanley 決定）。手機要用再改成公開網址（Cloudflare 從 private 出，程式碼仍 private）。不用 `file://` 雙擊（連雲端不可靠）。 |
+| **執行/分享** | **桌面本機跑**：雙擊 `run.bat`（Win）/ `run.command`（Mac）→ 起本機伺服器 → 瀏覽器開 `localhost`。**兩人各自在自己電腦跑，靠 Supabase 同步**。 | 暫**不做手機**（Stanley 決定）。手機要用再改成公開網址（Cloudflare 從 private 出，程式碼仍 private）。不用 `file://` 雙擊（連雲端不可靠）。　⚠️ **2026-07-25 已部分 supersede，見 §4.1（改為要上手機）** |
 | **後端** | **Supabase**，用 **Stanley 自己的專案** `kdmmjlaajqxjmiahfvos`（URL `https://kdmmjlaajqxjmiahfvos.supabase.co`），新表 `buylist_items`。 | spec 原寫 **Firebase**。改 Supabase：統一一個後端技術、SQL 查詢力、權限可預期、不鎖定。**注意：Scout 的 Supabase（`uarkccyqcqvgxukjcrey`）是 Chia 的、Stanley 沒後台權限**；所以 BuyList 改用 Stanley 自己的專案，他能自管（建表/改欄位都自己來）。BuyList 資料本來就跟 Scout 分開，無妨。anon key 寫在 `buylist/index.html`。 |
 | **前端** | **單檔 vanilla HTML/JS**（無 build），UI 風格輕參考 dfg | spec 原寫 **Vue + Vite**。改 vanilla：最薄、好分享、tracer bullet 不需框架。`decision-focus-graph` 只是介面範例，**不改、不照抄**。 |
 | **身分** | 無登入；anon key + 權限全開 | 同 spec（網址即存取）。實驗、兩人用，已接受風險。 |
 | **同步** | Supabase Realtime（`postgres_changes`） | 達成 spec 的第一 Must：兩人即時同步。同步靠 Supabase，與「放哪/怎麼開」無關。 |
+
+### 4.1 Superseding 決策（2026-07-25，Chia 拍板）
+覆寫 §4「執行/分享」中「暫不做手機」那條：
+
+- **決定：buylist 要上手機**，範圍限「**能在手機瀏覽器開來用**」——**不做** PWA/安裝、**不做**離線。
+- **拆解與分工**：
+  1. **部署/可達性（Stanley，部署範疇）**：把單檔靜態 app 放到手機連得到的網址（Cloudflare Tunnel 或靜態託管）。⚠️ **安全**：從「只在 localhost」變公開網址＝Supabase anon key ＋ 全開 RLS 攤在網址上，誰有網址誰能讀寫；§4「網址即存取」的風險在公開後放大，需確認接受。
+  2. **手機介面優化（Chia，UI 範疇）**：現行偏桌面的 UI 改 responsive／手機優先（呼應 Scout 主 app 的手機優先原則）。
+- **仍不做（留待「能線上手機用」之後再議）**：PWA 離線、離線編輯的兩人合併。
+- **狀態**：方向已定，HOW（部署方式）待 Stanley 決定；手機 UI 優化待 Chia 出 spec。
 
 ## 5. 現狀（current state）
 - ✅ 落點/執行已定：private `Scout/buylist/`，雙擊啟動檔本機跑，桌面、不公開。
@@ -81,6 +91,26 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 - 已實測 iHerb 連結：正確抽出「Mike's Hot Honey 含辣椒」+ 換算台幣 454，未自動送出。
 - 失敗路徑：連結欄空 / 無金鑰 / API 錯 / 解析失敗 都會在狀態列顯示對應紅字，不靜默失敗。
 
+
+## 6.2 下一步（新一批 backlog，2026-07-25，Chia 整理＋出 spec）
+
+Chia 從購物模組 backlog 整理出下面這批，已寫成 spec（都在 `buylist/`），交給 Stanley 執行。
+
+**待做（4 份 spec）**
+
+1. `spec-buylist-qty-and-bought-bottom.md` — ①已買永遠沉底（跨三種排序，現況只在預設排序生效）②數量欄位（純記錄、不動加總）。純前端＋數量需加一欄 DDL。
+2. `spec-buylist-bulk-add.md` — 一次貼多行批次新增，分隔符＝換行/頓號/逗號，每筆只帶名稱走預設。純前端、無 schema。
+3. `spec-buylist-context-tag.md` — 情境標籤（單一自由文字 `tag`）＋依標籤篩選；輕量版，不做多清單架構、不做每情境獨立預算。加一欄 `tag` DDL。
+4. `spec-buylist-md-export.md` — 一鍵匯出 `.md`，依情境分段、匯出全部（不受篩選影響）。純前端、無 schema。依賴 3 的 `tag`（缺欄位容錯）。
+
+**建議實作順序（照依賴）**：1 → 2 →（純顯示層、零依賴）→ 3（加 `tag` 欄）→ 4（匯出，接在 3 後）。
+
+**DDL 提醒**：spec 1 的 `quantity`、spec 3 的 `tag` 上線前都要先在 Supabase `kdmmjlaajqxjmiahfvos` 跑 `add column if not exists`（同 `starred` 的坑，沒跑寫入會噴錯）。
+
+**擱置（有意識地不做）**
+
+- **結構化輸出（Gemini JSON schema 強制）**：把現有 AI 貼連結帶入的自寫 parse 換成強制 schema。歸 Stanley（AI 範疇）；現況 parse 實測可用，等真的抓錯再做，暫列 backlog。
+- **PWA / 離線可用**：與既有決策衝突（桌面本機跑、靠 Supabase Realtime 同步、暫不做手機）。要先決定「buylist 是否上手機」才談，屬 superseding 級別的大方向，先擱置。
 
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。
