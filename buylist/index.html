@@ -49,7 +49,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .addbox input,.addbox select{font-family:inherit;font-size:14px;color:var(--ink);
   background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
 .addbox input:focus,.addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
-#bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-qty{width:78px;} #bl-cat{width:120px;} #bl-recur{width:140px;}
+#bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-qty{width:78px;} #bl-cat{width:120px;} #bl-tag{width:132px;} #bl-recur{width:140px;}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg);}
 .seg button{font-family:inherit;font-size:12.5px;padding:8px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
 .seg button.on{background:var(--ink);color:#fff;}
@@ -108,6 +108,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .tag.a-easy{background:#EAF2ED;color:#5C8C72;} .tag.a-os{background:#F5F0EA;color:#3C3830;} .tag.a-rare{background:#FBF0E0;color:#7A5230;}
 .tag.cat{background:#F5F0EA;color:#A8A298;}
 .tag.tm{background:#EAF2ED;color:var(--blue);} .tag.later{background:#F5F0EA;color:var(--muted);}
+.tag.ctx{background:#DCE9E1;color:var(--blue-d);border:1px solid #C3D9CC;}
 .tag.days{background:transparent;color:var(--faint);padding-left:0;}
 .imeta{font-size:11px;color:var(--faint);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .imeta a{color:var(--blue);text-decoration:none;} .imeta a:hover{text-decoration:underline;}
@@ -153,6 +154,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
       <input type="number" id="bl-price" placeholder="價格" min="0" step="1">
       <input type="number" id="bl-qty" placeholder="數量" min="1" step="1">
       <select id="bl-cat"></select>
+      <input type="text" id="bl-tag" list="tag-list" placeholder="情境（選填）" autocomplete="off">
+      <datalist id="tag-list"></datalist>
     </div>
     <div class="segline">
       <span class="fieldlabel">迫切度</span>
@@ -182,6 +185,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   <div class="filters">
     <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button><button data-v="starred">已買・星號</button></span>
     <select id="f-cat"></select>
+    <select id="f-tag"></select>
     <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
     <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
   </div>
@@ -223,7 +227,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   let me=localStorage.getItem('buylist_me')||'';
   let addUrg='maybe', addAcc='tw_easy';
   let addingItem=false;
-  let fStatus='all', fCat='all', fSort='default';
+  let fStatus='all', fCat='all', fSort='default', fTag='all';
 
   // 下拉選單填充
   $('bl-cat').innerHTML=CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
@@ -272,6 +276,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
       if(fStatus==='bought' && !i.bought) return false;
       if(fStatus==='starred' && !(i.bought && i.starred)) return false;   // 已買且加星
       if(fCat!=='all' && (i.category||'其他')!==fCat) return false;
+      if(fTag!=='all' && (i.tag||'').trim()!==fTag) return false;
       return true;
     });
     const urgRank={need:0,want:1,maybe:2};
@@ -293,6 +298,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     box.innerHTML=arr.map(i=>{
       const u=URG[i.urgency]||URG.maybe, a=ACC[i.accessibility]||ACC.tw_easy;
       const tags=tag(u.cls,u.label)+tag(a.cls,a.label)+tag('cat',esc(i.category||'其他'))
+        +((i.tag||'').trim()?tag('ctx','📍'+esc(i.tag.trim())):'')
         +(i.this_month?tag('tm','本月想買'):tag('later','之後再說'))+tag('days',daysSince(i.created_at));
       const meta=[];
       if(i.added_by) meta.push(esc(i.added_by)+' 加的');
@@ -323,7 +329,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     const q=(k,t,c)=>{const l=cells[k].map(i=>'<div class="chip"><span>'+esc(i.name)+'</span><span class="cp">'+(i.price?money(i.price):'')+'</span></div>').join('')||'<div style="font-size:11px;color:var(--faint);">（空）</div>';return '<div class="quad'+c+'"><div class="qh">'+t+'</div>'+l+'</div>';};
     $('matrix').innerHTML=q('lo-need','迫切高 · 價格低',' q-lo-need')+q('hi-need','迫切高 · 價格高',' q-hi-need')+q('lo-low','迫切低 · 價格低','')+q('hi-low','迫切低 · 價格高','');
   }
-  function renderAll(){renderBudget();renderList();renderMatrix();}
+  // 目前資料裡出現過的情境標籤（去空白、去重、排序）；分類是寫死的，情境是使用者自訂所以動態算
+  function distinctTags(){return [...new Set(items.map(i=>(i.tag||'').trim()).filter(Boolean))].sort();}
+  // 依現有資料重建「情境」篩選下拉與 autocomplete；保留當前選擇，選的標籤若消失則退回「全部情境」
+  function renderTagOptions(){
+    const tags=distinctTags();
+    if(fTag!=='all' && !tags.includes(fTag)) fTag='all';
+    $('f-tag').innerHTML='<option value="all">全部情境</option>'+tags.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join('');
+    $('f-tag').value=fTag;
+    $('tag-list').innerHTML=tags.map(t=>'<option value="'+esc(t)+'">').join('');
+  }
+  function renderAll(){renderTagOptions();renderBudget();renderList();renderMatrix();}
 
   // ── 動作 ──
   async function addItem(){
@@ -333,8 +349,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     const rec={name, price:parseFloat($('bl-price').value)||0, urgency:addUrg, accessibility:addAcc,
       category:$('bl-cat').value||'其他', this_month:$('bl-tm').checked, bought:false,
       added_by:me||'', note:($('bl-note').value||'').trim(), link:($('bl-link').value||'').trim(),
-      recurring_cost:parseFloat($('bl-recur').value)||0, quantity:parseInt($('bl-qty').value,10)||1};
-    ['bl-name','bl-price','bl-qty','bl-note','bl-link','bl-recur'].forEach(id=>$(id).value=''); $('bl-name').focus();
+      recurring_cost:parseFloat($('bl-recur').value)||0, quantity:parseInt($('bl-qty').value,10)||1,
+      tag:($('bl-tag').value||'').trim()};
+    ['bl-name','bl-price','bl-qty','bl-note','bl-link','bl-recur','bl-tag'].forEach(id=>$(id).value=''); $('bl-name').focus();
     const {error}=await sb.from('buylist_items').insert(rec);
     if(error)setStatus('新增失敗：'+error.message,'err');
     addingItem=false;
@@ -411,6 +428,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   $('whoSel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;me=b.dataset.me;localStorage.setItem('buylist_me',me);renderWho();});
   $('f-status').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fStatus=b.dataset.v;$('f-status').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderList();});
   $('f-cat').addEventListener('change',e=>{fCat=e.target.value;renderList();});
+  $('f-tag').addEventListener('change',e=>{fTag=e.target.value;renderList();});
   $('f-sort').addEventListener('change',e=>{fSort=e.target.value;renderList();});
   $('viewtabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
     document.querySelectorAll('#viewtabs button').forEach(x=>x.classList.toggle('on',x===b));
