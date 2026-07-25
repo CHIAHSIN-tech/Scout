@@ -501,6 +501,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     .on('postgres_changes',{event:'*',schema:'public',table:'buylist_budget'},loadAll)
     .subscribe(st=>{ if(st==='SUBSCRIBED')setStatus('即時同步已連線','live'); else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')setStatus('即時連線異常：'+st,'err'); });
 
+  // 沒設 Gemini 金鑰（如公開部署不帶 config.js）→ 隱藏「貼連結帶入」，金鑰不外洩、按鈕也不留死路
+  if(!GEMINI_KEY) $('bl-import').style.display='none';
   renderWho(); loadAll();
 })();
 </script>
