@@ -2,7 +2,7 @@
 
 > **用途**：新開一個 chat 時，把這份 `.md`（＋ Chia 的 spec）貼進去，就能完整理解專案、接著做。
 > **維護原則**：每完成一步，就更新 §5 現狀 與 §6 下一步。只記架構/決策/進度，不記瑣碎過程。
-> **最後更新**：2026-07-12
+> **最後更新**：2026-07-25
 
 ---
 
@@ -96,16 +96,16 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 
 Chia 從購物模組 backlog 整理出下面這批，已寫成 spec（都在 `buylist/`），交給 Stanley 執行。
 
-**待做（4 份 spec）**
+**進度（4 份 spec）**
 
-1. `spec-buylist-qty-and-bought-bottom.md` — ①已買永遠沉底（跨三種排序，現況只在預設排序生效）②數量欄位（純記錄、不動加總）。純前端＋數量需加一欄 DDL。
-2. `spec-buylist-bulk-add.md` — 一次貼多行批次新增，分隔符＝換行/頓號/逗號，每筆只帶名稱走預設。純前端、無 schema。
+1. ✅ **完成** `spec-buylist-qty-and-bought-bottom.md` — ①已買永遠沉底（已抽成套在三種排序之上的主鍵）②數量欄位（純記錄、不動加總）。branch `feat/buylist-qty-bought-bottom`、commit `41ccb7e`；`quantity int default 1` DDL 已在 Supabase `kdmmjlaajqxjmiahfvos` 執行。
+2. 🔨 **進行中（下一個）** `spec-buylist-bulk-add.md` — 一次貼多行批次新增，分隔符＝換行/頓號/逗號，每筆只帶名稱走預設。純前端、無 schema。
 3. `spec-buylist-context-tag.md` — 情境標籤（單一自由文字 `tag`）＋依標籤篩選；輕量版，不做多清單架構、不做每情境獨立預算。加一欄 `tag` DDL。
 4. `spec-buylist-md-export.md` — 一鍵匯出 `.md`，依情境分段、匯出全部（不受篩選影響）。純前端、無 schema。依賴 3 的 `tag`（缺欄位容錯）。
 
-**建議實作順序（照依賴）**：1 → 2 →（純顯示層、零依賴）→ 3（加 `tag` 欄）→ 4（匯出，接在 3 後）。
+**建議實作順序（照依賴）**：1 ✅ → 2 →（純顯示層、零依賴）→ 3（加 `tag` 欄）→ 4（匯出，接在 3 後）。
 
-**DDL 提醒**：spec 1 的 `quantity`、spec 3 的 `tag` 上線前都要先在 Supabase `kdmmjlaajqxjmiahfvos` 跑 `add column if not exists`（同 `starred` 的坑，沒跑寫入會噴錯）。
+**DDL 提醒**：spec 1 的 `quantity` 已執行 ✅；spec 3 的 `tag` 上線前仍要先在 Supabase `kdmmjlaajqxjmiahfvos` 跑 `add column if not exists`（同 `starred` 的坑，沒跑寫入會噴錯）。⚠️ 該專案免費方案會自動暫停，DDL/使用前先確認沒被 pause（見 memory `buylist-supabase-pause`）。
 
 **擱置（有意識地不做）**
 
