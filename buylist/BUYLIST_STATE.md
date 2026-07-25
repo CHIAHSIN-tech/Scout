@@ -96,16 +96,17 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
 
 Chia 從購物模組 backlog 整理出下面這批，已寫成 spec（都在 `buylist/`），交給 Stanley 執行。
 
-**進度（4 份 spec）**
+**進度（5 份 spec — 全部完成 ✅，2026-07-26 一輪做完，branch `feat/buylist-qty-bought-bottom`）**
 
-1. ✅ **完成** `spec-buylist-qty-and-bought-bottom.md` — ①已買永遠沉底（已抽成套在三種排序之上的主鍵）②數量欄位（純記錄、不動加總）。branch `feat/buylist-qty-bought-bottom`、commit `41ccb7e`；`quantity int default 1` DDL 已在 Supabase `kdmmjlaajqxjmiahfvos` 執行。
-2. 🔨 **進行中（下一個）** `spec-buylist-bulk-add.md` — 一次貼多行批次新增，分隔符＝換行/頓號/逗號，每筆只帶名稱走預設。純前端、無 schema。
-3. `spec-buylist-context-tag.md` — 情境標籤（單一自由文字 `tag`）＋依標籤篩選；輕量版，不做多清單架構、不做每情境獨立預算。加一欄 `tag` DDL。
-4. `spec-buylist-md-export.md` — 一鍵匯出 `.md`，依情境分段、匯出全部（不受篩選影響）。純前端、無 schema。依賴 3 的 `tag`（缺欄位容錯）。
+1. ✅ `spec-buylist-qty-and-bought-bottom.md` — 已買沉底（套在三種排序之上的主鍵）＋ 數量欄位（`quantity`，純記錄不動加總）。commit `41ccb7e`。
+2. ✅ `spec-buylist-bulk-add.md` — 一次貼多行批次新增（換行/頓號/逗號拆分、本次去重）。純前端。commit `750fda6`。實測 AC-1~8。
+3. ✅ `spec-buylist-context-tag.md` — 情境標籤（`tag`）＋依標籤篩選（datalist autocomplete、動態 distinct 下拉、📍chip）。commit `23e4229`。實測 AC-1~8。
+4. ✅ `spec-buylist-md-export.md` — 一鍵匯出 `.md`（依情境分段、已買劃線、匯出全部不受篩選）。純前端。commit `ff808e7`。實測 AC-1~8。
+5. ✅ `spec-buylist-actual-price.md` — 已買填實付＋當下省/超差額（`actual_price`，不進總價、不留帳）。commit `91f323f`。實測 AC-1~8。
 
-**建議實作順序（照依賴）**：1 ✅ → 2 →（純顯示層、零依賴）→ 3（加 `tag` 欄）→ 4（匯出，接在 3 後）。
+**DDL 全部已執行 ✅**（Supabase `kdmmjlaajqxjmiahfvos`）：`quantity int default 1`、`tag text default ''`、`actual_price numeric`。⚠️ 該專案免費方案會自動暫停，DDL/使用前先確認沒被 pause（見 memory `buylist-supabase-pause`）。
 
-**DDL 提醒**：spec 1 的 `quantity` 已執行 ✅；spec 3 的 `tag` 上線前仍要先在 Supabase `kdmmjlaajqxjmiahfvos` 跑 `add column if not exists`（同 `starred` 的坑，沒跑寫入會噴錯）。⚠️ 該專案免費方案會自動暫停，DDL/使用前先確認沒被 pause（見 memory `buylist-supabase-pause`）。
+**尚未 merge**：branch `feat/buylist-qty-bought-bottom` 有 6 個 commit（含這份 state），待 merge 回 `main`。
 
 **擱置（有意識地不做）**
 
