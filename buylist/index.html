@@ -49,7 +49,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .addbox input,.addbox select{font-family:inherit;font-size:14px;color:var(--ink);
   background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
 .addbox input:focus,.addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
-#bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-cat{width:120px;} #bl-recur{width:140px;}
+#bl-name{flex:1;min-width:150px;} #bl-price{width:110px;} #bl-qty{width:78px;} #bl-cat{width:120px;} #bl-recur{width:140px;}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg);}
 .seg button{font-family:inherit;font-size:12.5px;padding:8px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
 .seg button.on{background:var(--ink);color:#fff;}
@@ -92,6 +92,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .itop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
 .iname{font-size:15.5px;font-weight:600;word-break:break-word;}
 .iprice{font-size:14px;font-weight:700;color:var(--ink);}
+.iqty{font-size:13px;font-weight:600;color:var(--muted);}
 .itags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .tag{font-size:10.5px;font-weight:600;border-radius:7px;padding:2px 8px;}
 .tag.u-need{background:#E8C898;color:var(--need);} .tag.u-want{background:#FBF0E0;color:var(--want);} .tag.u-maybe{background:#F5F0EA;color:var(--muted);}
@@ -141,6 +142,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     <div class="addrow">
       <input type="text" id="bl-name" placeholder="想買什麼？（必填）" autocomplete="off">
       <input type="number" id="bl-price" placeholder="價格" min="0" step="1">
+      <input type="number" id="bl-qty" placeholder="數量" min="1" step="1">
       <select id="bl-cat"></select>
     </div>
     <div class="segline">
@@ -259,11 +261,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
       return true;
     });
     const urgRank={need:0,want:1,maybe:2};
-    if(fSort==='price') arr.sort((a,b)=>(+b.price||0)-(+a.price||0));
-    else if(fSort==='days') arr.sort((a,b)=>ageDays(b.created_at)-ageDays(a.created_at));
+    // 已買永遠沉底：抽成套在三種排序之上的主鍵（未購 0 在前、已買 1 在後），群內再照各自排序鍵
+    const boughtRank=i=>i.bought?1:0;
+    if(fSort==='price') arr.sort((a,b)=>boughtRank(a)-boughtRank(b) || (+b.price||0)-(+a.price||0));
+    else if(fSort==='days') arr.sort((a,b)=>boughtRank(a)-boughtRank(b) || ageDays(b.created_at)-ageDays(a.created_at));
     else arr.sort((a,b)=>{
+      if(a.bought!==b.bought) return boughtRank(a)-boughtRank(b);   // 已買沉底（主鍵）
       if((a.this_month&&!a.bought)!==(b.this_month&&!b.bought)) return (b.this_month&&!b.bought)-(a.this_month&&!a.bought);
-      if(a.bought!==b.bought) return a.bought-b.bought;
       if((urgRank[a.urgency]??9)!==(urgRank[b.urgency]??9)) return (urgRank[a.urgency]??9)-(urgRank[b.urgency]??9);
       return new Date(b.created_at)-new Date(a.created_at);
     });
@@ -284,7 +288,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
         +'<button class="chk '+(i.bought?'on':'')+'" data-id="'+i.id+'" data-b="'+(i.bought?1:0)+'" title="標記已買">'+(i.bought?'✓':'')+'</button>'
         +(i.bought?'<button class="star '+(i.starred?'on':'')+'" data-id="'+i.id+'" data-s="'+(i.starred?1:0)+'" title="標記可回購">★</button>':'')
         +'<div class="ibody">'
-          +'<div class="itop"><span class="iname">'+esc(i.name)+'</span>'+(i.price?'<span class="iprice">'+money(i.price)+'</span>':'')+'</div>'
+          +'<div class="itop"><span class="iname">'+esc(i.name)+'</span>'+((+i.quantity>1)?'<span class="iqty">×'+(+i.quantity)+'</span>':'')+(i.price?'<span class="iprice">'+money(i.price)+'</span>':'')+'</div>'
           +'<div class="itags">'+tags+'</div>'
           +(meta.length?'<div class="imeta">'+meta.join('')+'</div>':'')
           +(i.note?'<div class="inote">'+esc(i.note)+'</div>':'')
@@ -315,8 +319,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     const rec={name, price:parseFloat($('bl-price').value)||0, urgency:addUrg, accessibility:addAcc,
       category:$('bl-cat').value||'其他', this_month:$('bl-tm').checked, bought:false,
       added_by:me||'', note:($('bl-note').value||'').trim(), link:($('bl-link').value||'').trim(),
-      recurring_cost:parseFloat($('bl-recur').value)||0};
-    ['bl-name','bl-price','bl-note','bl-link','bl-recur'].forEach(id=>$(id).value=''); $('bl-name').focus();
+      recurring_cost:parseFloat($('bl-recur').value)||0, quantity:parseInt($('bl-qty').value,10)||1};
+    ['bl-name','bl-price','bl-qty','bl-note','bl-link','bl-recur'].forEach(id=>$(id).value=''); $('bl-name').focus();
     const {error}=await sb.from('buylist_items').insert(rec);
     if(error)setStatus('新增失敗：'+error.message,'err');
     addingItem=false;
