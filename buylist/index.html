@@ -81,6 +81,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .filters .seg button{font-size:12.5px;padding:7px 13px;}
 .filters .seg button.on{background:var(--blue);color:#fff;}
 .filters select{font-family:inherit;font-size:12.5px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;outline:none;cursor:pointer;}
+.expbtn{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--blue);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer;}
+.expbtn:hover{background:#EAF2ED;}
 .viewtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);margin-left:auto;}
 .viewtabs button{font-family:inherit;font-weight:600;font-size:12.5px;padding:7px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
 .viewtabs button.on{background:var(--blue);color:#fff;}
@@ -187,6 +189,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     <select id="f-cat"></select>
     <select id="f-tag"></select>
     <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
+    <button id="bl-export" class="expbtn" title="把整張清單匯出成 .md（全部項目，不受篩選影響）">⬇ 匯出 .md</button>
     <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
   </div>
 
@@ -416,8 +419,43 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     }
   }
 
+  // ── Markdown 匯出：依情境分段、匯出全部（不受篩選影響）──
+  function buildMarkdown(){
+    // 依 tag 分組；未分情境（空 tag）永遠放最後一段
+    const groups={};
+    items.forEach(i=>{ const t=(i.tag||'').trim(); (groups[t]=groups[t]||[]).push(i); });
+    const named=Object.keys(groups).filter(Boolean).sort();
+    const order=named.concat(groups['']?['']:[]);
+    const urgLabel=u=>(URG[u]||URG.maybe).label;
+    const lines=[];
+    order.forEach(t=>{
+      lines.push('## '+(t||'未分情境'));
+      // 段內：未購在前、已買在後（已買劃線集中段尾）
+      groups[t].slice().sort((a,b)=>(a.bought?1:0)-(b.bought?1:0)).forEach(i=>{
+        const qty=(+i.quantity>1)?('　×'+(+i.quantity)):'';
+        const nm=i.bought?('~~'+i.name+'~~'):i.name;
+        lines.push('- '+nm+'　'+money(i.price)+qty+'　['+urgLabel(i.urgency)+']');
+      });
+      lines.push('');
+    });
+    const unboughtTotal=items.filter(i=>!i.bought).reduce((s,i)=>s+(+i.price||0),0);
+    lines.push('> 共 '+items.length+' 項，未購合計 '+money(unboughtTotal));
+    return lines.join('\n');
+  }
+  function exportMd(){
+    if(!items.length){ setStatus('清單是空的，沒東西可匯出','err'); return; }
+    const d=new Date();
+    const ymd=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const blob=new Blob([buildMarkdown()],{type:'text/markdown;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='buylist-'+ymd+'.md';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    setStatus('已匯出 buylist-'+ymd+'.md','live');
+  }
+
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
+  $('bl-export').addEventListener('click',exportMd);
   $('bl-bulk-add').addEventListener('click',bulkAdd);
   $('bl-import').addEventListener('click',importFromLink);
   $('bl-name').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addItem();}});
