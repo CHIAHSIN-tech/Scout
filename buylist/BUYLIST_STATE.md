@@ -37,7 +37,12 @@ Chia 的 spec：Scout repo 的 `specs/buylist-handoff.md`（status: approved）�
   1. **部署/可達性（Stanley，部署範疇）**：把單檔靜態 app 放到手機連得到的網址（Cloudflare Tunnel 或靜態託管）。⚠️ **安全**：從「只在 localhost」變公開網址＝Supabase anon key ＋ 全開 RLS 攤在網址上，誰有網址誰能讀寫；§4「網址即存取」的風險在公開後放大，需確認接受。
   2. **手機介面優化（Chia，UI 範疇）**：現行偏桌面的 UI 改 responsive／手機優先（呼應 Scout 主 app 的手機優先原則）。
 - **仍不做（留待「能線上手機用」之後再議）**：PWA 離線、離線編輯的兩人合併。
-- **狀態**：方向已定，HOW（部署方式）待 Stanley 決定；手機 UI 優化待 Chia 出 spec。
+- **狀態**：
+  - ✅ **部署/可達性完成（2026-07-26）**：公開網址 **https://shoppingtool.netlify.app/**（Netlify，Stanley **個人**帳號、免費方案，已 claim）。手機瀏覽器可直接開、連同一個 Supabase 即時同步。
+    - 部署版**故意不含 `config.js` 金鑰**（`config.js` 帶空字串）→ index.html 偵測無 Gemini 金鑰時**隱藏「🔗貼連結帶入」**，金鑰不外洩（commit `5f49665`）。AI 帶入只在本機（有 config.js）可用。
+    - ⚠️ 安全現況（已接受）：Supabase anon key ＋ 全開 RLS 攤在公開網址上——誰有網址誰能讀/寫/刪 buylist 資料。兩人私用、已接受此風險。⚠️ **絕不用公司(witsper)帳號**，見 memory `buylist-personal-infra-only`。
+    - 更新網站：改 `buylist/index.html` 後，重新 drop 一份（只放 index.html＋空金鑰 config.js）到同一個 Netlify 站即可。
+  - 手機 UI 優化待 Chia 出 spec（現版能用但偏桌面）。
 
 ## 5. 現狀（current state）
 - ✅ 落點/執行已定：private `Scout/buylist/`，雙擊啟動檔本機跑，桌面、不公開。
