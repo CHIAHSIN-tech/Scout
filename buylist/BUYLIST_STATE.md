@@ -118,6 +118,16 @@ Chia 從購物模組 backlog 整理出下面這批，已寫成 spec（都在 `bu
 - **結構化輸出（Gemini JSON schema 強制）**：把現有 AI 貼連結帶入的自寫 parse 換成強制 schema。歸 Stanley（AI 範疇）；現況 parse 實測可用，等真的抓錯再做，暫列 backlog。
 - **PWA / 離線可用**：與既有決策衝突（桌面本機跑、靠 Supabase Realtime 同步、暫不做手機）。要先決定「buylist 是否上手機」才談，屬 superseding 級別的大方向，先擱置。
 
+## 6.3 辣醬庫 Tab（2026-07-26）
+
+buylist 頂部新增 **🛒買物清單 / 🌶️辣醬庫** 兩個 tab（`#tab-buy` / `#tab-sauce`），切換顯示、標題同步。辣醬庫是 buylist 的**第二個資料域**，與購物清單互不影響。
+
+- **來源**：原 `specs/spec-hot-sauce-library.md`（Vue 3 + Vite 獨立 app）→ Stanley 拍板改成「buylist 一個 tab」，沿用 Supabase + 即時 + 單檔 vanilla。修訂版 SSOT＝`buylist/spec-buylist-sauce-tab.md`。**原 Vue spec + kickoff 已被 supersede（內容過時，待標作廢/刪）**。
+- **新表 `sauces`**（`buylist-schema.sql` §5）：name/url/spiciness/aroma/cp/repurchase/added_by/created_at；RLS 全開 + Realtime；DDL 已在 Supabase `kdmmjlaajqxjmiahfvos` 執行。
+- **MVP 已完成**（實測 AC-1~9）：新增（4 星級皆必填）、列表按回購度排序、關鍵字搜尋、刪除、即時同步、375px 無橫捲。
+- **Should（未做）**：編輯評分、圖片上傳、價格、購買日期、標籤。
+- ⚠️ **公開站需重新部署**才會有辣醬 tab（shoppingtool.netlify.app 目前是舊版）。
+
 ## 7. 怎麼跑 / 怎麼繼續
 - **跑**：進 `Scout/buylist/`，雙擊 `run.bat`（Win）或 `run.command`（Mac）→ 瀏覽器會開買物清單。
 - **接手**：新 chat → 貼「這份 `BUYLIST_STATE.md` ＋ `specs/buylist-handoff.md`」→ 說「做下一步」。
