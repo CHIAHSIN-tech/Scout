@@ -132,6 +132,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
 .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 9px;display:flex;justify-content:space-between;gap:8px;}
 .chip .cp{color:var(--muted);font-weight:600;}
 .maxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px;padding:0 4px;}
+
+/* 頂層 tab：買物清單 / 辣醬庫（兩個獨立資料域） */
+.apptabs{display:flex;gap:8px;margin-bottom:14px;}
+.apptabs button{flex:1;font-family:inherit;font-weight:700;font-size:14px;padding:11px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--muted);cursor:pointer;}
+.apptabs button.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+/* 辣醬：新增表單星級選擇 */
+.ratings{display:flex;flex-direction:column;gap:8px;margin-bottom:11px;}
+.ratingrow{display:flex;align-items:center;gap:10px;}
+.ratingrow .rlabel{font-size:12.5px;color:var(--muted);width:52px;flex:none;}
+.stars{display:inline-flex;gap:3px;}
+.stars .st{font-size:22px;line-height:1;color:var(--line);cursor:pointer;user-select:none;}
+.stars .st.on{color:var(--amber);}
+/* 辣醬：卡片評分顯示 + 搜尋框 */
+.scmeta{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:12px;flex-wrap:wrap;}
+.scmeta .rd b{color:var(--ink);} .scmeta .rd.key b{color:var(--blue-d);}
+.scsearch{flex:1;min-width:160px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;outline:none;}
+.scsearch:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
 .hidden{display:none;}
 </style>
 </head>
@@ -140,12 +157,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   <div class="head">
     <div>
       <div class="eyebrow">兩人即時共用</div>
-      <div class="title">買物清單</div>
+      <div class="title" id="appTitle">買物清單</div>
       <div class="status" id="status"><span class="dot"></span><span id="statusText">連線中…</span></div>
     </div>
     <div class="me">我是 <span class="who" id="whoSel"><button data-me="Stanley">Stanley</button><button data-me="Chia">Chia</button></span></div>
   </div>
 
+  <div class="apptabs" id="apptabs">
+    <button data-tab="buy" class="on">🛒 買物清單</button>
+    <button data-tab="sauce">🌶️ 辣醬庫</button>
+  </div>
+
+  <div id="tab-buy">
   <div class="card budget">
     <div class="blk"><label>月預算（兩人共用）</label><input type="number" id="bl-budget" min="0" step="100" placeholder="0"></div>
     <div class="blk"><label>本月想買 · 未購總價</label><div class="big" id="bl-total">NT$ 0</div></div>
@@ -203,6 +226,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     <div class="matrix" id="matrix"></div>
     <div class="maxis"><span>← 價格低</span><span>價格高 →</span></div>
   </div>
+  </div><!-- /tab-buy -->
+
+  <div id="tab-sauce" class="hidden">
+    <div class="card addbox">
+      <div class="addrow">
+        <input type="text" id="sc-name" placeholder="辣醬名稱（必填）" autocomplete="off" style="flex:1;min-width:150px;">
+        <input type="text" id="sc-url" placeholder="連結（選填）" autocomplete="off" style="flex:1;min-width:150px;">
+      </div>
+      <div class="ratings" id="sc-ratings"></div>
+      <div class="segline" style="justify-content:flex-end;">
+        <button class="addbtn" id="sc-add">＋ 加入辣醬</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input type="text" id="sc-search" class="scsearch" placeholder="🔍 搜尋辣醬名稱">
+    </div>
+    <div class="card" style="padding:6px 0;"><div class="list" id="sc-list"></div></div>
+  </div>
 </div>
 
 <script src="config.js"></script>
@@ -219,6 +260,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   const URG={need:{label:'需要',cls:'u-need'},want:{label:'想要',cls:'u-want'},maybe:{label:'再看看',cls:'u-maybe'}};
   const ACC={tw_easy:{label:'台灣容易',cls:'a-easy'},overseas:{label:'需國外',cls:'a-os'},rare:{label:'稀有難找',cls:'a-rare'}};
   const CATS=['3C','家電','服飾','美妝','食品','生活','書籍','其他'];
+  // 辣醬庫評分維度（回購度是列表預設排序鍵）
+  const SDIMS=[{k:'spiciness',label:'辣度'},{k:'aroma',label:'香氣'},{k:'cp',label:'CP值'},{k:'repurchase',label:'回購度'}];
 
   const $=id=>document.getElementById(id);
   const statusEl=$('status'), statusText=$('statusText');
@@ -236,6 +279,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   let addUrg='maybe', addAcc='tw_easy';
   let addingItem=false;
   let fStatus='all', fCat='all', fSort='default', fTag='all';
+  // 辣醬庫狀態（獨立資料域，不與購物清單相干）
+  let sauces=[], activeTab='buy', scSearch='';
+  let newSauce={spiciness:0, aroma:0, cp:0, repurchase:0};
 
   // 下拉選單填充
   $('bl-cat').innerHTML=CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
@@ -476,6 +522,57 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
     setStatus('已匯出 buylist-'+ymd+'.md','live');
   }
 
+  // ══ 辣醬庫（Hot Sauce Library）— buylist 的第二個資料域，靠頂層 tab 切換 ══
+  async function loadSauces(){
+    const r=await sb.from('sauces').select('*').order('repurchase',{ascending:false}).order('created_at',{ascending:false});
+    if(r.error){setStatus('辣醬讀取失敗：'+r.error.message,'err');return;}
+    sauces=r.data||[]; renderSauces();
+  }
+  function renderSauces(){
+    const box=$('sc-list'); const kw=scSearch.trim().toLowerCase();
+    const arr=sauces.filter(s=>!kw || String(s.name||'').toLowerCase().includes(kw));
+    if(!arr.length){box.innerHTML='<div class="empty">'+(kw?'沒有符合的辣醬。':'還沒有辣醬。<br>上面加一瓶吧。')+'</div>';return;}
+    box.innerHTML=arr.map(s=>{
+      const meta=SDIMS.map(d=>'<span class="rd'+(d.k==='repurchase'?' key':'')+'">'+d.label+' <b>'+(+s[d.k]||0)+'</b>★</span>').join('');
+      const bits=[];
+      if(s.url) bits.push('<a href="'+esc(s.url)+'" target="_blank" rel="noopener">🔗 連結</a>');
+      if(s.added_by) bits.push(esc(s.added_by)+' 加的');
+      return '<div class="item"><div class="ibody">'
+        +'<div class="itop"><span class="iname">'+esc(s.name)+'</span></div>'
+        +'<div class="scmeta">'+meta+'</div>'
+        +(bits.length?'<div class="imeta">'+bits.join('　')+'</div>':'')
+        +'</div><button class="idel" data-scdel="'+s.id+'" title="刪除">✕</button></div>';
+    }).join('');
+    box.querySelectorAll('.idel').forEach(b=>b.addEventListener('click',()=>delSauce(b.dataset.scdel)));
+  }
+  // 新增表單的星級選擇器（反映 newSauce；點第 n 顆 = 設該維度為 n）
+  function renderRatingPicker(){
+    $('sc-ratings').innerHTML=SDIMS.map(d=>{
+      const v=newSauce[d.k]||0;
+      const stars=[1,2,3,4,5].map(n=>'<span class="st'+(n<=v?' on':'')+'" data-dim="'+d.k+'" data-n="'+n+'">★</span>').join('');
+      return '<div class="ratingrow"><span class="rlabel">'+d.label+'</span><span class="stars">'+stars+'</span></div>';
+    }).join('');
+  }
+  async function addSauce(){
+    const name=($('sc-name').value||'').trim();
+    if(!name){setStatus('辣醬名稱必填','err');$('sc-name').focus();return;}
+    if(SDIMS.some(d=>!newSauce[d.k])){setStatus('4 個評分都要選（1–5 星）','err');return;}
+    const rec={name, url:($('sc-url').value||'').trim(), spiciness:newSauce.spiciness,
+      aroma:newSauce.aroma, cp:newSauce.cp, repurchase:newSauce.repurchase, added_by:me||''};
+    const {error}=await sb.from('sauces').insert(rec);
+    if(error){setStatus('辣醬新增失敗：'+error.message,'err');return;}
+    $('sc-name').value=''; $('sc-url').value=''; newSauce={spiciness:0,aroma:0,cp:0,repurchase:0}; renderRatingPicker();
+    setStatus('已加入辣醬','live'); $('sc-name').focus();
+  }
+  async function delSauce(id){const {error}=await sb.from('sauces').delete().eq('id',id);if(error)setStatus('辣醬刪除失敗：'+error.message,'err');}
+  function switchTab(t){
+    activeTab=t;
+    document.querySelectorAll('#apptabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
+    $('tab-buy').classList.toggle('hidden',t!=='buy');
+    $('tab-sauce').classList.toggle('hidden',t!=='sauce');
+    $('appTitle').textContent = t==='sauce' ? '辣醬庫' : '買物清單';
+  }
+
   // ── 事件 ──
   $('bl-add').addEventListener('click',addItem);
   $('bl-export').addEventListener('click',exportMd);
@@ -494,16 +591,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-
   $('viewtabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
     document.querySelectorAll('#viewtabs button').forEach(x=>x.classList.toggle('on',x===b));
     $('view-list').classList.toggle('hidden',view!=='list');$('view-matrix').classList.toggle('hidden',view!=='matrix');});
+  // 辣醬庫事件
+  $('apptabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;switchTab(b.dataset.tab);});
+  $('sc-add').addEventListener('click',addSauce);
+  $('sc-name').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addSauce();}});
+  $('sc-search').addEventListener('input',e=>{scSearch=e.target.value;renderSauces();});
+  $('sc-ratings').addEventListener('click',e=>{const st=e.target.closest('.st');if(!st)return;newSauce[st.dataset.dim]=+st.dataset.n;renderRatingPicker();});
 
   // ── 即時訂閱 ──
   sb.channel('buylist-all')
     .on('postgres_changes',{event:'*',schema:'public',table:'buylist_items'},loadAll)
     .on('postgres_changes',{event:'*',schema:'public',table:'buylist_budget'},loadAll)
+    .on('postgres_changes',{event:'*',schema:'public',table:'sauces'},loadSauces)
     .subscribe(st=>{ if(st==='SUBSCRIBED')setStatus('即時同步已連線','live'); else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')setStatus('即時連線異常：'+st,'err'); });
 
   // 沒設 Gemini 金鑰（如公開部署不帶 config.js）→ 隱藏「貼連結帶入」，金鑰不外洩、按鈕也不留死路
   if(!GEMINI_KEY) $('bl-import').style.display='none';
-  renderWho(); loadAll();
+  renderRatingPicker(); renderWho(); loadAll(); loadSauces();
 })();
 </script>
 </body>

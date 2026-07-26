@@ -57,3 +57,23 @@ alter table buylist_items  replica identity full;
 alter table buylist_budget replica identity full;
 do $$ begin alter publication supabase_realtime add table buylist_items;  exception when duplicate_object then null; end $$;
 do $$ begin alter publication supabase_realtime add table buylist_budget; exception when duplicate_object then null; end $$;
+
+-- 5. 辣醬庫（Hot Sauce Library）— buylist 的附加 tab，獨立資料域，不影響購物清單
+create table if not exists sauces (
+    id          bigint generated always as identity primary key,
+    name        text not null,
+    url         text    default '',
+    spiciness   int     default 0,          -- 辣度 1-5
+    aroma       int     default 0,          -- 香氣 1-5
+    cp          int     default 0,          -- CP值 1-5
+    repurchase  int     default 0,          -- 回購度 1-5（列表預設排序鍵）
+    added_by    text    default '',         -- 誰加的
+    created_at  timestamptz default now()
+);
+alter table sauces enable row level security;
+drop policy if exists sauces_anon_all on sauces;
+create policy sauces_anon_all on sauces for all to anon using (true) with check (true);
+grant select, insert, update, delete on sauces to anon;
+grant usage, select on all sequences in schema public to anon;
+alter table sauces replica identity full;
+do $$ begin alter publication supabase_realtime add table sauces; exception when duplicate_object then null; end $$;
