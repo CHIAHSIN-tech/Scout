@@ -791,6 +791,42 @@ ADR-006 當時就寫明「若日後公開部署，需重新評估」。實際公
 
 ---
 
+### ADR-014: Scout repo 所有權轉移給 Chia，部署由她自主operate
+
+- **日期：** 2026-08-01
+- **狀態：** Accepted（等待 Chia 接受轉移請求）
+- **相關方：** Stanley（拍板）/ Claude Code
+
+**情境（Context）:**
+ADR-010 的合併要接上 Netlify 自動部署時卡住：Chia 的 Netlify 帳號連的是 `CHIAHSIN-tech` 這個 GitHub 帳號，而 `Scout` 是 `witsper-stanley` 名下的 private repo，因此不出現在 Netlify 的 repo 選單裡。Stanley 明確指出**未來後台的主要使用者是 Chia**，而現行結構讓每一次基礎設施異動都必須由他授權，是所有權錯位而不只是步驟麻煩。
+
+**考慮過的選項:**
+1. **維持現狀，Stanley 安裝一次 Netlify GitHub App** — 把 App 裝到 `witsper-stanley` 並授權 `Scout`
+   - 優點：改動最小；且這是一次性成本，裝完 Chia 在 Netlify 上就能自主
+   - 缺點：所有權仍錯位。未來換部署平台、加任何需要 repo 授權的服務，都會再卡 Stanley 一次
+   - 為什麼沒選：只解決這一次，沒解決結構
+2. **建立 GitHub organization 共同持有** — Scout 轉進 org，兩人都是 owner
+   - 優點：長期最乾淨，誰都不是瓶頸，之後加人也容易
+   - 缺點：建 org 是網頁流程（Claude Code 做不到），仍需有人手動操作；比選項 3 多一步
+   - 為什麼沒選：Stanley 選了更直接的選項 3
+3. **轉移給 `CHIAHSIN-tech`** — 最終採用
+
+**決策:**
+把 `witsper-stanley/Scout` 轉移給 `CHIAHSIN-tech`，Stanley 降為協作者。理由：Chia 的 Netlify 已連著該 GitHub 帳號，轉移後 repo 直接出現在選單，**不需要安裝任何 GitHub App**，剩餘所有部署步驟她都能自己完成。
+
+轉移請求已於 2026-08-01 透過 API 送出。轉移給**使用者帳號**需要對方按接受才生效，接受前 repo 仍在 `witsper-stanley` 名下。給 Chia 的操作說明寫在 `for-chia-deploy.md`。
+
+**預期後果:**
+- 正面：部署與後台操作的瓶頸從 Stanley 移除，與「Chia 是主要後台使用者」的事實一致
+- 負面：Stanley 失去 repo 擁有權，日後若要取回需再走一次轉移（且需他接受）
+- 負面：Stanley 依賴 Chia 保留他的協作者權限；轉移後需確認他仍有 Admin 或 Write，否則推不了程式
+- 需要後續處理的事項：轉移生效後更新本機 git remote（GitHub 會自動轉址，但明確指向新位址較清楚）；`BUYLIST_STATE.md` §4「落點：private 的 Scout repo」的敘述需補註所有權已變更
+
+**分歧與轉折紀錄:**
+Claude Code 一開始把「Netlify 選單顯示 CHIAHSIN-tech」誤判為帳號混用的風險，並援引 Stanley 稍早「這個 repo 是個人的，不要跟其他東西繞在一起」的說法提出疑慮。Stanley 更正：使用 Chia 的帳號是刻意的。此更正也讓真正的問題浮現——不是帳號用錯，而是所有權與實際操作者不一致。ADR-009 當初把 buylist 放進 Scout repo 的理由之一是「Chia 是 Scout 協作者也拿得到」，該前提在本次轉移後反轉：現在是 Stanley 成為協作者。
+
+---
+
 <!-- 往後的 ADR 依序往下寫 -->
 
 ---
