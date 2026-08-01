@@ -3,7 +3,8 @@
 // 為什麼需要：Supabase 免費方案閒置 7 天就自動暫停。購物專案天天用不會中招；
 // 行程專案是「規劃旅行才用」的季節性用途，2026-07 與 2026-08 已被暫停兩次，
 // 每次都要人工到後台 un-pause（spec-scout-app-merge.md §6.5、R6）。
-// 每天打一次最輕量的查詢，用 API 活動把閒置計時器歸零。
+// 每週一、四各打一次最輕量的查詢，用 API 活動把閒置計時器歸零。
+// （不排每 7 天一次：那等於零餘裕，單次延遲或失敗就會被暫停。理由詳見 netlify.toml。）
 //
 // 排程寫在 repo 根目錄的 netlify.toml（[functions."keepalive"]），不在這裡，
 // 這樣就不需要 @netlify/functions 套件、不需要 package.json、維持零 build step。

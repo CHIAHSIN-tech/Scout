@@ -36,12 +36,44 @@ window.SCOUT_CONFIG = Object.assign({
 
 // ── 持久全域狀態（供三個 view 共用；load() 後填入）──
 let curTrip = null;
+let curTrips = [];          // 所有旅程，供下拉選單用（因 Streamlit 退役而加）
 let curItems = [];
 let currentView = "checklist";   // checklist | dayplan | timeline
 let TRIP_CTX = { totalDays: 0, dayLabel: (d) => `Day ${d}` };
 
+// ── 旅程身分 ──
+// 原本只認網址的 ?trip=<id>，而 id 只能從 Streamlit 建立旅程後去 Supabase 撈。
+// Streamlit 退役後那條路沒了（ADR-010），所以改成：網址優先 → 退回 localStorage。
+// 網址仍然優先，既有的分享連結才不會失效（AC-11）。
+const TRIP_KEY = "scout_trip_id";
+
+function getTripId() {
+  const fromUrl = new URLSearchParams(location.search).get("trip");
+  if (fromUrl) { setTripId(fromUrl); return fromUrl; }
+  let saved = null;
+  try { saved = localStorage.getItem(TRIP_KEY); } catch (e) { return null; }
+  // 從 localStorage 還原時也要把 ?trip= 寫回網址，否則直接複製網址列會少掉旅程，
+  // 對方打開只會看到選擇畫面（或他自己上次看的那趟）。
+  if (saved) setTripId(saved);
+  return saved;
+}
+
+function setTripId(id) {
+  try { localStorage.setItem(TRIP_KEY, String(id)); } catch (e) { /* 無痕模式會擋 */ }
+  // 同步網址，讓當下這頁隨時可以直接複製成分享連結
+  const u = new URL(location.href);
+  u.searchParams.set("trip", String(id));
+  history.replaceState(null, "", u);
+}
+
+function clearTripId() {
+  try { localStorage.removeItem(TRIP_KEY); } catch (e) { /* 同上 */ }
+  const u = new URL(location.href);
+  u.searchParams.delete("trip");
+  history.replaceState(null, "", u);
+}
+
 // ── 小工具 ──
-function getTripId() { return new URLSearchParams(location.search).get("trip"); }
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => (
@@ -110,6 +142,25 @@ async function loadTrip(tripId) {
   return data[0] || null;
 }
 
+// 所有旅程（下拉選單用）。最近出發的排前面。
+async function loadTrips() {
+  const res = await sb(`trips?select=id,name,start_date,end_date&order=start_date.desc`);
+  return res.json();
+}
+
+// 建立旅程。username 是 NOT NULL，沿用 buylist 的「我是誰」設定；沒設就記 unknown。
+async function createTrip(fields) {
+  let who = "";
+  try { who = localStorage.getItem("buylist_me") || ""; } catch (e) { /* 無痕模式 */ }
+  const res = await sb(`trips`, {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ username: who || "unknown", notes: "", ...fields }),
+  });
+  const rows = await res.json();
+  return rows[0];
+}
+
 async function loadItems(tripId) {
   const order = "confirm_required.desc,is_confirmed.asc,day_number.asc,start_time.asc";
   const res = await sb(`itinerary_items?trip_id=eq.${encodeURIComponent(tripId)}&select=*&order=${order}`);
@@ -145,19 +196,86 @@ const VIEWS = [
   { key: "timeline",  label: "時間軸" },
 ];
 
+// ── 旅程選擇列（切換旅程 ＋ 建立旅程）──
+// Streamlit 退役後，這裡是唯一能開新旅程的地方（spec §6.2）。
+function renderTripBar() {
+  const opts = curTrips.map((t) =>
+    `<option value="${t.id}"${curTrip && String(t.id) === String(curTrip.id) ? " selected" : ""}>${escapeHtml(t.name)}</option>`
+  ).join("");
+  return `
+    <div class="tripbar">
+      <select id="trip-sel" aria-label="選擇旅程">
+        ${curTrip ? "" : `<option value="">— 選一趟旅程 —</option>`}
+        ${opts}
+      </select>
+      <details class="tripnew">
+        <summary>＋ 新旅程</summary>
+        <div class="mini-form">
+          <input type="text" id="trip-name" placeholder="旅程名稱（必填）" autocomplete="off">
+          <input type="date" id="trip-start" aria-label="開始日期">
+          <input type="date" id="trip-end" aria-label="結束日期">
+          <button type="button" class="sched-btn" id="trip-create">建立</button>
+        </div>
+        <div class="mini-msg" id="trip-msg" aria-live="polite"></div>
+      </details>
+    </div>`;
+}
+
+// ── 手動新增行程項目 ──
+// 原本只有 AI 匯入能新增（addItem 的註解就是這樣寫的），Streamlit 退役後必須補手動路徑。
+function renderAddItem() {
+  if (!curTrip) return "";
+  let dayOpts = `<option value="">候選（先不排日期）</option>`;
+  for (let d = 1; d <= TRIP_CTX.totalDays; d++) dayOpts += `<option value="${d}">${TRIP_CTX.dayLabel(d)}</option>`;
+  const catOpts = Object.keys(CATEGORY_LABEL)
+    .map((k) => `<option value="${k}"${k === "attraction" ? " selected" : ""}>${CATEGORY_LABEL[k]}</option>`).join("");
+  return `
+    <details class="additem">
+      <summary>＋ 新增項目</summary>
+      <div class="mini-form">
+        <input type="text" id="add-name" placeholder="景點 / 餐廳 / 活動名稱（必填）" autocomplete="off">
+        <select id="add-cat" aria-label="分類">${catOpts}</select>
+        <select id="add-day" aria-label="第幾天">${dayOpts}</select>
+        <input type="time" id="add-time" aria-label="開始時間">
+        <label class="mini-check"><input type="checkbox" id="add-req">必須確認</label>
+        <button type="button" class="sched-btn" id="add-go">加入</button>
+      </div>
+      <div class="mini-msg" id="add-msg" aria-live="polite"></div>
+    </details>`;
+}
+
 function renderApp() {
   TRIP_CTX = buildTripCtx(curTrip);
   const updated = new Date().toLocaleTimeString("zh-Hant", { hour: "2-digit", minute: "2-digit" });
+
+  // 還沒選旅程：只給選擇列，不渲染 tab 與清單（沒有 trip_id 什麼都查不了）
+  if (!curTrip) {
+    app.innerHTML = `
+      <div class="header">
+        <div class="title">確認清單</div>
+        <div class="sub">出發前確認清單</div>
+      </div>
+      ${renderTripBar()}
+      ${renderBanner("warn", curTrips.length
+        ? "上面選一趟旅程開始，或按「＋ 新旅程」建立一趟。"
+        : "還沒有任何旅程。按「＋ 新旅程」建立第一趟。")}
+    `;
+    wireShell();
+    return;
+  }
+
   app.innerHTML = `
     <div class="header">
-      <div class="title">${escapeHtml(curTrip ? curTrip.name : "確認清單")}</div>
+      <div class="title">${escapeHtml(curTrip.name)}</div>
       <div class="sub">出發前確認清單</div>
     </div>
+    ${renderTripBar()}
     <div class="toolbar">
       <button class="refresh-btn" id="refresh">↻ 重新整理</button>
       <button class="ai-import-btn" id="ai-import-open">✨ AI 匯入行程</button>
       <span class="updated">更新於 ${updated}</span>
     </div>
+    ${renderAddItem()}
     <div class="tabbar" id="tabbar">
       ${VIEWS.map((v) => `<button data-view="${v.key}" class="${v.key === currentView ? "on" : ""}">${v.label}</button>`).join("")}
     </div>
@@ -194,6 +312,78 @@ function wireShell() {
   if (aiBtn) aiBtn.addEventListener("click", openAiImportModal);
   document.querySelectorAll("#tabbar button").forEach((b) =>
     b.addEventListener("click", () => switchView(b.dataset.view)));
+  wireTripBar();
+  wireAddItem();
+}
+
+// 小表單的訊息列：失敗一律紅字，不靜默失敗（比照 buylist 的 setStatus 慣例）
+function miniMsg(id, text, cls) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = text; el.className = "mini-msg" + (cls ? " " + cls : ""); }
+}
+
+function wireTripBar() {
+  const sel = document.getElementById("trip-sel");
+  if (sel) sel.addEventListener("change", () => {
+    if (!sel.value) return;
+    setTripId(sel.value);
+    currentView = "checklist";   // 換旅程回到預設檢視，避免停在空的時間軸
+    load();
+  });
+
+  const btn = document.getElementById("trip-create");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const name = (document.getElementById("trip-name").value || "").trim();
+    const start = document.getElementById("trip-start").value;
+    const end = document.getElementById("trip-end").value;
+    if (!name)          return miniMsg("trip-msg", "請填旅程名稱。", "err");
+    if (!start || !end) return miniMsg("trip-msg", "請填開始與結束日期（行程表與時間軸要靠它算天數）。", "err");
+    if (end < start)    return miniMsg("trip-msg", "結束日期不能早於開始日期。", "err");
+
+    btn.disabled = true;
+    miniMsg("trip-msg", "建立中…", "busy");
+    try {
+      const row = await createTrip({ name, start_date: start, end_date: end });
+      if (!row || !row.id) throw new Error("Supabase 沒有回傳新旅程的 id");
+      setTripId(row.id);
+      currentView = "checklist";
+      await load();
+    } catch (e) {
+      btn.disabled = false;
+      miniMsg("trip-msg", "建立失敗：" + (e && e.message ? e.message : String(e)), "err");
+    }
+  });
+}
+
+function wireAddItem() {
+  const btn = document.getElementById("add-go");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const name = (document.getElementById("add-name").value || "").trim();
+    if (!name) return miniMsg("add-msg", "請填名稱。", "err");
+    const day = document.getElementById("add-day").value;
+    const time = document.getElementById("add-time").value;
+
+    btn.disabled = true;
+    miniMsg("add-msg", "加入中…", "busy");
+    try {
+      await addItem({
+        name,
+        category: document.getElementById("add-cat").value,
+        // 沒選天數 = 候選中（day_number 為 NULL），時間也一併留空才不會自相矛盾
+        day_number: day ? Number(day) : null,
+        start_time: day && time ? time : null,
+        confirm_required: document.getElementById("add-req").checked,
+        is_confirmed: false,
+        source: "manual",
+      });
+      await load();
+    } catch (e) {
+      btn.disabled = false;
+      miniMsg("add-msg", "加入失敗：" + (e && e.message ? e.message : String(e)), "err");
+    }
+  });
 }
 
 // ── 確認清單 view（三段；手機收合，AC-7）──
@@ -645,13 +835,18 @@ function showError(err) {
 async function load() {
   const cfgErr = configError();
   if (cfgErr) { app.innerHTML = renderBanner("error", escapeHtml(cfgErr)); return; }
-  const tripId = getTripId();
-  if (!tripId) {
-    app.innerHTML = renderBanner("error", "網址缺少 ?trip=&lt;旅程編號&gt;。請使用分享連結開啟，例如 index.html?trip=1");
-    return;
-  }
   app.innerHTML = `<div class="status">載入中…</div>`;
   try {
+    curTrips = await loadTrips();
+    const tripId = getTripId();
+    // 存的 id 可能指向已被刪掉的旅程，所以要對照清單確認它還在
+    const exists = tripId && curTrips.some((t) => String(t.id) === String(tripId));
+    if (!exists) {
+      if (tripId) clearTripId();          // 髒資料，清掉免得每次都撞
+      curTrip = null; curItems = [];
+      renderApp();                        // 渲染旅程選擇畫面，不是錯誤畫面
+      return;
+    }
     const [trip, itemsData] = await Promise.all([loadTrip(tripId), loadItems(tripId)]);
     curTrip = trip; curItems = itemsData;
     renderApp();
