@@ -8,17 +8,15 @@
 
 ---
 
-## 第 0 步：接受 repo 轉移（先做這個，其他都靠它）
+## 第 0 步：✅ 已完成 — repo 轉移
 
-Stanley 已經送出把 `Scout` repo 轉給你的請求。
+你已經接受了，repo 現在是 `github.com/CHIAHSIN-tech/Scout`，PR #4 也跟著搬過來了。
 
-1. 開 GitHub，你應該會看到通知（也會有一封 email，標題大概是 *"Repository transfer from witsper-stanley"*）
-2. 按 **Accept**（轉移請求有時效，**建議今天就按**，過期要重送）
+**只剩一個小調整（麻煩順手做）**：**Settings → Collaborators** → 把 **witsper-stanley** 從 **Write** 改成 **Admin**。
 
-接受後：
-- repo 網址變成 `github.com/CHIAHSIN-tech/Scout`
-- Stanley 會自動保留為協作者（麻煩你順手到 **Settings → Collaborators** 確認他還在，權限給 **Admin** 或 **Write**，不然他推不了程式）
-- 裡面那個還沒合併的 **PR #4** 會跟著一起搬過來
+現在他是 Write，推程式、合併 PR 都沒問題（已實測），但改不了 repo 設定——例如之後要調整 webhook、
+改公開/私有、或接別的服務時就會卡住又要來找你。給 Admin 可以省掉這類來回。
+你自己仍然是擁有者，這不會影響你的任何權限。
 
 ---
 
