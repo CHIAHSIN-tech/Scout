@@ -1,0 +1,22 @@
+// config.js.example — 複製成 config.js（已被 .gitignore 擋住）再填值。
+//
+// 沒有 config.js 也能跑：兩邊的 Supabase 連線都寫死在各自的 js 裡（publishable key，
+// 設計上即公開、靠網址當存取邊界）。config.js 只在兩種情況下需要：
+//   1. 要用購物 Tab 的「🔗 貼連結帶入」——沒有金鑰時該按鈕會自動隱藏。
+//   2. 要臨時指向別的 Supabase 專案（例如測試）。
+//
+// ⚠️ Day 2 會把這兩個全域收斂成單一 window.SCOUT_APP_CONFIG，
+//    並把 Gemini 金鑰整個移到 Netlify Function（前端不再持有金鑰）。
+//    在那之前先沿用兩邊原本的全域名稱，避免動到已驗證過的邏輯。
+
+// 購物 Tab（buylist.js 讀這個）
+window.BUYLIST_CONFIG = {
+  GEMINI_API_KEY: "",              // 留空 = 隱藏「🔗 貼連結帶入」
+  GEMINI_MODEL: "gemini-2.5-flash",
+};
+
+// 行程 Tab（checklist.js 讀這個；留空物件即可，連線已寫死在 checklist.js）
+window.SCOUT_CONFIG = {
+  // SUPABASE_URL: "https://xxxx.supabase.co",
+  // SUPABASE_ANON_KEY: "sb_publishable_xxxx",
+};
