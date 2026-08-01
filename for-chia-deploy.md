@@ -1,9 +1,53 @@
 # 給珈欣 — 把合併版 app 部署上線
 
+> **2026-08-01 進度**：站已經建起來了 ✅，但對外還是 401 打不開。
+> 直接看下面紅色那節「現在要做的三件事」，第 1～5 步是原始的建置說明，留著備查。
+
 > **背景**：購物清單（buylist）和行程確認清單（scout-checklist）已經合併成**一個網頁、頂部兩個 Tab**。
 > 程式碼寫好、測過、也已經合併進 `main` 了。就差「接上 Netlify」這一步。
 >
 > **你要做的是下面第 1～4 步。** Stanley 只有最後第 5 步（刪掉舊站），而且要等你確認新站正常之後才做。
+
+---
+
+# 🔴 現在要做的三件事（2026-08-01 更新）
+
+你已經把站建起來了，但**目前外面的人打不開**。三件事，都在 Netlify，都是你的帳號才能做。
+
+## ① 關掉存取保護（必做，不然這個網址等於沒上線）
+
+現在 `https://shoppingtool.netlify.app/` 對外回 **HTTP 401**，根目錄會跳到 Netlify 的登入頁
+（`app.netlify.com/edge-access?...`）。**沒有 Netlify 帳號的人一律打不開**，連 functions 也是 401。
+
+- **Site configuration** → 找 **Access & security**（有的版本叫 **Visitor access** 或 **Password protection**）
+- 把保護關掉 / 設成 **Public**
+
+怎麼確認好了：用手機的無痕視窗（或請 Stanley）開 `https://shoppingtool.netlify.app/`，
+不用登入就看到畫面才算成功。
+
+## ② 確認「自動部署」真的接上了
+
+GitHub 那邊查到 main 的 commit 有 **0 個部署狀態、0 個 deployment**。如果是用 Import from Git
+接的，Netlify 通常會在每個 commit 回報狀態。完全沒有，可能代表站台是**手動拖拉**上去的。
+
+- **Site configuration** → **Build & deploy** → **Continuous deployment**
+- 那一區要顯示 `CHIAHSIN-tech/Scout`
+
+**如果沒有顯示** → 就是手動部署，自動部署沒接成。請按 **Link repository** 照下面第 1、2 步重接一次。
+（差別很大：沒接 Git 的話，之後每次改程式都要人工重新上傳，很容易忘記，
+線上就會變成舊版——這個坑之前踩過一次。）
+
+## ③ 把 Stanley 加進你的 Netlify team
+
+現在這個站在你的 team 裡，Stanley 完全看不到，所以像上面①②這種部署問題他沒辦法自己查、
+只能來回問你。build 設定是他寫的，讓他能進來看 deploy log 會省很多時間。
+
+- **Team settings** → **Members** → **Invite members** → 填 Stanley 的 email
+
+你仍然是 team owner，他只是成員，不影響你的任何權限。
+
+> ⚠️ Netlify 免費方案的成員數可能有上限。如果 invite 被擋住就先算了，跟他說一聲，
+> 之後部署有問題你把 deploy log 貼給他就行。
 
 ---
 
