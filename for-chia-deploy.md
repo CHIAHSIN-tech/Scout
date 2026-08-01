@@ -21,8 +21,11 @@
 未來後台主要是你在操作，所以決定**把部署也搬到你這邊** —— repo 和 Netlify 都在你手上，之後改設定、
 加服務都不用再找 Stanley。
 
-代價是**網址會變**（不再是 `shoppingtool.netlify.app`）。使用者只有你們兩個，換個書籤就好，
-比起三方協調改名，這樣單純很多。
+**好消息：網址可以保留。** Stanley 已經把他那個舊站改名成 `shoppingtool-old`，
+所以 `shoppingtool` 這個名字現在是空的，你建好站之後改成這個名字就接手了（第 4 步）。
+
+> ⚠️ 在你完成第 4 步之前，`shoppingtool.netlify.app` 是 404。
+> 這段期間要用舊版的話，網址是 **`shoppingtool-old.netlify.app`**（資料相通，連的是同一個 Supabase）。
 
 ---
 
@@ -63,9 +66,9 @@
 > 這把金鑰是給「✨ AI 匯入行程」和「🔗 貼連結帶入」用的。
 > **金鑰只放在這裡**，不進程式碼、也不會外洩到前端（前端只呼叫 `/.netlify/functions/...`）。
 
-## 第 4 步：確認新站正常，然後把網址給 Stanley
+## 第 4 步：確認正常後，把站名改成 shoppingtool
 
-打開新網址（Netlify 給的那個，像 `xxx-yyy-123.netlify.app`），確認：
+先用 Netlify 給的臨時網址（像 `xxx-yyy-123.netlify.app`）確認下面這些都對：
 
 1. 頂部有 **🛒 購物 / 🗺️ 行程** 兩個 Tab，可以切換；重新整理後停在上次看的那個
 2. **購物 Tab**：清單有資料、可以新增一筆、辣醬庫那個 tab 也在
@@ -77,11 +80,15 @@
 4. **Functions** 分頁有兩支：`ai-parse`、`keepalive`（後者標示 **Scheduled**）
 5. 手機打開不破版
 
-都對了就把新網址給 Stanley。
+都對了之後 → **Site configuration → General → Site details → Change site name** → 改成 **`shoppingtool`**
+
+（這個名字是空的，Stanley 已經把他的舊站改名讓出來了。改完網址就變回 `https://shoppingtool.netlify.app/`。）
+
+然後跟 Stanley 說一聲。
 
 ## 第 5 步（Stanley 做）：刪掉舊站
 
-確認新站沒問題後，Stanley 到他自己的 Netlify 把 `shoppingtool` 站刪掉。
+你確認新站正常、名字也接手之後，Stanley 到他自己的 Netlify 把 `shoppingtool-old` 這個站刪掉。
 **在那之前舊站留著當退路**，反正兩個站連的是同一個 Supabase，資料一致。
 
 ---
