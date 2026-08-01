@@ -1,0 +1,31 @@
+# netlify.toml — Scout 合併版 web app 的部署設定。
+#
+# 放在 repo 根目錄（不是 web/），因為 Netlify 預設只在根目錄找這個檔案。
+# 刻意不設 base：所有路徑都相對於 repo 根目錄，語意最不容易搞錯
+# （設了 base 之後 publish / functions 要不要跟著相對，各版本行為不一致，乾脆不用）。
+#
+# 沒有 build command：整包是無 build step 的靜態檔（ADR-010），Netlify 直接發佈 web/。
+
+[build]
+  publish = "web"
+  functions = "web/netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# ── 排程：Supabase 保活 ──
+# 為什麼把 schedule 寫在這裡而不是 function 檔案裡：
+# 檔案內宣告排程要 import @netlify/functions 套件，就得有 package.json 與 npm install，
+# 等於為了一支保活工作引進 build step。寫在 netlify.toml 就不需要任何相依套件。
+#
+# 每週一、四 03:17 UTC（台灣時間 11:17）各跑一次。
+#
+# 為什麼是兩次而不是一次：Supabase 的暫停門檻就是「閒置 7 天」。若排程也是 7 天一次，
+# 餘裕是零——Netlify 排程不保證準時觸發，只要延遲一次或失敗一次就會被暫停，
+# 而失敗只會出現在 function log 裡，不會有人立刻發現。一、四各一次 = 間隔 3～4 天，
+# 單次失敗還有下一次補救。
+#
+# 為什麼不是每天：沒必要。頻率不是成本問題（Netlify 免費方案每月 125k 次呼叫），
+# 純粹是每天跑對一個 7 天門檻來說是多餘的。
+[functions."keepalive"]
+  schedule = "17 3 * * 1,4"

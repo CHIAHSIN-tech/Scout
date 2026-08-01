@@ -1,0 +1,61 @@
+/* shell.css — 合併版外殼樣式。
+   職責只有三件事：全域重設、body 版面、頂部雙 Tab。
+   兩個 app 各自的樣式在 buylist.css / checklist.css，都已用 #panel-shop / #panel-trip 前綴隔離。
+
+   為什麼變數叫 --sh-*：buylist 與 checklist 各自在自己的 panel 上定義了同名的 --bg / --card /
+   --green 等變數（值不同），外殼不能跟著用同一批名字，否則會被 panel 繼承關係搞混。 */
+
+:root{
+  /* Scout CIS 米色系，對照 scout_cis.html */
+  --sh-bg:#F5F0EA;
+  --sh-card:#FFFFFF;
+  --sh-ink:#3C3830;
+  --sh-muted:#6B6558;
+  --sh-line:#DCD8D0;
+  --sh-green:#3D6B54;
+  --sh-font:'Noto Sans TC',sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family:var(--sh-font);
+  background:var(--sh-bg);
+  color:var(--sh-ink);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+.app-shell{max-width:640px;margin:0 auto;}
+
+/* ── 頂部雙 Tab ──
+   sticky：手機上往下捲時仍能切換，不用捲回頂端。
+   底色必須不透明，否則 sticky 時內容會透出來。 */
+.shell-tabs{
+  position:sticky;top:0;z-index:50;
+  display:flex;gap:8px;
+  padding:12px 14px;
+  background:var(--sh-bg);
+  border-bottom:1px solid var(--sh-line);
+}
+.shell-tabs button{
+  flex:1;
+  font-family:inherit;font-weight:700;font-size:15px;
+  padding:11px 12px;
+  border:1px solid var(--sh-line);border-radius:999px;
+  background:var(--sh-card);color:var(--sh-muted);
+  cursor:pointer;
+}
+.shell-tabs button.on{
+  background:var(--sh-green);color:#fff;border-color:var(--sh-green);
+}
+
+/* ── Panel ──
+   .panel.hidden 用外殼自己的規則；兩邊各自的 .hidden 已被前綴限定在自己的子樹裡，
+   不會誤中這裡。 */
+.panel.hidden{display:none;}
+
+/* buylist 原本的版面 padding 在它的 body 規則上，拆檔時被丟掉，這裡補回來。
+   （checklist 的 padding 在它自己的 #app 上，已隨 checklist.css 保留。） */
+#panel-shop{padding:14px 14px 60px;}

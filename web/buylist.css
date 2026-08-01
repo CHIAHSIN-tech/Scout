@@ -1,0 +1,149 @@
+﻿/* buylist.css — 從 buylist/index.html 的 <style> 原樣搬出，每條選擇器加上 #panel-shop 作用域。
+   為什麼加前綴：buylist 與 checklist 都用 .card / .status / .empty 等通用 class 名，
+   同頁並存會互相污染（spec-scout-app-merge.md §5.2）。前綴讓兩邊完全隔離，不必逐個改名。
+   原本的 :root 變數改定義在 #panel-shop 上——CSS 變數會往下繼承，等於自動作用域化。 */
+#panel-shop{
+  /* Scout CIS 配色（sage/linen/wheat）— 對照 scout_cis.html */
+  --bg:#F5F0EA; --card:#FFFFFF; --ink:#3C3830; --muted:#6B6558; --faint:#A8A298;
+  --line:#DCD8D0; --line-soft:#F5F0EA; --blue:#3D6B54; --blue-d:#2A4D3A;
+  --green:#5C8C72; --amber:#C4915A; --red:#7A5230;
+  --need:#7A5230; --want:#C4915A; --maybe:#6B6558;
+  --r-lg:18px; --r-md:12px; --font:'Noto Sans TC',sans-serif;
+}
+#panel-shop *{box-sizing:border-box;margin:0;padding:0;}
+/* [scoped] body/html 規則已移到 shell.css */
+
+#panel-shop .wrap{width:100%;max-width:640px;}
+#panel-shop .head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+#panel-shop .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.26em;color:var(--faint);text-transform:uppercase;margin-bottom:6px;}
+#panel-shop .title{font-weight:700;font-size:26px;letter-spacing:-.01em;}
+#panel-shop .status{font-size:11.5px;color:var(--muted);margin-top:5px;}
+#panel-shop .status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--faint);margin-right:5px;vertical-align:middle;}
+#panel-shop .status.live .dot{background:var(--green);} #panel-shop .status.err .dot{background:var(--red);}
+#panel-shop .me{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+#panel-shop .me .who{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);}
+#panel-shop .me .who button{font-family:inherit;font-size:12px;padding:6px 11px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
+#panel-shop .me .who button.on{background:var(--ink);color:#fff;}
+#panel-shop .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:0 1px 2px rgba(20,22,28,.05),0 8px 28px rgba(20,22,28,.05);}
+
+#panel-shop .budget{padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+#panel-shop .budget .blk{display:flex;flex-direction:column;gap:3px;}
+#panel-shop .budget label{font-size:11px;color:var(--faint);font-weight:600;}
+#panel-shop .budget input{width:120px;font-family:inherit;font-size:15px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none;}
+#panel-shop .budget input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+#panel-shop .budget .big{font-size:20px;font-weight:700;letter-spacing:-.01em;}
+#panel-shop .budget .sep{flex:1;}
+#panel-shop .budget .remain.ok{color:var(--green);} #panel-shop .budget .remain.over{color:var(--red);}
+#panel-shop .budget .hint{font-size:10.5px;color:var(--faint);width:100%;}
+#panel-shop .budget .recur{font-size:11px;color:var(--amber);width:100%;font-weight:600;}
+
+#panel-shop .addbox{padding:16px 18px;margin-bottom:14px;}
+#panel-shop .addrow{display:flex;gap:9px;margin-bottom:11px;flex-wrap:wrap;}
+#panel-shop .addbox input,
+#panel-shop .addbox select{font-family:inherit;font-size:14px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
+#panel-shop .addbox input:focus,
+#panel-shop .addbox select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+#panel-shop #bl-name{flex:1;min-width:150px;} #panel-shop #bl-price{width:110px;} #panel-shop #bl-qty{width:78px;} #panel-shop #bl-cat{width:120px;} #panel-shop #bl-tag{width:132px;} #panel-shop #bl-recur{width:140px;}
+#panel-shop .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg);}
+#panel-shop .seg button{font-family:inherit;font-size:12.5px;padding:8px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
+#panel-shop .seg button.on{background:var(--ink);color:#fff;}
+#panel-shop .seg.urg button.on[data-v=need]{background:var(--need);} #panel-shop .seg.urg button.on[data-v=want]{background:var(--want);}
+#panel-shop .fieldlabel{font-size:11px;color:var(--faint);font-weight:600;margin:0 6px 0 2px;align-self:center;}
+#panel-shop .segline{display:flex;gap:10px;align-items:center;margin-bottom:11px;flex-wrap:wrap;}
+#panel-shop .tmtoggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink);cursor:pointer;}
+#panel-shop .tmtoggle input{width:16px;height:16px;}
+#panel-shop .addbtn{font-family:inherit;font-weight:600;font-size:14px;padding:11px 22px;border-radius:999px;cursor:pointer;border:none;background:var(--blue);color:#fff;}
+#panel-shop .addbtn:hover{background:var(--blue-d);}
+/* 次要按鈕（貼連結帶入）：白底 sage 描邊，跟主要「加入」區隔 */
+#panel-shop .addbtn.ghost{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);padding:9.5px 18px;}
+#panel-shop .addbtn.ghost:hover{background:#EAF2ED;}
+#panel-shop .addbtn:disabled{opacity:.55;cursor:default;}
+#panel-shop .btngroup{display:inline-flex;gap:8px;flex-wrap:wrap;}
+#panel-shop .addbox .wide{width:100%;}
+/* 批次貼多行：原生 details 可展開，不擠壓單筆表單 */
+#panel-shop .bulkbox{border-top:1px solid var(--line-soft);margin-top:6px;padding-top:12px;}
+#panel-shop .bulkbox summary{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;list-style:none;user-select:none;}
+#panel-shop .bulkbox summary::-webkit-details-marker{display:none;}
+#panel-shop .bulkbox summary::before{content:'＋ ';}
+#panel-shop .bulkbox[open] summary::before{content:'－ ';}
+#panel-shop .bulkbox textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;resize:vertical;min-height:78px;margin:10px 0;}
+#panel-shop .bulkbox textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+
+/* 篩選 / 排序列 */
+#panel-shop .filters{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+#panel-shop .filters .seg button{font-size:12.5px;padding:7px 13px;}
+#panel-shop .filters .seg button.on{background:var(--blue);color:#fff;}
+#panel-shop .filters select{font-family:inherit;font-size:12.5px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;outline:none;cursor:pointer;}
+#panel-shop .expbtn{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--blue);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer;}
+#panel-shop .expbtn:hover{background:#EAF2ED;}
+#panel-shop .viewtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card);margin-left:auto;}
+#panel-shop .viewtabs button{font-family:inherit;font-weight:600;font-size:12.5px;padding:7px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;}
+#panel-shop .viewtabs button.on{background:var(--blue);color:#fff;}
+
+#panel-shop .list{display:flex;flex-direction:column;gap:9px;}
+#panel-shop .item{padding:13px 15px;display:flex;align-items:flex-start;gap:12px;}
+#panel-shop .item.bought .iname{text-decoration:line-through;color:var(--faint);}
+#panel-shop .chk{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;padding:0;margin-top:2px;}
+#panel-shop .chk:hover{border-color:var(--green);} #panel-shop .chk.on{background:var(--green);border-color:var(--green);color:#fff;}
+/* 星號收藏：只在已買項目顯示（.item.bought）；空心＝未收藏、實心 wheat＝值得回購 */
+#panel-shop .star{flex:none;width:22px;height:22px;border:none;background:none;cursor:pointer;
+  color:var(--faint);font-size:18px;padding:0;margin-top:2px;display:none;line-height:1;}
+#panel-shop .item.bought .star{display:inline-flex;align-items:center;justify-content:center;}
+#panel-shop .star.on{color:var(--amber);}
+#panel-shop .star:hover{color:var(--amber);}
+#panel-shop .ibody{flex:1;min-width:0;}
+#panel-shop .itop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+#panel-shop .iname{font-size:15.5px;font-weight:600;word-break:break-word;}
+#panel-shop .iprice{font-size:14px;font-weight:700;color:var(--ink);}
+#panel-shop .iqty{font-size:13px;font-weight:600;color:var(--muted);}
+#panel-shop .itags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+#panel-shop .tag{font-size:10.5px;font-weight:600;border-radius:7px;padding:2px 8px;}
+#panel-shop .tag.u-need{background:#E8C898;color:var(--need);} #panel-shop .tag.u-want{background:#FBF0E0;color:var(--want);} #panel-shop .tag.u-maybe{background:#F5F0EA;color:var(--muted);}
+#panel-shop .tag.a-easy{background:#EAF2ED;color:#5C8C72;} #panel-shop .tag.a-os{background:#F5F0EA;color:#3C3830;} #panel-shop .tag.a-rare{background:#FBF0E0;color:#7A5230;}
+#panel-shop .tag.cat{background:#F5F0EA;color:#A8A298;}
+#panel-shop .tag.tm{background:#EAF2ED;color:var(--blue);} #panel-shop .tag.later{background:#F5F0EA;color:var(--muted);}
+#panel-shop .tag.ctx{background:#DCE9E1;color:var(--blue-d);border:1px solid #C3D9CC;}
+#panel-shop .tag.days{background:transparent;color:var(--faint);padding-left:0;}
+#panel-shop .imeta{font-size:11px;color:var(--faint);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+#panel-shop .imeta a{color:var(--blue);text-decoration:none;} #panel-shop .imeta a:hover{text-decoration:underline;}
+#panel-shop .irecur{color:var(--amber);font-weight:600;}
+#panel-shop .inote{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word;}
+/* 實付金額：只在已買項目顯示，填了看省/超差額 */
+#panel-shop .actual{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#panel-shop .ainput{width:88px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;outline:none;}
+#panel-shop .ainput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+#panel-shop .pdiff{font-weight:600;} #panel-shop .pdiff.save{color:var(--green);} #panel-shop .pdiff.over{color:var(--red);} #panel-shop .pdiff.even{color:var(--faint);}
+#panel-shop .idel{flex:none;background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:2px 4px;margin-top:2px;}
+#panel-shop .idel:hover{color:var(--red);}
+#panel-shop .empty{padding:42px 16px;text-align:center;font-size:13px;color:var(--faint);line-height:1.8;}
+
+#panel-shop .matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;min-height:340px;margin-top:4px;}
+#panel-shop .quad{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;background:var(--card);}
+#panel-shop .quad .qh{font-size:11px;font-weight:700;color:var(--muted);}
+#panel-shop .quad.q-hi-need{background:#E8C898;border-color:#C4915A;} #panel-shop .quad.q-lo-need{background:#FBF0E0;border-color:#E8C898;}
+#panel-shop .chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 9px;display:flex;justify-content:space-between;gap:8px;}
+#panel-shop .chip .cp{color:var(--muted);font-weight:600;}
+#panel-shop .maxis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px;padding:0 4px;}
+
+/* 頂層 tab：買物清單 / 辣醬庫（兩個獨立資料域） */
+#panel-shop .apptabs{display:flex;gap:8px;margin-bottom:14px;}
+#panel-shop .apptabs button{flex:1;font-family:inherit;font-weight:700;font-size:14px;padding:11px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--muted);cursor:pointer;}
+#panel-shop .apptabs button.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+/* 辣醬：新增表單星級選擇 */
+#panel-shop .ratings{display:flex;flex-direction:column;gap:8px;margin-bottom:11px;}
+#panel-shop .ratingrow{display:flex;align-items:center;gap:10px;}
+#panel-shop .ratingrow .rlabel{font-size:12.5px;color:var(--muted);width:52px;flex:none;}
+#panel-shop .stars{display:inline-flex;gap:3px;}
+#panel-shop .stars .st{font-size:22px;line-height:1;color:var(--line);cursor:pointer;user-select:none;}
+#panel-shop .stars .st.on{color:var(--amber);}
+/* 辣醬：卡片評分顯示 + 搜尋框 */
+#panel-shop .scmeta{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:12px;flex-wrap:wrap;}
+#panel-shop .scmeta .rd b{color:var(--ink);} #panel-shop .scmeta .rd.key b{color:var(--blue-d);}
+#panel-shop .scsearch{flex:1;min-width:160px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;outline:none;}
+#panel-shop .scsearch:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+#panel-shop .hidden{display:none;}

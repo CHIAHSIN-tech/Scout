@@ -2,17 +2,17 @@
 # PROJECT DNA — 會被覆寫，但很少改動。只在專案定位本身改變時更新。
 project_name: "Scout"
 created_at: "2026-04-04"
-last_updated: "2026-04-18 16:53"
+last_updated: "2026-08-01"
 current_version: "v0.0.0"
-current_phase: "開發中"
+current_phase: "轉型中——Streamlit 退役、合併為單一靜態雙 Tab web app"
 primary_owner: "Stanley / 珈欣（Chia）"
 tech_stack:
-  language: "Python"
-  ui_framework: "Streamlit"
-  styling: "Custom CSS（Noto Sans TC、綠色主題、手機優先）"
-  backend: "Streamlit（Python）"
-  database: "SQLite（scout.db）"
-  hosting: "TBD"
+  language: "JavaScript（vanilla，無 build）；Python 僅存於待退役的 Streamlit"
+  ui_framework: "無框架（原生 HTML/CSS/JS）；Streamlit 待退役"
+  styling: "Custom CSS（Scout CIS 米色系、Noto Sans TC、手機優先）"
+  backend: "無自有後端；瀏覽器直打 Supabase PostgREST + Netlify Functions（AI proxy）"
+  database: "Supabase（PostgreSQL）×2 專案：uarkccyqcqvgxukjcrey（行程，Chia）／kdmmjlaajqxjmiahfvos（購物，Stanley）"
+  hosting: "Netlify"
 repo_url: "https://github.com/witsper-stanley/Scout.git"
 ---
 
@@ -222,35 +222,43 @@ TBD（待實際開發中出現時補充）
 
 ### 2.1 當前階段
 
-**目前在哪：** 開發中（第一版）
-**本週焦點：** 購物模組 — 待買清單完成，下一步購物模組預算追蹤
+**目前在哪：** 轉型中。專案在 2026-04～07 分裂成三套並存的東西（Streamlit app、buylist 靜態 app、scout-checklist 靜態 app），現正收斂成**單一靜態雙 Tab web app**，Streamlit 退役。
+**本週焦點：** 執行 `specs/spec-scout-app-merge.md` v2（Appetite：一個週末）。
 
 ### 2.2 MoSCoW 範疇
 
-**Must（第一版）**
-- [x] 基本框架 + 登入（Stanley / 珈欣 下拉選使用者）
-- [x] 行程規劃模組（時間軸 + AI 建議）
-- [x] 購物模組 — 待買清單
-- [ ] 購物模組 — 預算追蹤
-- [ ] 貼連結自動分析（AI 核心功能）
+> 原「第一版」的模組式範疇（餐廳／旅館模組等）是 Streamlit 時代的規劃，隨 ADR-010 退役而失效。以下是收斂後的實際範疇。
 
-**Should（第二版）**
-- [ ] 餐廳模組
-- [ ] 旅館模組
-- [ ] 手機介面優化
+**Must（合併版）**
+- [x] 購物 — 待買清單（buylist，13+ 欄、預算爆表、2×2 矩陣、篩選排序、匯出 md、Realtime 同步）
+- [x] 購物 — 辣醬庫
+- [x] 購物 — 貼連結 AI 帶入（本機可用；公開站待改 Function proxy）
+- [x] 行程 — 確認清單兩軸儀表板
+- [x] 行程 — 行程表 / 時間軸（拖曳改時間）
+- [x] 行程 — AI 匯入行程（Netlify Function proxy，金鑰不外露）
+- [ ] **合併成單一雙 Tab app**（`spec-scout-app-merge.md` v2）
+- [ ] **最小旅程管理**（建立旅程／切換旅程／手動新增項目）— Streamlit 退役的前置條件
+- [ ] **Netlify 接 Git 自動部署**（取代手動 drag-and-drop）
 
-**Could（第三版）**
-- [ ] 統計報表
-- [ ] 擱置原因記錄
+**Should**
+- [ ] 手機介面像素級優化（現版能用但偏桌面）
+- [ ] 行程 Tab 補 Realtime（目前只有購物 Tab 有，兩邊行為不一致）
+
+**Could**
+- [ ] 救回 Streamlit 的「AI 生成行程」（多輪問答 → Gemini 產出整份行程）
+- [ ] 行程項目的欄位編輯／排序／跨天移動（Streamlit 有、合併版未補）
 
 **Won't（明確不做）**
 - 自動爬蟲（由使用者主動貼連結）
+- 合併兩個 Supabase 專案（ADR-012）
+- 帳號系統（網址即存取，已接受風險）
+- PWA / 離線
 
 ### 2.3 進度指標
 
-- **完成度：** 第一版約 60%（3/5 Must 項目完成）
-- **剩餘時間預算：** TBD
-- **最接近的里程碑：** 購物模組 — 預算追蹤
+- **完成度：** 兩邊功能各自完整且已上線；合併工程 0%（spec 已 ready，尚未動工）
+- **剩餘時間預算：** 一個週末（2–3 天）
+- **最接近的里程碑：** 合併版外殼 + 兩邊搬入（spec §8 Day 1）
 
 ---
 
@@ -260,51 +268,66 @@ TBD（待實際開發中出現時補充）
 
 ### 3.1 技術棧
 
+> ⚠️ 本專案目前**同時存在兩套技術棧**：已上線的靜態 web app（購物＋行程），與待退役的 Streamlit app。下表以前者為主。
+
 | 層次 | 選擇 | 對應 ADR |
 |------|------|----------|
-| 語言（Language） | Python | ADR-002 |
-| UI 框架 | Streamlit | ADR-003 |
-| 樣式 | Custom CSS（Noto Sans TC、綠色主題） | ADR-003 |
-| 元件庫 | Streamlit 內建 | ADR-003 |
-| 狀態管理 | `st.session_state` | ADR-003 |
-| 後端框架 | Streamlit（Python） | ADR-003 |
-| 資料庫 | SQLite（scout.db） | ADR-004 |
-| ORM | 無（直接使用 `sqlite3`） | ADR-004 |
-| AI 後端 | Google Gemini（`google-genai`） | ADR-005 |
-| 身份驗證 | 無（下拉選使用者，無密碼） | ADR-006 |
-| 建置工具 | 無（直接 `streamlit run app.py`） | — |
-| 測試 | 無 | TBD |
-| 部署 | TBD | TBD |
+| 語言（Language） | JavaScript（vanilla，無 build）；Python 僅存於待退役的 Streamlit | ADR-002、ADR-010 |
+| UI 框架 | **無框架**，原生 HTML/CSS/JS | ADR-010 |
+| 樣式 | Custom CSS（Scout CIS 米色系，見 `scout_cis.html`）、手機優先 | ADR-010 |
+| 狀態管理 | 模組內區域變數 + `localStorage`（記住 tab／使用者／旅程） | ADR-010 |
+| 後端框架 | **無自有後端**。瀏覽器直打 Supabase PostgREST；AI 呼叫走 Netlify Functions | ADR-007、ADR-011 |
+| 資料庫 | **Supabase（PostgreSQL）× 2 個專案**（見 §3.3） | ADR-007、ADR-012 |
+| ORM | 無（buylist 用 supabase-js；checklist 直接 `fetch` 打 PostgREST） | ADR-007 |
+| 即時同步 | Supabase Realtime `postgres_changes`（**僅購物側**；行程側是手動重新整理） | — |
+| AI 後端 | Google Gemini。行程側已走 Netlify Function proxy（金鑰在環境變數）；購物側仍在前端 `config.js`，待改 | ADR-005、ADR-011 |
+| 身份驗證 | 無。購物：網址即存取；行程：`?trip=<trip_id>` 即憑證 | ADR-006、ADR-013 |
+| 建置工具 | 無 | ADR-010 |
+| 測試 | 無（`tests/test_itinerary.py` 只涵蓋待退役的 Streamlit 邏輯） | TBD |
+| 部署 | **Netlify**（購物：`shoppingtool.netlify.app`，手動 drop；行程：另一站，Git 連動 + Functions） | ADR-011 |
 
 ### 3.2 資料夾結構
 
 ```
-Scout/
-├── app.py                  # 主入口，路由 + 全域 CSS
-├── db.py                   # 資料庫 CRUD（trips / itinerary / wishlist / budget）
-├── ai.py                   # Gemini API 封裝
-├── itinerary.py            # 行程邏輯（時間計算、排序）
-├── page_itinerary.py       # 行程規劃頁面 UI
-├── page_ai_suggest.py      # AI 建議 Tab UI
-├── page_shopping.py        # 購物清單頁面 UI（待買清單 + 連結分析）
-├── requirements.txt        # streamlit, google-genai
-├── scout.db                # SQLite 資料庫（未 commit）
-├── scout_cis.html          # 設計規範文件
-├── test_gemini.py          # Gemini API 測試腳本
-├── .streamlit/
-│   ├── config.toml         # Streamlit 伺服器設定
-│   └── secrets.toml        # API 金鑰（未 commit）
-├── CLAUDE.md               # Claude Code 規則
-└── context.md              # 本檔案
+Scout/                          ← private repo
+├── buylist/                    # 【已上線】購物 app（買物清單 + 辣醬庫）
+│   ├── index.html              #   單檔 584 行 / 42 KB，HTML+CSS+JS 全內聯
+│   ├── config.js               #   Gemini 金鑰（gitignored）
+│   ├── config.js.example
+│   ├── buylist-schema.sql      #   Supabase DDL（SSOT）
+│   ├── run.bat / run.command   #   本機起 http server
+│   └── BUYLIST_STATE.md        #   購物側的接手文件
+├── specs/                      # Chia 出的 spec ＋ 執行端修訂版（SSOT）
+├── supabase_schema.sql         # 行程側 Supabase DDL（SSOT）
+├── scout_cis.html              # 設計規範（配色 SSOT）
+├── CLAUDE.md / context.md / CHANGELOG.md
+│
+├── ── 以下為待退役的 Streamlit app（ADR-010）──
+├── app.py                      # 主入口、路由、全域 CSS
+├── db.py                       # Supabase CRUD（已非 SQLite）
+├── ai.py / itinerary.py
+├── page_itinerary.py / page_ai_suggest.py / page_shopping.py
+├── tests/test_itinerary.py
+├── requirements.txt
+├── scout.db                    # 死檔案（SQLite 時代遺留，2026-04-04 後未寫入）
+└── .streamlit/{config,secrets}.toml
 ```
 
+**repo 外**：`witsper-stanley/scout-checklist`（private）—— 已上線的行程 app，三檔結構（`index.html` + `app.js` 33 KB + `styles.css`）+ `netlify.toml` + `netlify/functions/ai-parse.js`。合併後併入 Scout 的 `web/`，該 repo 退役（ADR-010）。
+
+> ⚠️ 該 repo 內另有 `buylist.html` / `buylist-schema.sql` / `BUYLIST_STATE.md` —— 是 2026-06 時代的 buylist tracer bullet 複本，早已過時，合併時刪除。
+
 ### 3.3 資料模型（Data Model）
+
+#### 行程側 — Supabase 專案 `uarkccyqcqvgxukjcrey`（Chia 的）
+
+DDL SSOT：`supabase_schema.sql`（冪等，可安全重跑）。Streamlit 與 scout-checklist **共用這同一份資料**。
 
 **trips（旅程）**
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | INTEGER PK | 自動遞增 |
-| user | TEXT | 使用者名稱 |
+| username | TEXT | 建立者（**不叫 `user`**，避開 PostgreSQL 保留字） |
 | name | TEXT | 旅程名稱 |
 | start_date | TEXT | 出發日期 |
 | end_date | TEXT | 結束日期 |
@@ -316,17 +339,20 @@ Scout/
 |------|------|------|
 | id | INTEGER PK | 自動遞增 |
 | trip_id | INTEGER FK | 對應 trips.id，CASCADE 刪除 |
-| day_number | INTEGER | 第幾天 |
+| day_number | INTEGER **nullable** | 第幾天；**NULL = 候選中**（尚未排入某天） |
 | name | TEXT | 景點/餐廳名稱 |
 | category | TEXT | restaurant/hotel/attraction/shopping/transport/other |
-| start_time | TEXT | HH:MM |
+| start_time | TEXT **nullable** | 'HH:MM'（用 text 不用 time，避免回傳 HH:MM:SS 解析錯誤） |
 | duration_minutes | INTEGER | 停留分鐘數 |
 | location | TEXT | 地點/店名 |
 | address | TEXT | 地址/Google Map |
 | booking_ref | TEXT | 預約編號 |
 | notes | TEXT | 備註 |
 | source | TEXT | manual / ai |
+| source_id | BIGINT | 來源項目 id |
 | sort_order | INTEGER | 排序 |
+| **confirm_required** | BOOLEAN | 確認清單軸一：必須確認(t) / 可以彈性(f) |
+| **is_confirmed** | BOOLEAN | 確認清單軸二：已確認(t) / 未確認(f) |
 
 **trip_adjustments（調整紀錄）**
 | 欄位 | 型別 | 說明 |
@@ -337,25 +363,51 @@ Scout/
 | instruction | TEXT | 操作說明 |
 | items_changed | TEXT | JSON 陣列 |
 
-**wishlist / budget** — 表格已建立，wishlist CRUD 已實作（UI 完成），budget UI 尚未實作
+**wishlist** — Streamlit 購物模組用；已被 buylist 的 `buylist_items` 完全取代，隨 Streamlit 退役而作廢。
+
+#### 購物側 — Supabase 專案 `kdmmjlaajqxjmiahfvos`（Stanley 的）
+
+DDL SSOT：`buylist/buylist-schema.sql`
+
+- **`buylist_items`**（13+ 欄）：name / category / price / urgency（需要·想要·再看看）/ availability（台灣易·需國外·稀有）/ status（pending·bought）/ starred / quantity / tag（情境標籤）/ actual_price（實付）/ link / recurring_cost / added_by / created_at
+- **`buylist_budget`**：月預算 + `last_cleared`（月初自動清上月已買的月份標記）
+- **`sauces`**（辣醬庫）：name / url / spiciness / aroma / cp / repurchase / added_by / created_at
+
+三張表皆 RLS 全開 + 啟用 Realtime。
+
+> ⚠️ 該專案是免費方案，會自動暫停；DDL 或使用前先確認未被 pause。
 
 ### 3.4 外部服務與 API
 
-| 服務 | 用途 |
-|------|------|
-| Google Gemini API | AI 行程建議生成（page_ai_suggest.py） |
+| 服務 | 用途 | 金鑰放哪 |
+|------|------|---------|
+| Supabase `uarkccyqcqvgxukjcrey`（Chia 的） | 行程資料（trips / itinerary_items / trip_adjustments / wishlist） | publishable key 寫死在前端，設計上即公開 |
+| Supabase `kdmmjlaajqxjmiahfvos`（Stanley 的） | 購物資料（buylist_items / buylist_budget / sauces） | 同上 |
+| Google Gemini API | 行程：AI 匯入（貼文字解析）／購物：貼連結抽名稱價格／Streamlit：AI 生成行程 | 行程側在 **Netlify 環境變數**（不外露）；購物側仍在前端 `config.js`（故公開站隱藏該功能） |
+| Netlify | 靜態託管 + Functions（AI proxy） | — |
 
 ### 3.5 環境變數
 
-從 `.streamlit/secrets.toml`（未 commit）讀取：
-- `GEMINI_API_KEY`（反推自 ai.py 使用 `genai.Client`）
+- **Netlify 站台環境變數**：`GEMINI_API_KEY`（必要）、`GEMINI_MODEL`（選用，預設 `gemini-2.5-flash`）
+- **`buylist/config.js`**（gitignored）：`window.BUYLIST_CONFIG.GEMINI_API_KEY` / `GEMINI_MODEL`
+- **`scout-checklist/config.js`**（gitignored）：`window.SCOUT_CONFIG`，可覆蓋 Supabase 連線；Gemini 金鑰已改走 Function，前端不再需要
+- **`.streamlit/secrets.toml`**（gitignored，Streamlit 用）：`SUPABASE_URL` / `SUPABASE_KEY` / `GEMINI_API_KEY`
 
 ### 3.6 關鍵模式與慣例
 
-- **路由：** `st.session_state["page"]` 控制頁面切換，`app.py` 最底部 if/elif 分派
-- **資料庫：** 每次操作開新連線，用完關閉（非連線池）
-- **AI 呼叫：** 各頁面自組 prompt，`ai.py` 只負責呼叫 API + 自動重試
-- **按鈕 key 命名：** `st-key-[name]` 對應 CSS 選擇器，讓樣式精準覆蓋
+**靜態 web app（現行）**
+- **無 build step**：改完檔案重整瀏覽器就是新版；本機用 `run.bat` / `run.command` 起 http server（不用 `file://`，連雲端不可靠）
+- **CSS 變數**：`:root` 定義 Scout CIS 米色系（`--bg:#F5F0EA`、`--card:#FFFFFF`…），配色 SSOT 是 `scout_cis.html`
+- **DOM id 前綴**：購物側一律 `bl-`，行程側合併後一律 `ck-`（避免同頁撞名）
+- **JS 隔離**：各模組包 IIFE `"use strict"`，不外洩全域
+- **狀態列**：`setStatus(訊息, 'err'|'ok')` —— **失敗一律顯示紅字，不靜默失敗**
+- **AI 金鑰**：走 Netlify Function proxy，前端不接觸金鑰（行程側已是，購物側待改）
+- **DDL**：一律冪等（`create table if not exists` / `add column if not exists`），可安全重跑
+
+**Streamlit（待退役）**
+- **路由**：`st.session_state["page"]` + `app.py` 底部 if/elif 分派
+- **AI 呼叫**：各頁面自組 prompt，`ai.py` 只負責呼叫 + 503 重試
+- **按鈕 key 命名**：`st-key-[name]` 對應 CSS 選擇器
 
 ---
 
@@ -426,7 +478,7 @@ Scout/
 ### ADR-003: 採用 Streamlit 作為 UI 與應用框架
 
 - **日期：** 2026-04-04
-- **狀態：** Pre-existing (reverse-engineered)
+- **狀態：** **Superseded by ADR-010**（2026-08-01，Streamlit 退役、改為靜態 web app）
 - **相關方：** 無紀錄
 
 **情境（Context）:**
@@ -451,7 +503,7 @@ Scout/
 ### ADR-004: 採用 SQLite 作為資料庫
 
 - **日期：** 2026-04-04
-- **狀態：** Pre-existing (reverse-engineered)
+- **狀態：** **Superseded by ADR-007**（已遷移至 Supabase；`scout.db` 為遺留死檔案）
 - **相關方：** 無紀錄
 
 **情境（Context）:**
@@ -528,6 +580,217 @@ commit message 為「Simplify login to username dropdown, no password」，表�
 
 ---
 
+### ADR-007: 資料庫從 SQLite 遷移至 Supabase（PostgreSQL）
+
+- **日期：** 2026-06（實際日期無紀錄，反推自 `db.py` 與 `supabase_schema.sql`）
+- **狀態：** Accepted — **Supersedes ADR-004**
+- **相關方：** Stanley（反推自程式碼；context.md 在此期間未被維護，故當時未記錄）
+
+**情境（Context）:**
+ADR-004 當時已寫明 SQLite 的缺點：「不適合多人同時寫入；檔案式資料庫部署到雲端需額外處理」，並留下待辦「若日後部署到雲端，需評估 db 持久化方案」。當專案要讓兩人同時使用、且要有能在手機瀏覽器打開的網頁版時，這個限制變成硬阻擋——網頁前端無法讀取伺服器上的 SQLite 檔案。
+
+**考慮過的選項:**
+1. **繼續用 SQLite + 找持久化方案** — 例如 Streamlit Cloud 掛外部磁碟、或 LiteFS 之類
+   - 優點：不用改資料層程式碼
+   - 缺點：仍然只有 Streamlit 能存取；純前端網頁版無解
+   - 為什麼沒選：擋住「靜態網頁版 + 兩人共用」這個方向
+2. **Firebase** — checklist 網頁版最初的選擇
+   - 為什麼沒選：見 ADR-008，最終也遷離
+3. **Supabase（PostgreSQL）** — 最終採用
+
+**決策:**
+遷移至 Supabase。`db.py` 改用 `supabase.create_client()`，連線資訊從 `.streamlit/secrets.toml` 讀取。schema 以 `supabase_schema.sql` 為 SSOT，所有 DDL 寫成冪等（`create table if not exists` / `add column if not exists`），因為 Chia 已在 Supabase 介面手建部分表格，同一份必須能安全重跑。遷移時避開 PostgreSQL 保留字：`trips.user` → `trips.username`。
+
+**預期後果:**
+- 正面：資料脫離單機檔案；PostgREST 讓純靜態前端可直接讀寫，不需要自有後端；兩人共用成立
+- 負面：多了一個外部相依與其可用性風險（免費方案會自動暫停）；anon key 攤在前端（見 ADR-013）
+- 需要後續處理的事項：`scout.db` 成為死檔案，應刪除；context.md 的技術棧描述失效（本次 2026-08-01 才補正）
+
+**分歧與轉折紀錄:**
+此決策發生在 context.md 停止維護的期間（2026-04-18 ～ 2026-08-01），過程未被記錄，本則為事後從程式碼反推補記。**這段空窗本身是教訓**：ADR-004 已預告的風險真的發生了，但決策過程沒留下紀錄。
+
+---
+
+### ADR-008: 行程確認清單獨立為靜態網頁版，並從 Firebase 改為 Supabase
+
+- **日期：** 2026-06（反推自 `witsper-stanley/scout-checklist` commit `122f55d`、`8cd65b3`）
+- **狀態：** Accepted
+- **相關方：** Stanley / Chia
+
+**情境（Context）:**
+「出發前哪些事還沒確認」這個需求，Streamlit 版不適合——Chia 要能在手機上隨時打開、也要能把連結分享出去。最初做成 Firebase 版（本機 `scout-checklist/` 資料夾裡那份，remote 指向 `CHIAHSIN-tech/scout-checklist`）。
+
+**考慮過的選項:**
+1. **做進 Streamlit** — 為什麼沒選：手機體驗差、要跑伺服器、無法分享連結
+2. **Firebase 靜態網頁版** — 初始實作
+   - 為什麼沒選：與 ADR-007 的 Supabase 方向不一致，會變成兩套後端技術
+3. **Supabase 靜態網頁版** — 最終採用
+
+**決策:**
+改寫資料層 Firebase → Supabase，直接 `fetch` 打 PostgREST（**不載 supabase-js**，省一個相依）。與 Streamlit 共用同一個 Supabase 專案與同一張 `itinerary_items` 表，因此兩邊看到的是同一份資料。同步機制刻意用手動「↻ 重新整理」而非 Realtime（省成本）。舊 Firebase 版停用。
+
+**預期後果:**
+- 正面：手機可用、可分享連結、與 Streamlit 資料互通
+- 負面：**版本混淆風險**——本機 `scout-checklist/` 那份舊 Firebase 版仍存在，且 remote 指向不同帳號，容易誤認為現行版（`spec-scout-app-merge.md` v1 就差點踩到）
+- 需要後續處理的事項：刪除本機舊 Firebase 版
+
+**分歧與轉折紀錄:**
+無紀錄（發生在 context.md 空窗期）。
+
+---
+
+### ADR-009: BuyList 採單檔 vanilla HTML + Stanley 自己的 Supabase 專案
+
+- **日期：** 2026-07-05 前後（反推自 `buylist/BUYLIST_STATE.md` §4）
+- **狀態：** Accepted
+- **相關方：** Chia（出 spec）/ Stanley（執行端調整）
+
+**情境（Context）:**
+Chia 的 spec（`specs/buylist-handoff.md`）原本指定 Vue + Vite + Firebase、開全新獨立專案。Stanley 在執行端做了三處調整，理由記在 `BUYLIST_STATE.md` §4。
+
+**考慮過的選項:**
+1. **Vue + Vite（spec 原案）** — 為什麼沒選：tracer bullet 不需要框架；有 build step 就不好分享
+2. **Firebase（spec 原案）** — 為什麼沒選：ADR-007 已選 Supabase，統一一個後端技術，且要 SQL 查詢力、不鎖定
+3. **全新獨立 repo（spec 原案）** — 為什麼沒選：Scout 是 private 且 Chia 已是協作者，不需要多開 repo
+4. **單檔 vanilla HTML + Scout repo 的 `buylist/` + Supabase** — 最終採用
+
+**決策:**
+單檔 vanilla HTML/CSS/JS（無 build），放在 private Scout repo 的 `buylist/`。後端用 **Stanley 自己的 Supabase 專案 `kdmmjlaajqxjmiahfvos`**，而非 Scout 既有的 `uarkccyqcqvgxukjcrey`——**關鍵理由：Scout 那個專案是 Chia 的，Stanley 沒有後台權限，無法自己建表改欄位。** 用 supabase-js + Realtime `postgres_changes` 達成兩人即時同步。
+
+**預期後果:**
+- 正面：零 build、好分享、Stanley 能自管 schema、即時同步達成 spec 第一 Must
+- 負面：**專案內出現第二個 Supabase 專案**（見 ADR-012）；單檔隨功能長大到 584 行 / 42 KB
+- 需要後續處理的事項：合併時需把單檔拆成 `.js` / `.css`（見 ADR-010）
+
+**分歧與轉折紀錄:**
+Stanley 有意識地覆寫了 spec 的三項技術指定（框架、後端、落點），理由均記在 `BUYLIST_STATE.md` §4 的「與 spec 差異 / 理由」欄。另外 spec 要求「一次一步、做完停、等 Chia 檢查」，Stanley 選擇 one-shot 全做，同樣為有意識覆寫。
+
+---
+
+### ADR-010: 收斂為單一靜態雙 Tab web app，Streamlit 退役
+
+- **日期：** 2026-08-01
+- **狀態：** Accepted — **Supersedes ADR-003**
+- **相關方：** Stanley（拍板）/ Claude Code（調查與提案）/ Chia（原合併需求提出者，2026-07-25）
+
+**情境（Context）:**
+Stanley 提問「Scout 放 Cloudflare + Supabase 是不是過度工程，換 Netlify 會不會比較乾淨」。調查後發現：(a) 專案內根本沒有 Cloudflare，實際是 Netlify + GitHub Pages 的混合；(b) **真正的複雜度不在 infra，而在同一批需求被做了三次**——Streamlit app（從未部署）、buylist 靜態 app（Netlify）、scout-checklist 靜態 app（Netlify），三個部署位置、兩套技術棧、功能重疊。Chia 早在 2026-07-25 就提出要把後兩者合併成雙 Tab（`spec-scout-app-merge.md` v1）。
+
+**考慮過的選項:**
+1. **只做 infra 搬家（Netlify ↔ Cloudflare）** — 優點：改動小
+   - 為什麼沒選：零收益。靜態單頁 app 對兩家託管商功能等價，搬家不解決任何實際問題
+2. **砍掉 Supabase 改用更輕的東西** — 為什麼沒選：Supabase 正是「不用寫後端就有兩人即時同步」的原因，砍掉等於砍掉核心價值或自己寫後端，只會更複雜。用不到的功能（Auth/Storage/Edge Functions）不增加負擔
+3. **保留 Streamlit 作為「管理後台」，靜態版只讀** — 優點：不用補旅程管理 UI
+   - 為什麼沒選：兩套並存的維護成本正是問題本身；且 Streamlit 從未部署，要用得先本機起服務
+4. **合併 buylist + checklist 為單一雙 Tab 靜態 app，Streamlit 退役** — 最終採用
+5. **合併後外層做「首頁卡片選單」** — Stanley 最初的描述
+   - 為什麼沒選：兩邊各自內部已有 tab，外面再包首頁＝三層導覽，而最外層只有兩個選項，手機上是純負擔。改為**頂部雙 Tab**
+
+**決策:**
+執行 `spec-scout-app-merge.md` v2。合併只動介面層（一個外殼 + 頂部雙 Tab + 作用域隔離），**不打通兩邊資料**（Stanley 明確選「A. 純介面」）。落點為 Scout repo 的 `web/`，`witsper-stanley/scout-checklist` repo 退役，三個 repo 收斂成一個。Streamlit 停止開發、不刪檔、標作廢。Appetite：一個週末。
+
+因 checklist 的 `?trip=<trip_id>` 是唯一身分機制、而 `trip_id` 只能從 Streamlit 建立旅程取得，**退役的前置條件是補上最小旅程管理**（建立旅程／切換旅程／手動新增項目）。若不補，Streamlit 退役後將無人能開新旅程，且 Stanley 對 Chia 的 Supabase 沒後台權限、無法手動 insert。
+
+**預期後果:**
+- 正面：一個網址、一套技術、一個 repo、一個部署平台；buylist 的 AI 功能可藉 checklist 已有的 Function proxy 在公開站復活
+- 負面：**Streamlit 獨有功能沒有替代品**——AI 生成行程（多輪問答）、行程項目欄位編輯／排序／跨天移動、旅程刪除。本次刻意不補（spec §5.4、R2）
+- 負面：合併後一個網址外流＝兩邊資料同時外流（風險集中，見 ADR-013）
+- 需要後續處理的事項：`scout.db` 刪除；`scout-checklist` repo 內過時的 buylist 複本刪除；Netlify 站台命名決定（spec R1）
+
+**分歧與轉折紀錄:**
+Stanley 的原始提問假設「Scout 放在 Cloudflare」，經查證為誤記，實際無 Cloudflare。Claude Code 指出真正的問題不在託管平台選擇而在架構分裂，Stanley 接受並將範疇從「換託管商」改為「收斂架構 + Streamlit 退役」。導覽形態上，Stanley 原本描述「首頁進去再到不同功能」，Claude Code 以「三層導覽只為兩個選項」為由建議改頂部雙 Tab，Stanley 採納。AI 生成行程是否救回一題，Stanley 未答，暫定不救（spec §5.4）。
+
+---
+
+### ADR-011: 部署採 Netlify，AI 金鑰以 Netlify Function 代理
+
+- **日期：** 2026-07-26（buylist 上線）／2026-07-26（checklist 改 Function proxy，commit `9bf6a62`）
+- **狀態：** Accepted
+- **相關方：** Stanley
+
+**情境（Context）:**
+兩件事同時要解：(a) app 要能在手機瀏覽器打開，需要公開網址（`BUYLIST_STATE.md` §4.1 Chia 拍板「buylist 要上手機」）；(b) 前端直呼 Gemini 就得把金鑰放進前端檔案，公開部署等於金鑰外洩。
+
+**考慮過的選項:**
+1. **Cloudflare Tunnel** — 從本機 private 環境開洞出去，程式碼仍 private
+   - 為什麼沒選：要求本機常開；靜態託管更簡單
+2. **GitHub Pages** — 免費、直接從 repo 出
+   - 為什麼沒選：**不能跑 serverless function**，AI 金鑰問題無解
+3. **Netlify** — 最終採用
+
+**決策:**
+用 Netlify（Stanley **個人**帳號、免費方案）。金鑰問題以 Netlify Function 代理解決：`netlify/functions/ai-parse.js` 從 `process.env.GEMINI_API_KEY` 取金鑰呼叫 Gemini，前端只打 `/.netlify/functions/ai-parse`，完全不接觸金鑰。
+
+buylist 側當時未採此法，改用權宜方案：部署版 `config.js` 帶空字串，前端偵測無金鑰就**隱藏**「🔗貼連結帶入」（commit `5f49665`）——功能在公開站不可用。ADR-010 的合併將改為與 checklist 一致的 proxy 模式。
+
+**預期後果:**
+- 正面：手機可用；Gemini 金鑰不外露；Functions 讓純靜態站也能有「一點點後端」
+- 負面：buylist 目前是**手動 drag-and-drop 部署**，已造成版本漂移（公開站至今仍是舊版、沒有辣醬 tab）。合併時改為 Git 連動自動部署
+- 需要後續處理的事項：⚠️ **絕不使用公司（witsper）帳號**，僅用個人帳號
+
+**分歧與轉折紀錄:**
+`BUYLIST_STATE.md` §4 原記「手機要用再改成公開網址（Cloudflare 從 private 出）」，2026-07-25 被 §4.1 supersede 為「要上手機」，最終落地是 Netlify 而非 Cloudflare。
+
+---
+
+### ADR-012: 不合併兩個 Supabase 專案
+
+- **日期：** 2026-07-25
+- **狀態：** Accepted
+- **相關方：** Chia（確認）/ Stanley
+
+**情境（Context）:**
+合併成單一 app 後，同一頁會同時連兩個 Supabase 專案（購物連 Stanley 的、行程連 Chia 的）。直覺上「一個 app 一個資料庫」比較乾淨，是否該合併？
+
+**考慮過的選項:**
+1. **合併成一個 Supabase 專案** — 優點：概念單純
+   - 缺點：兩邊無共用資料表、無跨表查詢，合併只有遷移成本、沒有功能收益；且 Stanley 對 Chia 的專案沒後台權限，合過去就失去自管 schema 的能力（這正是 ADR-009 分開的原因）
+   - 為什麼沒選：純成本、零收益
+2. **維持兩個專案** — 最終採用
+
+**決策:**
+不合併。若未來真出現「這趟行程要買的東西」這類跨模組需求，用**情境標籤**（`buylist_items.tag`，已實作）之類的輕量欄位表達，不合併資料庫。
+
+**預期後果:**
+- 正面：各自可獨立演進；Stanley 保有購物側的完整自管權
+- 負面：兩個免費方案專案都可能自動暫停，要各自留意；合併後的 app 有兩套不同的存取模式（supabase-js + Realtime vs 裸 fetch + 手動重新整理），行為不一致
+- 需要後續處理的事項：無
+
+**分歧與轉折紀錄:**
+Chia 提出合併需求時同時確認「資料不合併」，未出現分歧。
+
+---
+
+### ADR-013: 存取控制＝網址即憑證，不做帳號系統
+
+- **日期：** 2026-07（反推自 `supabase_schema.sql` §6 與兩邊 README）
+- **狀態：** Accepted — 延續並放大 ADR-006
+- **相關方：** Stanley / Chia（均已明示接受風險）
+
+**情境（Context）:**
+ADR-006 決定 Streamlit 不做密碼登入（僅下拉選使用者），當時的前提是「信任環境、本機使用」，並留下待辦「若日後公開部署，需重新評估」。2026-07 兩個 app 都公開部署了，這個待辦到期。
+
+**考慮過的選項:**
+1. **導入 Supabase Auth** — 優點：真實存取控制
+   - 為什麼沒選：兩人私用工具，登入流程的摩擦大於收益
+2. **網址即憑證** — 最終採用
+
+**決策:**
+不做帳號系統。RLS 全開（`supabase_schema.sql` 用「停用 RLS + GRANT anon」的版本 A），publishable anon key 直接寫死在前端原始碼中——這在 Supabase 靜態網站是常見做法，真正的存取邊界是**網址本身**：
+- 購物：知道 `shoppingtool.netlify.app` 就能讀寫全部購物資料
+- 行程：知道網址**且**知道 `?trip=<trip_id>` 才能讀寫該趟旅程
+
+**預期後果:**
+- 正面：零摩擦，分享連結即分享存取權
+- 負面：**連結外流 = 資料外流**，任何人可讀／寫／刪。已由 Stanley 與 Chia 明示接受（`BUYLIST_STATE.md` §4.1）
+- 負面：ADR-010 合併後兩邊共用一個網址，**風險集中**——一個網址外流等於兩邊資料同時外流。合併前需再次確認接受（`spec-scout-app-merge.md` R3）
+- 需要後續處理的事項：若哪天要給第三人看，需重新評估
+
+**分歧與轉折紀錄:**
+ADR-006 當時就寫明「若日後公開部署，需重新評估」。實際公開時的處理是「評估後接受風險」而非「加上保護」，屬有意識的取捨，不是遺漏。
+
+---
+
 <!-- 往後的 ADR 依序往下寫 -->
 
 ---
@@ -538,6 +801,35 @@ commit message 為「Simplify login to username dropdown, no password」，表�
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-08-01] 架構調查 → 決定收斂為單一靜態 app、Streamlit 退役
+
+**類型：** 決策
+**關聯 ADR：** ADR-010（主）、ADR-007／008／009／011／012／013（補記）
+**關聯 MoSCoW：** Must — 合併成單一雙 Tab app
+
+Stanley 問「Scout 放 Cloudflare + Supabase 是不是過度工程，換 Netlify 比較乾淨？」。查證後發現前提有誤：專案裡沒有任何 Cloudflare，實際是 Netlify（buylist、checklist）+ 一個從未部署的 Streamlit。指出真正的複雜度不在託管平台，而在**同一批需求被做了三次**；Stanley 接受，把題目從「換託管商」改成「收斂架構」，並拍板 Streamlit 退役、純介面合併、頂部雙 Tab、Appetite 一個週末。
+
+順帶解除了 `spec-scout-app-merge.md` v1 的 blocker：取得 `witsper-stanley/scout-checklist` 現行原碼，發現它跟 spec 假設差很多（三檔不是單檔、Netlify 不是 GitHub Pages、已有 Function proxy、不用 supabase-js），據此把 spec 改寫為 v2 並補上實測的命名衝突清單（只有 3 個 CSS 變數真衝突，JS 一包 IIFE 全解）。
+
+發現的關鍵依賴：**Streamlit 是目前唯一能建立旅程的地方**，退役前必須補最小旅程管理，否則 checklist 的 `?trip=` 拿不到 id、Stanley 又沒有 Chia 的 Supabase 後台權限。
+
+---
+
+### [2026-04-18 ～ 2026-08-01] 時期摘要 — context.md 空窗期
+
+**類型：** 其他
+
+這段期間 context.md **完全未被維護**，但專案發生了根本性的架構變化。以下為事後從 git history 與程式碼反推的摘要（細節見對應 ADR）：
+
+- **資料層整個換掉**：SQLite → Supabase（ADR-007）。`db.py` 改用 `create_client`，`scout.db` 成為死檔案。
+- **主力開發從 Streamlit 移到靜態網頁**：checklist 網頁版（ADR-008）、buylist（ADR-009）陸續完成並上線，功能豐富度早已超過 Streamlit 對應模組。
+- **首次公開部署**：兩個 app 都上 Netlify，並用 Netlify Function 解掉 AI 金鑰外露問題（ADR-011）。
+- **存取控制的待辦到期並結案**：ADR-006 留下的「公開部署需重新評估」，實際處理是評估後接受風險（ADR-013）。
+
+**教訓：** ADR-004 已預告「檔案式資料庫部署到雲端需額外處理」，這個風險真的發生了、也真的被解決了，但**整個決策過程沒有留下紀錄**，只能事後反推。CLAUDE.md 第 1 節要求每個 session 讀 context.md——但沒有機制保證有人回寫。
+
+---
 
 ### [2026-04-18] 購物模組 — 待買清單完成
 
@@ -586,40 +878,50 @@ _(目前尚無壓縮紀錄)_
 
 > 這一章是**覆寫型**。反映「現在」哪些事情還懸而未決。
 
-### 6.1 建檔時無法反推的資訊
-
-以下項目在 context.md 建立時無法從客觀事實反推，待實際開發中出現時由 Claude Code 自動補充：
+### 6.1 仍然反推不出來的資訊
 
 - 問題陳述的「為什麼值得解決」細節
-- JTBD 陳述
+- JTBD 陳述（合併 app 的 JTBD 已寫在 `spec-scout-app-merge.md` §2，但整個 Scout 的還沒有）
 - 成功標準（具體指標）
-- 時間預算（Appetite）
-- 本週焦點（已初步填入，待確認）
-- Gemini API 的 secrets key 名稱（.streamlit/secrets.toml 未 commit）
+- ADR-005 從 Claude API 切到 Gemini 的實際理由
 
-### 6.2 待決定的技術選擇
+### 6.2 待決定
 
-- **部署平台：** 尚未決定（Streamlit Cloud / 自行部署？）
-- **SQLite 持久化：** 部署後 scout.db 如何保存？
-- **測試框架：** 目前無任何測試，是否引入？
+- **Netlify 站台命名**：合併後沿用 `shoppingtool.netlify.app`（名字不再貼切但書籤不變）還是改名（舊網址失效、要重發連結給 Chia）？見 `spec-scout-app-merge.md` R1。
+- **AI 生成行程要不要救**：Streamlit 的多輪問答 → Gemini 產出整份行程（`page_ai_suggest.py`），合併版沒有替代品。本週末刻意不補，之後再議。見 spec R2。
+- **測試框架**：`tests/test_itinerary.py` 只涵蓋待退役的 Streamlit 邏輯，靜態 app 完全無測試。要不要引入？
 
 ### 6.3 已知的 Bug
 
-_(目前尚無紀錄)_
+- **公開站版本落後**：`shoppingtool.netlify.app` 仍是舊版，沒有辣醬庫 tab。成因是手動 drag-and-drop 部署造成的漂移，合併時接 Git 自動部署解決。
 
 ### 6.4 技術債（Technical Debt）
 
-- `scout.db` 在 `.gitignore` 中，部署時需要另外處理資料遷移
-- 無測試覆蓋，功能修改時容易引發回歸問題
+- **同一批需求做了三次**：Streamlit / buylist / checklist 三套並存，兩套技術棧、三個部署位置。ADR-010 的合併就是在還這筆債。
+- **`scout.db`**：SQLite 時代的死檔案，應刪除。
+- **`scout-checklist` repo 內有過時的 buylist 複本**（`buylist.html` / `buylist-schema.sql` / `BUYLIST_STATE.md`），是 2026-06 的 tracer bullet，合併時刪。
+- **本機 `scout-checklist/` 資料夾是舊 Firebase 版**，remote 指向不同帳號（`CHIAHSIN-tech/scout-checklist`），極易誤認為現行版——`spec-scout-app-merge.md` v1 就差點踩到。應刪。
+- **無測試覆蓋**（靜態 app 完全沒有）。
+- **buylist 單檔已 584 行 / 42 KB**，HTML+CSS+JS 全內聯；合併時會拆成獨立 `.js` / `.css`。
+- **兩邊同步機制不一致**：購物有 Realtime、行程要手動重新整理。合併後同一頁兩種行為，使用者可能困惑。
+- **context.md 曾空窗四個月**（2026-04-18 ～ 2026-08-01），期間所有架構決策都是事後反推補記。沒有機制保證有人回寫。
 
 ### 6.5 暫緩的想法（Parking Lot）
 
-- 貼連結自動分析（AI 核心功能）— 所有模組共用，待購物模組完成後實作
-- 手機介面優化 — 第二版
+- 手機介面像素級優化（現版能用但偏桌面）— 待 Chia 出 spec
+- 行程側補 Realtime（消除與購物側的行為落差）— 非小工程
+- 行程項目的欄位編輯／排序／跨天移動、旅程刪除 — Streamlit 有、合併版不補
+- PWA / 離線 — 與「靠 Supabase 即時同步」的既有決策衝突，明確不做
+- 結構化輸出（Gemini JSON schema 強制）取代現有自寫 parse — 現況實測可用，等真的抓錯再做
+- 餐廳模組、旅館模組、統計報表 — Streamlit 時代的規劃，隨 ADR-010 失效，若要做得在新架構重新設計
 
 ### 6.6 外部相依的風險
 
-- Google Gemini API 依賴外部服務；503 已有重試機制，但長期穩定性未知
+- **Supabase 免費方案會自動暫停**：兩個專案都是。DDL 或使用前先確認未被 pause（購物側 `kdmmjlaajqxjmiahfvos` 已踩過）。
+- **Google Gemini API**：Streamlit 端有 503 重試；靜態 app 端失敗只顯示紅字、無重試。
+- **CDN 相依**：buylist 從 jsdelivr 載 supabase-js，CDN 掛掉整個購物 tab 不能用。
+- **Netlify 免費方案**：Functions 有每月執行次數上限；兩人用不會碰到，但值得知道。
+- **⚠️ 帳號紀律**：Netlify 與 Supabase 一律用**個人帳號**，絕不用公司（witsper）帳號。
 
 ---
 
@@ -636,9 +938,25 @@ _(目前尚無紀錄)_
 
 ## 附錄 B：外部參考資料
 
-- [Google Gemini API 文件](https://ai.google.dev/docs)
-- [Streamlit 文件](https://docs.streamlit.io)
-- `scout_cis.html` — 專案設計規範文件（存在於 repo 根目錄）
+**專案內文件**
+- `scout_cis.html` — 設計規範／配色 SSOT
+- `specs/spec-scout-app-merge.md` — 合併工程的執行 SSOT（v2）
+- `buylist/BUYLIST_STATE.md` — 購物側的接手文件
+- `supabase_schema.sql` / `buylist/buylist-schema.sql` — 兩側 DDL 的 SSOT
+
+**Supabase 專案**
+- 行程（Chia 的）：`uarkccyqcqvgxukjcrey`
+- 購物（Stanley 的）：`kdmmjlaajqxjmiahfvos`
+
+**線上位置**
+- 購物：https://shoppingtool.netlify.app/ （⚠️ 目前是舊版，見 §6.3）
+- 行程：Netlify（`witsper-stanley/scout-checklist` repo 連動）
+
+**外部文件**
+- [Google Gemini API](https://ai.google.dev/docs)
+- [Supabase PostgREST](https://supabase.com/docs/guides/api)
+- [Netlify Functions](https://docs.netlify.com/functions/overview/)
+- [Streamlit](https://docs.streamlit.io)（待退役）
 
 ---
 

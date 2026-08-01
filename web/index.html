@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&display=swap" rel="stylesheet">
+<!-- 順序有意義：shell 先定義全域重設與 body，兩邊各自的樣式再蓋上去（都有前綴，不會互撞） -->
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="buylist.css">
+<link rel="stylesheet" href="checklist.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <nav class="shell-tabs" id="shell-tabs">
+    <button type="button" data-panel="shop" class="on">🛒 購物</button>
+    <button type="button" data-panel="trip">🗺️ 行程</button>
+  </nav>
+
+  <!-- ══════════ 購物 Tab（buylist）══════════
+       整段從 buylist/index.html 的 <body> 原樣搬來。
+       唯一改動：id="status" / id="statusText" → bl- 前綴（與 checklist 撞名）。 -->
+  <div id="panel-shop" class="panel">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <div class="eyebrow">兩人即時共用</div>
+          <div class="title" id="appTitle">買物清單</div>
+          <div class="status" id="bl-status"><span class="dot"></span><span id="bl-statusText">連線中…</span></div>
+        </div>
+        <div class="me">我是 <span class="who" id="whoSel"><button data-me="Stanley">Stanley</button><button data-me="Chia">Chia</button></span></div>
+      </div>
+
+      <div class="apptabs" id="apptabs">
+        <button data-tab="buy" class="on">🛒 買物清單</button>
+        <button data-tab="sauce">🌶️ 辣醬庫</button>
+      </div>
+
+      <div id="tab-buy">
+      <div class="card budget">
+        <div class="blk"><label>月預算（兩人共用）</label><input type="number" id="bl-budget" min="0" step="100" placeholder="0"></div>
+        <div class="blk"><label>本月想買 · 未購總價</label><div class="big" id="bl-total">NT$ 0</div></div>
+        <div class="sep"></div>
+        <div class="blk" style="text-align:right;"><label>剩餘額度</label><div class="big remain" id="bl-remain">—</div></div>
+        <div class="recur" id="bl-recur"></div>
+        <div class="hint">只加總「本月想買 且 未購」。標記已買＝移出總價（不留帳）。每月初自動清掉上月「已買」。</div>
+      </div>
+
+      <div class="card addbox">
+        <div class="addrow">
+          <input type="text" id="bl-name" placeholder="想買什麼？（必填）" autocomplete="off">
+          <input type="number" id="bl-price" placeholder="價格" min="0" step="1">
+          <input type="number" id="bl-qty" placeholder="數量" min="1" step="1">
+          <select id="bl-cat"></select>
+          <input type="text" id="bl-tag" list="tag-list" placeholder="情境（選填）" autocomplete="off">
+          <datalist id="tag-list"></datalist>
+        </div>
+        <div class="segline">
+          <span class="fieldlabel">迫切度</span>
+          <span class="seg urg" id="seg-urg"><button data-v="need">需要</button><button data-v="want">想要</button><button data-v="maybe" class="on">再看看</button></span>
+          <span class="fieldlabel">取得</span>
+          <span class="seg acc" id="seg-acc"><button data-v="tw_easy" class="on">台灣易</button><button data-v="overseas">需國外</button><button data-v="rare">稀有</button></span>
+        </div>
+        <div class="addrow">
+          <input type="number" id="bl-recur" placeholder="後續成本/月（選填）" min="0" step="1">
+          <input type="text" id="bl-link" placeholder="連結（選填）" autocomplete="off" style="flex:1;min-width:160px;">
+        </div>
+        <input type="text" id="bl-note" class="wide" placeholder="備註（選填）" autocomplete="off" style="margin-bottom:11px;">
+        <div class="segline" style="justify-content:space-between;">
+          <label class="tmtoggle"><input type="checkbox" id="bl-tm" checked>本月想買（取消＝之後再說）</label>
+          <span class="btngroup">
+            <button class="addbtn" id="bl-add">＋ 加入</button>
+            <button class="addbtn ghost" id="bl-import" title="把商品連結貼到上面「連結」欄，按這裡自動帶入名稱與價格">🔗 貼連結帶入</button>
+          </span>
+        </div>
+        <details class="bulkbox">
+          <summary>一次貼多行批次新增</summary>
+          <textarea id="bl-bulk" placeholder="一行一項，或用 、 , 分隔。例：衛生紙、洗髮精、咖啡豆"></textarea>
+          <button class="addbtn ghost" id="bl-bulk-add">批次新增</button>
+        </details>
+      </div>
+
+      <div class="filters">
+        <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button><button data-v="starred">已買・星號</button></span>
+        <select id="f-cat"></select>
+        <select id="f-tag"></select>
+        <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
+        <button id="bl-export" class="expbtn" title="把整張清單匯出成 .md（全部項目，不受篩選影響）">⬇ 匯出 .md</button>
+        <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
+      </div>
+
+      <div id="view-list" class="card" style="padding:6px 0;"><div class="list" id="list"></div></div>
+      <div id="view-matrix" class="hidden">
+        <div class="matrix" id="matrix"></div>
+        <div class="maxis"><span>← 價格低</span><span>價格高 →</span></div>
+      </div>
+      </div><!-- /tab-buy -->
+
+      <div id="tab-sauce" class="hidden">
+        <div class="card addbox">
+          <div class="addrow">
+            <input type="text" id="sc-name" placeholder="辣醬名稱（必填）" autocomplete="off" style="flex:1;min-width:150px;">
+            <input type="text" id="sc-url" placeholder="連結（選填）" autocomplete="off" style="flex:1;min-width:150px;">
+          </div>
+          <div class="ratings" id="sc-ratings"></div>
+          <div class="segline" style="justify-content:flex-end;">
+            <button class="addbtn" id="sc-add">＋ 加入辣醬</button>
+          </div>
+        </div>
+        <div class="filters">
+          <input type="text" id="sc-search" class="scsearch" placeholder="🔍 搜尋辣醬名稱">
+        </div>
+        <div class="card" style="padding:6px 0;"><div class="list" id="sc-list"></div></div>
+      </div>
+    </div>
+  </div><!-- /panel-shop -->
+
+  <!-- ══════════ 行程 Tab（scout-checklist）══════════
+       整段從 witsper-stanley/scout-checklist 的 index.html 搬來，內容由 checklist.js 動態渲染。 -->
+  <div id="panel-trip" class="panel hidden">
+    <main id="app">
+      <div id="status" class="status">載入中…</div>
+    </main>
+
+    <!-- ── AI 匯入行程 modal（預設隱藏）── -->
+    <div id="ai-import-backdrop" class="ai-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="ai-import-title">
+      <div class="ai-modal">
+        <div class="ai-modal-head">
+          <div id="ai-import-title" class="ai-modal-title">✨ AI 匯入行程</div>
+          <button type="button" id="ai-import-close" class="ai-modal-x" aria-label="關閉">✕</button>
+        </div>
+        <div class="ai-modal-hint">貼上一段文字行程（部落格、訊息、備忘錄都行），AI 會抓出景點/餐廳/時間並排入行程。</div>
+        <textarea id="ai-import-text" class="ai-textarea" rows="8"
+          placeholder="例如：&#10;Day 1 上午 10:00 到美麗海水族館，中午在本部町吃海鮮，晚上 18:30 國際通燒肉…"></textarea>
+        <div id="ai-import-msg" class="ai-msg" aria-live="polite"></div>
+        <div class="ai-modal-actions">
+          <button type="button" id="ai-import-cancel" class="ai-btn-ghost">取消</button>
+          <button type="button" id="ai-import-run" class="ai-btn-primary">解析並加入</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-trip -->
+
+</div><!-- /app-shell -->
+
+<!-- 設定檔（gitignored）。複製 config.js.example → config.js 後填入。 -->
+<script src="config.js"></script>
+<!-- 只有 buylist 用 supabase-js（要 Realtime）；checklist 直接 fetch 打 PostgREST，不需要這支。 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="buylist.js"></script>
+<script src="checklist.js"></script>
+<!-- shell 最後載入：兩個 panel 的內容都就緒後再決定顯示哪一個 -->
+<script src="shell.js"></script>
+</body>
+</html>

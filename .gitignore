@@ -2,6 +2,8 @@
 secrets.toml
 checklist/config.js
 buylist/config.js
+web/config.js
+web/_buylist-body.htmlpart
 __pycache__/
 *.pyc
 *.pyo
