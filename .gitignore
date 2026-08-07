@@ -1,6 +1,7 @@
 .streamlit/secrets.toml
 secrets.toml
 checklist/config.js
+scout-checklist/config.js
 buylist/config.js
 web/config.js
 web/_buylist-body.htmlpart
