@@ -157,6 +157,17 @@
         </div>
       </div>
     </div>
+
+    <!-- ── AI 生成行程 modal（兩階段：六題問答 → 勾選加入）── -->
+    <div id="ai-suggest-backdrop" class="ai-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="ai-suggest-title">
+      <div class="ai-modal">
+        <div class="ai-modal-head">
+          <div id="ai-suggest-title" class="ai-modal-title">✨ AI 生成行程</div>
+          <button type="button" id="ai-suggest-close" class="ai-modal-x" aria-label="關閉">✕</button>
+        </div>
+        <div id="ai-suggest-body"></div>
+      </div>
+    </div>
   </div><!-- /panel-trip -->
 
 </div><!-- /app-shell -->
@@ -168,6 +179,8 @@
 <script src="buylist.js"></script>
 <!-- 匯出格式的純函式（.ics / CSV / 兩種連結）。必須排在 checklist.js 前面。 -->
 <script src="export-formats.js"></script>
+<!-- AI 生成行程的共用邏輯（問題清單 / prompt / 正規化），同樣排在 checklist.js 前面。 -->
+<script src="ai-suggest-core.js"></script>
 <script src="checklist.js"></script>
 <!-- shell 最後載入：兩個 panel 的內容都就緒後再決定顯示哪一個 -->
 <script src="shell.js"></script>

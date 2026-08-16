@@ -364,3 +364,63 @@
 #panel-trip .ai-btn-primary:hover{ background: var(--brand-d); }
 #panel-trip .ai-btn-primary:disabled,
 #panel-trip .ai-btn-ghost:disabled{ opacity: .5; cursor: default; }
+
+/* ── AI 生成行程 modal（specs/spec-ai-suggest-web.md）──
+   沿用 .ai-backdrop / .ai-modal 的外殼，只補兩個階段各自需要的元件。 */
+#panel-trip .ai-suggest-btn{
+  font-family: inherit; font-size: 14px; cursor: pointer; white-space: nowrap;
+  background: var(--green-soft); color: var(--brand); border: 1px solid var(--border);
+  border-radius: 100px; padding: 7px 16px; transition: background .15s;
+}
+#panel-trip .ai-suggest-btn:hover{ background: var(--border); }
+/* toolbar 現在有四個東西，手機上一定要能換行 */
+#panel-trip .toolbar{ flex-wrap: wrap; }
+
+/* 階段一：問答 */
+#panel-trip .as-done{ margin-bottom: 8px; }
+#panel-trip .as-done-q{ font-size: 12px; color: var(--faint); }
+#panel-trip .as-done-a{ font-size: 14px; font-weight: 500; color: var(--text); }
+#panel-trip .as-hr{ border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+#panel-trip .as-progress{ font-size: 11.5px; color: var(--faint); margin-bottom: 4px; }
+#panel-trip .as-q{ font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+#panel-trip .as-input{
+  width: 100%; font-family: inherit; font-size: 15px; color: var(--text);
+  border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: var(--white);
+}
+#panel-trip .as-input:focus{ outline: none; border-color: var(--green); }
+#panel-trip .as-opts{ display: flex; flex-wrap: wrap; gap: 7px; }
+#panel-trip .as-opt{
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  background: var(--white); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 100px; padding: 7px 13px;
+}
+#panel-trip .as-opt.on{ background: var(--brand); color: var(--white); border-color: var(--brand); }
+
+/* 階段二：勾選加入 */
+#panel-trip .as-result-head{ font-size: 16px; font-weight: 600; color: var(--brand); margin-bottom: 2px; }
+#panel-trip .as-bulk{ display: flex; align-items: center; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+#panel-trip .as-mini{
+  font-family: inherit; font-size: 12px; cursor: pointer;
+  background: var(--green-soft); color: var(--brand); border: none;
+  border-radius: 100px; padding: 5px 13px;
+}
+#panel-trip .as-count{ font-size: 12px; color: var(--faint); margin-left: auto; }
+#panel-trip .as-list{ max-height: 46vh; overflow-y: auto; }
+#panel-trip .as-day{
+  font-size: 13px; font-weight: 700; color: var(--brand);
+  margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+}
+#panel-trip .as-row{
+  display: flex; align-items: flex-start; gap: 9px; padding: 8px 4px;
+  border-radius: 10px; cursor: pointer;
+}
+#panel-trip .as-row:hover{ background: var(--green-soft); }
+#panel-trip .as-row input{ margin-top: 3px; flex: none; }
+#panel-trip .as-time{
+  font-size: 13px; font-weight: 700; color: var(--brand); flex: none;
+  width: 42px; font-variant-numeric: tabular-nums;
+}
+#panel-trip .as-body{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#panel-trip .as-name{ font-size: 14.5px; font-weight: 600; word-break: break-word; }
+#panel-trip .as-meta{ font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+#panel-trip .as-note{ font-size: 12px; color: var(--faint); margin-top: 3px; word-break: break-word; }

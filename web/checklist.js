@@ -346,6 +346,7 @@ function renderApp() {
     <div class="toolbar">
       <button class="refresh-btn" id="refresh">↻ 重新整理</button>
       <button class="ai-import-btn" id="ai-import-open">✨ AI 匯入行程</button>
+      <button class="ai-suggest-btn" id="ai-suggest-open">🪄 AI 生成行程</button>
       <span class="updated">更新於 ${updated}</span>
     </div>
     ${renderExportBar()}
@@ -384,6 +385,8 @@ function wireShell() {
   if (refresh) refresh.addEventListener("click", () => load());
   const aiBtn = document.getElementById("ai-import-open");
   if (aiBtn) aiBtn.addEventListener("click", openAiImportModal);
+  const asBtn = document.getElementById("ai-suggest-open");
+  if (asBtn) asBtn.addEventListener("click", openAiSuggestModal);
   document.querySelectorAll("#tabbar button").forEach((b) =>
     b.addEventListener("click", () => switchView(b.dataset.view)));
   wireTripBar();
@@ -1027,6 +1030,250 @@ function wireAiImportModalOnce() {
   if (bd) bd.addEventListener("click", (e) => { if (e.target === bd) closeAiImportModal(); });
 }
 
+// ══════════════════════════════════════════════════════════
+//  AI 生成行程（specs/spec-ai-suggest-web.md）
+//  兩階段：六題問答 → 勾選加入。純邏輯全在 window.ScoutAiSuggest，這裡只管 UI 與寫入。
+// ══════════════════════════════════════════════════════════
+let asStep = 0;          // 目前問到第幾題
+let asAnswers = {};      // key → 答案字串
+let asMulti = [];        // 第 4 題（多選）當下的選擇
+let asItems = null;      // null = 還在問答階段；陣列 = 已生成
+let asSelected = new Set();
+let asBusy = false;
+
+function asReset() {
+  asStep = 0; asAnswers = {}; asMulti = []; asItems = null; asSelected = new Set(); asBusy = false;
+}
+
+function openAiSuggestModal() {
+  const bd = document.getElementById("ai-suggest-backdrop");
+  if (!bd) return;
+  asReset();
+  bd.classList.remove("hidden");
+  renderAiSuggest();
+}
+function closeAiSuggestModal() {
+  const bd = document.getElementById("ai-suggest-backdrop");
+  if (bd) bd.classList.add("hidden");
+}
+
+function renderAiSuggest() {
+  const body = document.getElementById("ai-suggest-body");
+  const X = window.ScoutAiSuggest;
+  if (!body || !X) return;
+  body.innerHTML = asItems === null ? asQuestionHtml(X) : asResultHtml(X);
+  asWire(X);
+}
+
+// ── 階段一：問答 ──
+function asQuestionHtml(X) {
+  const done = X.QUESTIONS.slice(0, asStep).map((q) =>
+    `<div class="as-done"><div class="as-done-q">${escapeHtml(q.label)}</div>` +
+    `<div class="as-done-a">${escapeHtml(asAnswers[q.key] || "（跳過）")}</div></div>`).join("");
+
+  const q = X.QUESTIONS[asStep];
+  const isLast = asStep === X.QUESTIONS.length - 1;
+
+  let input;
+  if (q.type === "multiselect") {
+    input = `<div class="as-opts">` + q.options.map((o, i) =>
+      `<button type="button" class="as-opt${asMulti.includes(o) ? " on" : ""}" data-opt="${i}">${escapeHtml(o)}</button>`
+    ).join("") + `</div>`;
+  } else {
+    input = `<input type="text" id="as-input" class="as-input" placeholder="${escapeHtml(q.placeholder || "")}" ` +
+            `value="${escapeHtml(asAnswers[q.key] || "")}" autocomplete="off">`;
+  }
+
+  return `
+    ${done}
+    ${asStep > 0 ? '<hr class="as-hr">' : ""}
+    <div class="as-progress">第 ${asStep + 1} / ${X.QUESTIONS.length} 題</div>
+    <div class="as-q">${escapeHtml(q.label)}</div>
+    ${input}
+    <div class="ai-msg" id="as-msg" aria-live="polite"></div>
+    <div class="ai-modal-actions">
+      ${asStep > 0 ? '<button type="button" class="ai-btn-ghost" id="as-restart">↩ 重新開始</button>' : ""}
+      ${isLast ? '<button type="button" class="ai-btn-ghost" id="as-skip">跳過</button>' : ""}
+      <button type="button" class="ai-btn-primary" id="as-next">${isLast ? "開始生成行程 ✨" : "下一題 →"}</button>
+    </div>`;
+}
+
+// ── 階段二：勾選加入 ──
+function asResultHtml(X) {
+  const dest = asAnswers.destination || "行程";
+  const groups = X.groupByDay(asItems);
+  const body = groups.map((g) => `
+    <div class="as-day">${escapeHtml(TRIP_CTX.dayLabel(g.day))}</div>` +
+    g.items.map((it) => {
+      const i = asItems.indexOf(it);
+      const cat = CATEGORY_LABEL[it.category] || CATEGORY_LABEL.other;
+      return `
+      <label class="as-row">
+        <input type="checkbox" data-idx="${i}"${asSelected.has(i) ? " checked" : ""}>
+        <span class="as-time">${escapeHtml(it.start_time)}</span>
+        <span class="as-body">
+          <span class="as-name">${escapeHtml(it.name)}</span>
+          <span class="as-meta">${escapeHtml(cat)}・${it.duration_minutes} 分${it.location ? "・" + escapeHtml(it.location) : ""}</span>
+          ${it.notes ? `<span class="as-note">${escapeHtml(it.notes)}</span>` : ""}
+        </span>
+      </label>`;
+    }).join("")).join("");
+
+  return `
+    <div class="as-result-head">✨ ${escapeHtml(dest)} 建議行程</div>
+    <div class="ai-modal-hint">勾選想加入的項目，再點「加入行程」。加入後可以在卡片上編輯或刪除。</div>
+    <div class="as-bulk">
+      <button type="button" class="as-mini" id="as-all">全選</button>
+      <button type="button" class="as-mini" id="as-none">取消全選</button>
+      <span class="as-count">${asSelected.size} / ${asItems.length} 已勾選</span>
+    </div>
+    <div class="as-list">${body}</div>
+    <div class="ai-msg" id="as-msg" aria-live="polite"></div>
+    <div class="ai-modal-actions">
+      <button type="button" class="ai-btn-ghost" id="as-again">重來</button>
+      <button type="button" class="ai-btn-primary" id="as-add">＋ 加入行程</button>
+    </div>`;
+}
+
+function asMsg(text, cls) {
+  const el = document.getElementById("as-msg");
+  if (el) { el.textContent = text; el.className = "ai-msg" + (cls ? " " + cls : ""); }
+}
+
+function asWire(X) {
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+
+  // 多選選項
+  document.querySelectorAll("#ai-suggest-body .as-opt").forEach((b) => {
+    b.addEventListener("click", () => {
+      const o = X.QUESTIONS[asStep].options[Number(b.dataset.opt)];
+      const i = asMulti.indexOf(o);
+      if (i === -1) asMulti.push(o); else asMulti.splice(i, 1);
+      b.classList.toggle("on");
+    });
+  });
+
+  // Enter 直接下一題（同參照系統）
+  const input = document.getElementById("as-input");
+  if (input) {
+    setTimeout(() => input.focus(), 50);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); asAdvance(X, false); }
+    });
+  }
+
+  on("as-next", () => asAdvance(X, false));
+  on("as-skip", () => asAdvance(X, true));
+  on("as-restart", () => { asReset(); renderAiSuggest(); });
+  on("as-all", () => { asSelected = new Set(asItems.map((_, i) => i)); renderAiSuggest(); });
+  on("as-none", () => { asSelected = new Set(); renderAiSuggest(); });
+  on("as-again", () => { asReset(); renderAiSuggest(); });
+  on("as-add", () => asAddSelected());
+
+  document.querySelectorAll("#ai-suggest-body .as-list input[type=checkbox]").forEach((c) => {
+    c.addEventListener("change", () => {
+      const i = Number(c.dataset.idx);
+      if (c.checked) asSelected.add(i); else asSelected.delete(i);
+      const n = document.querySelector("#ai-suggest-body .as-count");
+      if (n) n.textContent = `${asSelected.size} / ${asItems.length} 已勾選`;
+    });
+  });
+}
+
+// 前進一題；最後一題則送出生成
+async function asAdvance(X, skip) {
+  if (asBusy) return;
+  const q = X.QUESTIONS[asStep];
+  const isLast = asStep === X.QUESTIONS.length - 1;
+
+  let answer;
+  if (skip) answer = "";
+  else if (q.type === "multiselect") answer = asMulti.join("、");
+  else answer = (document.getElementById("as-input") || {}).value || "";
+  answer = answer.trim();
+
+  // 非最後一題不能留空（同參照系統）；最後一題本來就可跳過
+  if (!answer && !isLast && !q.optional) return asMsg("請選擇或輸入回答後再繼續。", "err");
+
+  asAnswers[q.key] = answer;
+  if (!isLast) { asStep += 1; asMulti = []; renderAiSuggest(); return; }
+
+  await asGenerate();
+}
+
+async function asGenerate() {
+  asBusy = true;
+  asMsg("AI 正在規劃你的行程，請稍候…", "busy");
+  const btn = document.getElementById("as-next") || document.getElementById("as-skip");
+  if (btn) btn.disabled = true;
+  try {
+    const raw = await asCallBackend(asAnswers);
+    const parsed = window.ScoutAiSuggest.parseSuggestions(raw);
+    if (parsed.error) throw new Error(parsed.error);
+    const total = (TRIP_CTX && TRIP_CTX.totalDays) ? TRIP_CTX.totalDays : 0;
+    const items = window.ScoutAiSuggest.normaliseAll(parsed.items, total);
+    if (!items.length) throw new Error("AI 給的內容裡沒有任何可加入的行程項目。請按「重來」再試一次。");
+    asItems = items;
+    asSelected = new Set();          // 預設全不勾（spec Q3）
+    asBusy = false;
+    renderAiSuggest();
+  } catch (e) {
+    asBusy = false;
+    if (btn) btn.disabled = false;
+    // 生成失敗保留已填答案（spec Q4）：六題重填成本太高，失敗多半是暫時的
+    asMsg("生成失敗：" + (e && e.message ? e.message : String(e)), "err");
+  }
+}
+
+// 只走 Netlify Function，不做前端金鑰 fallback——
+// 生成用的 prompt 比解析長得多，把金鑰留在前端的誘因更不該存在（spec A6）。
+async function asCallBackend(answers) {
+  let res;
+  try {
+    res = await fetch("/.netlify/functions/ai-suggest", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answers }),
+    });
+  } catch (e) {
+    throw new Error("連不到 AI 服務。這個功能需要部署在 Netlify 上才能用（本機開啟靜態檔沒有 functions）。");
+  }
+  if (res.status === 404) {
+    throw new Error("找不到 AI 服務（404）。這個功能需要部署在 Netlify 上；本機直接開檔案沒有 functions。");
+  }
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) throw new Error(data.error || `AI 服務錯誤（${res.status}）`);
+  return data.raw || "";
+}
+
+async function asAddSelected() {
+  if (asBusy) return;
+  if (!asSelected.size) return asMsg("請至少勾選一個項目。", "err");
+  asBusy = true;
+  const btn = document.getElementById("as-add");
+  if (btn) btn.disabled = true;
+  const picked = [...asSelected].sort((a, b) => a - b).map((i) => asItems[i]);
+  asMsg(`寫入 ${picked.length} 筆…`, "busy");
+  let ok = 0, fail = 0;
+  for (const f of picked) {
+    try { await addItem(f); ok++; } catch (_) { fail++; }
+  }
+  asBusy = false;
+  if (ok === 0) {
+    if (btn) btn.disabled = false;
+    return asMsg("全部寫入失敗，請確認連線與資料表權限。", "err");
+  }
+  asMsg(`已加入 ${ok} 個行程項目！` + (fail ? `（${fail} 筆失敗）` : ""), "ok");
+  setTimeout(async () => { closeAiSuggestModal(); asReset(); await load(); }, 700);
+}
+
+function wireAiSuggestModalOnce() {
+  const closeX = document.getElementById("ai-suggest-close");
+  const bd = document.getElementById("ai-suggest-backdrop");
+  if (closeX) closeX.addEventListener("click", closeAiSuggestModal);
+  if (bd) bd.addEventListener("click", (e) => { if (e.target === bd) closeAiSuggestModal(); });
+}
+
 function showError(err) {
   app.innerHTML = renderBanner("error",
     `操作失敗：<br><code>${escapeHtml(err.message)}</code><br><br>` +
@@ -1056,6 +1303,7 @@ async function load() {
 }
 
 wireAiImportModalOnce();  // modal 是靜態 DOM，只綁一次
+wireAiSuggestModalOnce();
 load();
 
 })();
