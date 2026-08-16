@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>想要的東西 — Scout</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* 獨立唯讀頁：刻意不載入 buylist.css。
+     那份樣式是為了「可編輯的清單」寫的（勾選框、刪除鈕、輸入框），
+     這裡一個互動元件都沒有，共用只會帶進一堆用不到的規則。
+     色票沿用 Scout CIS，值與 shell.css 相同。 */
+  :root{
+    --bg:#F5F0EA; --card:#FFFFFF; --ink:#3C3830; --muted:#6B6558; --faint:#A8A298;
+    --line:#DCD8D0; --brand:#3D6B54; --need:#7A5230; --want:#C4915A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);
+       line-height:1.5;-webkit-font-smoothing:antialiased;padding:22px 16px 60px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.26em;color:var(--faint);
+           text-transform:uppercase;margin-bottom:6px;}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.01em;}
+  .sub{font-size:13px;color:var(--muted);margin-top:6px;}
+  .list{margin-top:22px;display:flex;flex-direction:column;gap:9px;}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;}
+  .itop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+  .name{font-size:16px;font-weight:600;word-break:break-word;flex:1;min-width:0;}
+  .qty{font-size:13px;font-weight:600;color:var(--muted);}
+  .price{font-size:15px;font-weight:700;color:var(--brand);white-space:nowrap;}
+  .tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{font-size:11px;border-radius:999px;padding:2px 9px;background:var(--bg);color:var(--muted);}
+  .tag.need{background:#E8C898;color:var(--need);font-weight:600;}
+  .tag.want{background:#FBF0E0;color:var(--want);font-weight:600;}
+  .note{font-size:12.5px;color:var(--muted);margin-top:7px;word-break:break-word;}
+  .link{display:inline-block;font-size:12.5px;margin-top:8px;color:var(--brand);}
+  .msg{background:var(--card);border:1px solid var(--line);border-radius:14px;
+       padding:22px 18px;text-align:center;color:var(--muted);font-size:14px;margin-top:22px;}
+  .msg.err{border-color:var(--need);color:var(--need);}
+  .foot{margin-top:26px;font-size:11.5px;color:var(--faint);text-align:center;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Scout · 唯讀分享</div>
+  <h1 id="title">想要的東西</h1>
+  <div class="sub" id="sub">載入中…</div>
+  <div class="list" id="list"></div>
+  <div class="foot">這是一份唯讀清單，看到的人不會動到原本的資料。</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var money=function(n){return 'NT$ '+(Math.round(+n||0)).toLocaleString('en-US');};
+
+  var tag=new URLSearchParams(location.search).get('list')||'';
+  var listEl=document.getElementById('list');
+  var subEl=document.getElementById('sub');
+
+  function show(html,cls){listEl.innerHTML='<div class="msg'+(cls?' '+cls:'')+'">'+html+'</div>';}
+
+  if(!tag){
+    subEl.textContent='';
+    show('這個連結少了清單名稱。<br>請跟分享的人要完整網址。','err');
+    return;
+  }
+  document.getElementById('title').textContent=tag;
+  document.title=tag+' — Scout';
+
+  fetch('/.netlify/functions/share?tag='+encodeURIComponent(tag))
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(res){
+      if(!res.ok){subEl.textContent='';show(esc(res.d.error||'讀取失敗'),'err');return;}
+      var items=res.d.items||[];
+      if(!items.length){
+        subEl.textContent='';
+        show('這份清單目前是空的。');
+        return;
+      }
+      subEl.textContent='共 '+items.length+' 樣';
+      listEl.innerHTML=items.map(function(i){
+        var urg=i.urgency==='need'?'<span class="tag need">'+esc(i.urgency_label)+'</span>'
+               :i.urgency==='want'?'<span class="tag want">'+esc(i.urgency_label)+'</span>'
+               :(i.urgency_label?'<span class="tag">'+esc(i.urgency_label)+'</span>':'');
+        return '<div class="item">'
+          +'<div class="itop"><span class="name">'+esc(i.name)+'</span>'
+          +((+i.quantity>1)?'<span class="qty">×'+(+i.quantity)+'</span>':'')
+          +(i.price?'<span class="price">'+money(i.price)+'</span>':'')+'</div>'
+          +'<div class="tags">'+urg+(i.category?'<span class="tag">'+esc(i.category)+'</span>':'')+'</div>'
+          +(i.note?'<div class="note">'+esc(i.note)+'</div>':'')
+          +(i.link?'<a class="link" href="'+esc(i.link)+'" target="_blank" rel="noopener noreferrer">🔗 看商品</a>':'')
+          +'</div>';
+      }).join('');
+    })
+    .catch(function(e){
+      subEl.textContent='';
+      show('連不上伺服器：'+esc(e.message)+'<br>這個分享頁需要部署在 Netlify 上才能運作。','err');
+    });
+})();
+</script>
+</body>
+</html>

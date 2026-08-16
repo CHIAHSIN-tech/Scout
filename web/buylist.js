@@ -200,6 +200,28 @@
   }
   function renderAll(){renderTagOptions();renderBudget();renderList();renderCatGroups();renderMatrix();}
 
+  // ── 唯讀分享連結 ──
+  // 只分享「一個情境標籤」而不是整份清單：一來分享的情境本來就是「送禮-媽媽」這種，
+  // 二來限定範圍才不會把兩人所有想買的東西一次攤給外人看。
+  // 唯讀是後端保證的（web/netlify/functions/share.js），不是靠這個連結的隱晦性。
+  async function shareList(){
+    if(fTag==='all'){
+      setStatus('先在上面選一個「情境」，分享連結是以情境為單位','err');
+      return;
+    }
+    const n=items.filter(i=>!i.bought && (i.tag||'').trim()===fTag).length;
+    if(!n){ setStatus('「'+fTag+'」目前沒有未購項目，分享出去會是空的','err'); return; }
+    const url=location.origin+'/share.html?list='+encodeURIComponent(fTag);
+    try{
+      await navigator.clipboard.writeText(url);
+      setStatus('已複製「'+fTag+'」的唯讀連結（'+n+' 樣）','live');
+    }catch(e){
+      // 沒有剪貼簿權限（http 或使用者拒絕）→ 至少讓人看得到、可以手動複製
+      window.prompt('複製這個唯讀連結分享出去：', url);
+      setStatus('「'+fTag+'」的唯讀連結已產生（'+n+' 樣）','live');
+    }
+  }
+
   // ── 快速複製常買清單 ──
   // 「星號」在既有語意裡就是「已買且可回購」（spec-buylist-starred），所以重買的來源直接用它，
   // 不另外發明一個「常買」欄位。
@@ -432,6 +454,7 @@
     $('view-list').classList.toggle('hidden',view!=='list');
     $('view-cat').classList.toggle('hidden',view!=='cat');
     $('view-matrix').classList.toggle('hidden',view!=='matrix');});
+  $('bl-share').addEventListener('click',shareList);
   $('bl-repeat').addEventListener('click',()=>toggleRepeat($('repeat-box').classList.contains('hidden')));
   $('rp-cancel').addEventListener('click',()=>toggleRepeat(false));
   $('rp-go').addEventListener('click',repeatAdd);
