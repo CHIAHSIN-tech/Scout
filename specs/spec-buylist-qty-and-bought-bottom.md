@@ -8,7 +8,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：小。兩項都該在一個工作段落內做完；若超時，先交「Feature A（已買沉底）」——它零 schema、零風險。
-- **Status**：draft
+- **Status**：done（落地 commit `41ccb7e`）
 - **Date**：2026-07-25
 
 ## 1. Problem Statement

@@ -8,7 +8,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：小。一個工作段落內做完；純前端＋一次批次寫入，無 schema 變動。
-- **Status**：draft
+- **Status**：done（落地 commit `750fda6`）
 - **Date**：2026-07-25
 
 ## 1. Problem Statement

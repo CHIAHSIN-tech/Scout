@@ -223,7 +223,7 @@ TBD（待實際開發中出現時補充）
 ### 2.1 當前階段
 
 **目前在哪：** 轉型中。專案在 2026-04～07 分裂成三套並存的東西（Streamlit app、buylist 靜態 app、scout-checklist 靜態 app），現正收斂成**單一靜態雙 Tab web app**，Streamlit 退役。
-**本週焦點：** 執行 `specs/spec-scout-app-merge.md` v2（Appetite：一個週末）。
+**本週焦點：** 收斂已完成——合併版雙 Tab app 已上線，`specs/` 內**沒有待執行的規格**。下一個要決定的是「AI 生成行程」要不要補（Streamlit 退役後唯一沒有替代品的缺口）。
 
 ### 2.2 MoSCoW 範疇
 
@@ -236,8 +236,10 @@ TBD（待實際開發中出現時補充）
 - [x] 行程 — 確認清單兩軸儀表板
 - [x] 行程 — 行程表 / 時間軸（拖曳改時間）
 - [x] 行程 — AI 匯入行程（Netlify Function proxy，金鑰不外露）
-- [ ] **合併成單一雙 Tab app**（`spec-scout-app-merge.md` v2）
-- [ ] **最小旅程管理**（建立旅程／切換旅程／手動新增項目）— Streamlit 退役的前置條件
+- [x] **合併成單一雙 Tab app**（`spec-scout-app-merge.md` v2）— commit `0d3a00a`
+- [x] **最小旅程管理**（建立旅程／切換旅程／手動新增項目）— commit `efa0878`
+- [x] **行程項目的編輯／跨天移動／刪除項目／刪除旅程** — commit `e2ba895`，補回 Streamlit 退役造成的功能倒退
+- [x] **兩 Tab 視覺統一 ＋ 匯出 Google 日曆／Maps** — 見 ADR-015 與 `ACCEPTANCE.md`
 - [ ] **Netlify 接 Git 自動部署**（取代手動 drag-and-drop）
 
 **Should**
@@ -246,7 +248,7 @@ TBD（待實際開發中出現時補充）
 
 **Could**
 - [ ] 救回 Streamlit 的「AI 生成行程」（多輪問答 → Gemini 產出整份行程）
-- [ ] 行程項目的欄位編輯／排序／跨天移動（Streamlit 有、合併版未補）
+- [ ] 行程項目的上移↑／下移↓ 排序 — **刻意不做**：時間軸已能拖曳改時間，目的重疊（`spec-itinerary-restore-edit-delete.md` §4 Could）
 
 **Won't（明確不做）**
 - 自動爬蟲（由使用者主動貼連結）
@@ -256,9 +258,8 @@ TBD（待實際開發中出現時補充）
 
 ### 2.3 進度指標
 
-- **完成度：** 兩邊功能各自完整且已上線；合併工程 0%（spec 已 ready，尚未動工）
-- **剩餘時間預算：** 一個週末（2–3 天）
-- **最接近的里程碑：** 合併版外殼 + 兩邊搬入（spec §8 Day 1）
+- **完成度：** 合併版雙 Tab app 已上線；行程側的功能倒退已補齊；兩 Tab 視覺統一與匯出已完成。`specs/` 無待執行規格。
+- **最接近的里程碑：** 由 Chia 決定「AI 生成行程」做不做（要做需另開 spec）
 
 ---
 
@@ -831,12 +832,69 @@ Claude Code 一開始把「Netlify 選單顯示 CHIAHSIN-tech」誤判為帳號�
 
 ---
 
+---
+
+### ADR-015: 兩個 Tab 的顏色 token 只求「同名同值」，不抽成共用樣式層
+
+**日期：** 2026-08-16
+**狀態：** 已採納
+**決策者：** Chia（2026-08-08 拍板方向）／Stanley 端執行
+
+**背景：**
+合併成雙 Tab 後，`#panel-shop` 與 `#panel-trip` 各自定義了一整套 CSS 變數（buylist.css / checklist.css 的檔頭），其中 `--muted`、`--green`、`--amber` 三個名字**在兩邊指不同顏色**（例如 `--muted` 一邊 `#6B6558`、一邊 `#A8A298`）。
+
+真正的成本不是「看起來不像同一個 app」，而是**日後任何一次改色，改的人會以為兩邊都改到，實際只改到一半，而且不會有任何錯誤訊息**。這個缺陷會隨每次改動放大。
+
+**選項：**
+1. 把兩邊的 token 上移到 `shell.css` 成為單一來源
+2. 維持兩份定義，但要求同名一律同值
+3. 不處理
+
+**決策：** 選 2。並補一支 `scripts/check-style.mjs --token-parity` 把這條規則變成可執行的檢查。
+統一時**以購物 Tab 為準，不反向修改購物端**：行程端主色 `--green`（`#3D6B54`）改名 `--brand`、`--green-line` 改名 `--green`、`--sub`→`--muted`、原 `--muted`→`--faint`。字體同理全站統一 `Noto Sans TC`，襯線體移除。
+
+**理由：**
+選項 1 的改動範圍過大（兩個 app 的全部樣式規則都要重新對照命名），而它要解決的問題——「同名不同值」——選項 2 就能解決。抽共用層是更乾淨的終局，但不是現在該付的代價。
+
+**代價 / 已知風險：**
+- 兩份 token 定義仍然存在，仍可能各自漂移。**只有在有人執行 `scripts/check-style.mjs` 時才會被抓到**——目前沒有 CI、沒有 pre-commit hook。
+- 同值不同名的情況（`--text` vs `--ink`）沒有處理，不構成上述缺陷，但也還在。
+- `--amber` 對齊購物端色票後，當文字色對比只剩約 2.3:1，因此另立 `--warn-ink`（值取自購物端既有的 `--red`）給文字用。這不是新增顏色，是既有色票換個語意名字。
+
+**關聯：** ADR-010（單一靜態 app、無 build step）、`specs/TASK-ui-unify-and-calendar-maps-export.md`、`DECISIONS.md`
+
 ## 5. 開發日誌
 
 > **只增不改（但會週期性壓縮舊內容）。**
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-08-16] 清掉 specs/ 裡最後兩份待執行規格
+
+**類型：** 進度
+**關聯 ADR：** ADR-015（新增）、ADR-010
+**關聯 MoSCoW：** Must — 行程編輯／刪除、視覺統一＋匯出
+
+盤點 `specs/` 後發現只有兩份真的還開著，其餘不是已實作但狀態沒改，就是早已作廢。兩份都執行完：
+
+1. **行程 Tab 補回編輯與刪除**（`spec-itinerary-restore-edit-delete.md`，commit `e2ba895`）。
+   卡片加展開式編輯表單（九個欄位＋「第幾天」＝跨天移動），新增 `deleteItem` / `deleteTrip`——
+   在此之前整份 `checklist.js` **沒有任何 DELETE**。刪旅程採「先刪項目再刪旅程」，
+   因為珈欣的 Supabase 有沒有設 CASCADE 無法從前端確認，先刪子表在兩種情況下都正確。
+   AC-1～AC-9 以本地假後端逐條驗過（Supabase 在開發環境連不到，且不應拿正式資料庫做刪除測試）。
+
+2. **雙 Tab 視覺統一 ＋ 匯出 Google 日曆／Maps**（`TASK-ui-unify-and-calendar-maps-export.md`）。
+   見 ADR-015。新增 `web/export-formats.js`（純函式，瀏覽器與驗證腳本共用同一份實作）
+   與 `scripts/` 下兩支只用 Node 內建模組的驗收腳本。A1–A10 全 PASS，無項目被砍。
+   兩支腳本都反向注入違規測試過；其中抓到自己寫鬆的一條斷言（拿實作常數當預期值），已改硬寫。
+
+**順帶清掉的文件債：** 刪除作廢的辣醬庫 Vue 規格與其 kickoff（2026-07-26 已改成 buylist 的一個 tab）；
+六份早已上線卻仍標 `draft` 的規格補上 `done` 與落地 commit；`specs/README.md` 索引從只有 001 一列補齊到全部。
+
+**產出物：** `ACCEPTANCE.md`、`DECISIONS.md`、`KNOWN_ISSUES.md`、`for-chia-itinerary-edit-delete.md`
+
+---
 
 ### [2026-08-01] 架構調查 → 決定收斂為單一靜態 app、Streamlit 退役
 
@@ -937,7 +995,7 @@ _(目前尚無壓縮紀錄)_
 - **`scout.db`**：SQLite 時代的死檔案，應刪除。
 - **`scout-checklist` repo 內有過時的 buylist 複本**（`buylist.html` / `buylist-schema.sql` / `BUYLIST_STATE.md`），是 2026-06 的 tracer bullet，合併時刪。
 - **本機 `scout-checklist/` 資料夾是舊 Firebase 版**，remote 指向不同帳號（`CHIAHSIN-tech/scout-checklist`），極易誤認為現行版——`spec-scout-app-merge.md` v1 就差點踩到。應刪。
-- **無測試覆蓋**（靜態 app 完全沒有）。
+- **無測試覆蓋**：`tests/test_itinerary.py` 只涵蓋已退役的 Streamlit 邏輯。靜態 app 現在有兩支驗收腳本（`scripts/check-style.mjs`、`scripts/check-exports.mjs`，只用 Node 內建模組），但它們涵蓋的是樣式 token 與匯出格式，**不是**應用邏輯，而且沒有掛進任何 CI，要有人記得跑。
 - **buylist 單檔已 584 行 / 42 KB**，HTML+CSS+JS 全內聯；合併時會拆成獨立 `.js` / `.css`。
 - **兩邊同步機制不一致**：購物有 Realtime、行程要手動重新整理。合併後同一頁兩種行為，使用者可能困惑。
 - **context.md 曾空窗四個月**（2026-04-18 ～ 2026-08-01），期間所有架構決策都是事後反推補記。沒有機制保證有人回寫。
@@ -946,7 +1004,7 @@ _(目前尚無壓縮紀錄)_
 
 - 手機介面像素級優化（現版能用但偏桌面）— 待 Chia 出 spec
 - 行程側補 Realtime（消除與購物側的行為落差）— 非小工程
-- 行程項目的欄位編輯／排序／跨天移動、旅程刪除 — Streamlit 有、合併版不補
+- 行程項目的上移↑／下移↓ 排序 — 其餘（欄位編輯／跨天移動／刪除項目／刪除旅程）已於 2026-08-16 補回；↑↓ 因與拖曳改時間目的重疊而刻意不做
 - PWA / 離線 — 與「靠 Supabase 即時同步」的既有決策衝突，明確不做
 - 結構化輸出（Gemini JSON schema 強制）取代現有自寫 parse — 現況實測可用，等真的抓錯再做
 - 餐廳模組、旅館模組、統計報表 — Streamlit 時代的規劃，隨 ADR-010 失效，若要做得在新架構重新設計

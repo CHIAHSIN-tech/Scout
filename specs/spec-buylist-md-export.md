@@ -8,7 +8,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：小。純前端：把 `items` 組成 markdown 字串 → Blob 下載。無 schema、無後端。
-- **Status**：draft
+- **Status**：done（落地 commit `ff808e7`）
 - **Date**：2026-07-25
 - **建議順序**：接在 `spec-buylist-context-tag.md`（情境標籤）之後做最順；若先做，沒有 `tag` 欄位時全部歸「未分情境」，程式須容錯。
 

@@ -10,7 +10,7 @@
 
 ## 0. Meta
 - **Appetite**：中。買物清單之外的第二個資料域，塞進同一個單檔 app，靠頂層 tab 切換。
-- **Status**：draft
+- **Status**：done（落地 commit `c84f786`）
 - **Date**：2026-07-26
 
 ## 1. Problem Statement

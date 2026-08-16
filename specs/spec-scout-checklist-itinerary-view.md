@@ -2,8 +2,19 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：不限定（此版本不以 appetite 做範疇削減依據）
-- **Status**：draft
+- **Status**：done（狀態補標於 2026-08-16——當初在 `scout-checklist` repo 落地，
+  該 repo 退役後內容併入合併版，沒有人回來改這個欄位）
 - **Date**：2026-06-27
+
+> **落地位置對照**（現況以 [`web/checklist.js`](../web/checklist.js) 為準）：
+> Must 1 Day 分組 → `renderDayView()`；Must 2 未排定提醒 → `.dayplan-alert`；
+> Must 3 時間軸重疊並排 → `tlPackColumns()`；Must 4 拖曳改時間 → `tlAttachDrag()`；
+> Must 5 手機資訊架構（必須確認置頂、其餘收合）→ `renderChecklistSections()`；
+> Must 6 AI 貼文字匯入 → `aiParseItinerary()` 與 `web/netlify/functions/ai-parse.js`。
+>
+> **Must 7（網址正式化）已被後續決策取代**：`scout-checklist` repo 已轉 private 並退役，
+> 對外網址改為合併版雙 Tab app，不再是 `witsper-stanley.github.io/scout-checklist`。
+> 見 [`spec-scout-app-merge.md`](spec-scout-app-merge.md)。
 
 ---
 

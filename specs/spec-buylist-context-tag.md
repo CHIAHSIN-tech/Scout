@@ -8,7 +8,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：小。一張表加一欄 ＋ `index.html` 加一個輸入、一個篩選、一個顯示標籤。**刻意不含**標籤的批次改名/刪除管理（見 §4 Won't）。
-- **Status**：draft
+- **Status**：done（落地 commit `23e4229`）
 - **Date**：2026-07-25
 
 ## 1. Problem Statement

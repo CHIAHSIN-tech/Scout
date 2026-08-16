@@ -1,5 +1,9 @@
 # TASK: 雙 Tab 視覺統一 ＋ 行程可匯入 Google 日曆／Google Maps
 
+> **Status**：done（2026-08-16 落地）。A1–A10 全部 PASS、無項目被砍。
+> 驗收表與原始命令輸出見 [`ACCEPTANCE.md`](../ACCEPTANCE.md)；
+> 取捨見 [`DECISIONS.md`](../DECISIONS.md)；建議事項見 [`KNOWN_ISSUES.md`](../KNOWN_ISSUES.md)。
+
 ## OBJECTIVE
 
 合併版 web app 的兩個 Tab 共用同一套字體與顏色權杖（token），且任一趟行程能匯出成 Google 日曆與 Google Maps 讀得進去的檔案與連結。

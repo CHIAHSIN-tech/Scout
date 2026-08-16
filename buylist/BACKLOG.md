@@ -1,4 +1,4 @@
-# Scout App Backlog 分流（更新於 2026-08-08）
+# Scout App Backlog 分流（更新於 2026-08-16）
 
 > 把 Chia 的原始筆記整份對照**現況**分流，避免重複做已存在的功能。
 > 這份是「思考/決策」用的清單，不是 spec。要動手的項目才另外寫成 `spec-*.md`。
@@ -113,10 +113,10 @@
 
 | 項目 | 狀態 | 備註 |
 |---|---|---|
-| 編輯項目欄位（名稱/分類/時間/地點/備註…） | 🔨 | `specs/spec-itinerary-restore-edit-delete.md`（Must） |
-| 跨天移動 | 🔨 | 同上（Must） |
-| 刪除單一行程項目 | 🔨 | 同上（Must）——web 版目前**完全沒有 DELETE** |
-| 刪除旅程 | 🔨 | 同上（Must） |
+| 編輯項目欄位（名稱/分類/時間/地點/備註…） | ✅ | `specs/spec-itinerary-restore-edit-delete.md`（Must） |
+| 跨天移動 | ✅ | 同上（Must） |
+| 刪除單一行程項目 | ✅ | 同上（Must）——web 版目前**完全沒有 DELETE** |
+| 刪除旅程 | ✅ | 同上（Must） |
 | 上移↑/下移↓ 排序 | 🔽 降級 | 同 spec 列 Could——web 版時間軸**已有拖曳改時間**，功能重疊，先不做 |
 | **AI 生成行程**（多輪問答生成整份行程） | 🆕⚠️ | Streamlit 退役後**沒有任何替代品**，唯一重大缺口，需另開 spec |
 
@@ -140,13 +140,13 @@
 
 | 項目 | 狀態 | 備註 |
 |---|---|---|
-| 兩 Tab 字體統一 | 🔨 | 行程標題用 `Noto Serif TC`、購物用 `Noto Sans TC`；定案**以購物端為準**，襯線體連同 Google Fonts 連結一併移除 |
-| 兩 Tab 顏色 token 統一 | 🔨 | ⚠️ 真正的缺陷不是「看起來不像同一個 app」，而是**同名不同值**（`--muted` / `--green` / `--amber` 在兩邊各指不同色）→ 日後改色只會改到一半且無錯誤提示 |
+| 兩 Tab 字體統一 | ✅ | 行程標題用 `Noto Serif TC`、購物用 `Noto Sans TC`；定案**以購物端為準**，襯線體連同 Google Fonts 連結一併移除 |
+| 兩 Tab 顏色 token 統一 | ✅ | ⚠️ 真正的缺陷不是「看起來不像同一個 app」，而是**同名不同值**（`--muted` / `--green` / `--amber` 在兩邊各指不同色）→ 日後改色只會改到一半且無錯誤提示 |
 | 字級（font-size）統一 | 🔽 延後 | 行程端字級全部寫死、購物端也無字級 scale；統一等於重排整個版面，超出本次預算，且不影響上面那個真缺陷 |
-| 匯出 `.ics`（整趟行程） | 🔨 | ⚠️ **手機無法匯入 Google 日曆**（僅電腦版瀏覽器），UI 需明示此限制 |
-| 每項「加到 Google 日曆」連結 | 🔨 | 手機可用，因此列為 **Never-cut**；`.ics` 反而排在砍除順序前面 |
-| 匯出 My Maps CSV（整趟地點） | 🔨 | 規劃用途；My Maps 上限 2,000 筆／每圖 10 圖層，遠高於本專案規模 |
-| 每項「開 Google Maps」連結 | 🔨 | 現場導航用，同列 **Never-cut** |
+| 匯出 `.ics`（整趟行程） | ✅ | ⚠️ **手機無法匯入 Google 日曆**（僅電腦版瀏覽器），UI 需明示此限制 |
+| 每項「加到 Google 日曆」連結 | ✅ | 手機可用，因此列為 **Never-cut**；`.ics` 反而排在砍除順序前面 |
+| 匯出 My Maps CSV（整趟地點） | ✅ | 規劃用途；My Maps 上限 2,000 筆／每圖 10 圖層，遠高於本專案規模 |
+| 每項「開 Google Maps」連結 | ✅ | 現場導航用，同列 **Never-cut** |
 | `.ics` 時區處理 | ⚠️ 已知取捨 | `trips` 無時區欄位，預設採 floating time；日本行程在台北時區日曆會早響一小時，已寫入規格 INTERVIEW Q1 |
 | `address` 欄位補用 | ❌ 本次不做 | 資料表有 `address` 但 web 版完全沒用到，地圖匯出一律以 `location` 為準 |
 | 與 Google 雙向同步 / OAuth | ❌ 不做 | 規格 NON-GOALS 明列：不讀回、不登入、不呼叫任何 Google API |
@@ -163,12 +163,22 @@
 > **順序理由**：1 是補倒退（現在做不到的事），2 是新增能力，所以 1 先。
 > 但 2 的「視覺統一」部分有時間成本——每多改一次樣式，兩邊 token 就多歪一點，所以不宜排太後面。
 
+### 2026-08-16 更新：上面第 1、2 項都做完了
+
+兩份規格已實作上線，`specs/` 裡**沒有待執行的規格**。剩下的順序變成：
+
+1. **決定 AI 生成行程要不要補**——Streamlit 退役後唯一沒有替代品的重大缺口，需先決定做不做、怎麼做。
+2. 購物若要再加，只有三項划算：**關鍵字搜尋**、**依分類折疊分組**、**「誰負責採買」標記**。
+
+順帶處理掉的兩件文件債：作廢的辣醬庫 Vue 規格已刪除（現行 SSOT 是
+`buylist/spec-buylist-sauce-tab.md`）；`specs/README.md` 的索引補齊到全部規格。
+
 ### 目前所有可交付規格一覽
 
 | 規格 | 範圍 | 狀態 |
 |---|---|---|
-| `specs/spec-itinerary-restore-edit-delete.md` | 行程：編輯欄位／跨天移動／刪除項目／刪除旅程 | 待執行 |
-| `specs/TASK-ui-unify-and-calendar-maps-export.md` | 跨 Tab 視覺統一 ＋ 日曆／地圖匯出 | 待執行 |
+| `specs/spec-itinerary-restore-edit-delete.md` | 行程：編輯欄位／跨天移動／刪除項目／刪除旅程 | ✅ 已實作（2026-08-16） |
+| `specs/TASK-ui-unify-and-calendar-maps-export.md` | 跨 Tab 視覺統一 ＋ 日曆／地圖匯出 | ✅ 已實作（2026-08-16） |
 | `specs/spec-scout-app-merge.md` | 雙 Tab 合併 | ✅ 已實作 |
 | `specs/spec-buylist-*.md`（5 份） | 數量／沉底／批次新增／情境標籤／匯出 md／實付金額 | ✅ 已實作 |
 

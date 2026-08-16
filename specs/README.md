@@ -19,6 +19,28 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 
 ## 索引
 
-| 編號 | 標題 | 狀態 |
+> 早期幾份沒照 `NNN-` 編號、直接用 `spec-<主題>.md`，維持原檔名不動（改名會斷掉既有連結）。
+> **狀態以每份檔頭的 Status 為準，這張表是導覽用。**
+
+| 標題 | 範圍 | 狀態 |
 |------|------|------|
-| 001 | 候選＋確認狀態整合（行程/待辦/餐廳） | ✅ done |
+| [001 候選＋確認狀態整合](001-confirm-integration.md) | 行程/待辦/餐廳 | ✅ done |
+| [scout-checklist 行程表＋AI 匯入＋UI 翻新](spec-scout-checklist-itinerary-view.md) | 行程 | ✅ done（併入合併版） |
+| [buylist 交接包](buylist-handoff.md) | 購物（本體） | ✅ done |
+| [數量欄位＋已買沉底](spec-buylist-qty-and-bought-bottom.md) | 購物 | ✅ done |
+| [一次貼多行批次新增](spec-buylist-bulk-add.md) | 購物 | ✅ done |
+| [情境標籤＋依標籤篩選](spec-buylist-context-tag.md) | 購物 | ✅ done |
+| [Markdown 匯出](spec-buylist-md-export.md) | 購物 | ✅ done |
+| [實付金額＋估價差額](spec-buylist-actual-price.md) | 購物 | ✅ done |
+| [辣醬庫作為 buylist 的一個 tab](../buylist/spec-buylist-sauce-tab.md) | 購物 | ✅ done |
+| [合併為單一雙 Tab App](spec-scout-app-merge.md) | 全站 | ✅ done |
+| [行程 Tab 補回編輯與刪除](spec-itinerary-restore-edit-delete.md) | 行程 | ✅ done |
+| [雙 Tab 視覺統一＋日曆／地圖匯出](TASK-ui-unify-and-calendar-maps-export.md) | 全站 | ✅ done |
+
+**目前沒有待執行的 spec。** 下一批候選見 [`buylist/BACKLOG.md`](../buylist/BACKLOG.md)
+（最大的缺口是 Streamlit 退役後沒有替代品的「AI 生成行程」，需先決定做不做）。
+
+### 已作廢
+- `spec-hot-sauce-library.md` 與 `kickoff-hot-sauce-library-stanley.md`（Vue 3 + Vite 獨立 app）
+  已於 2026-08-16 刪除。2026-07-26 拍板改成「buylist 的一個 tab、不開新 app、不用 Vue」，
+  現行 SSOT 是 [`buylist/spec-buylist-sauce-tab.md`](../buylist/spec-buylist-sauce-tab.md)。

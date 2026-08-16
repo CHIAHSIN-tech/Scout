@@ -9,7 +9,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：小。加一欄 `actual_price` ＋ 已買項目上一個 inline 輸入 ＋ 一行差額顯示。
-- **Status**：draft
+- **Status**：done（落地 commit `91f323f`）
 - **Date**：2026-07-25
 
 ## 1. Problem Statement
