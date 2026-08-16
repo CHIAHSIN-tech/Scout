@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scout</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&display=swap" rel="stylesheet">
+<!-- 全站單一字體 Noto Sans TC（以購物 Tab 為準）。襯線體連同字重一起移除，少載一套。 --><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- 順序有意義：shell 先定義全域重設與 body，兩邊各自的樣式再蓋上去（都有前綴，不會互撞） -->
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="buylist.css">
@@ -151,6 +151,8 @@
 <!-- 只有 buylist 用 supabase-js（要 Realtime）；checklist 直接 fetch 打 PostgREST，不需要這支。 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="buylist.js"></script>
+<!-- 匯出格式的純函式（.ics / CSV / 兩種連結）。必須排在 checklist.js 前面。 -->
+<script src="export-formats.js"></script>
 <script src="checklist.js"></script>
 <!-- shell 最後載入：兩個 panel 的內容都就緒後再決定顯示哪一個 -->
 <script src="shell.js"></script>

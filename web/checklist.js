@@ -259,6 +259,64 @@ function renderAddItem() {
     </details>`;
 }
 
+// ── 匯出到 Google 日曆 / Google Maps ──
+// 格式組裝全部在 web/export-formats.js（同一份實作，驗證腳本共用），這裡只管 UI 與下載。
+// 不呼叫任何 Google API、不做 OAuth：.ics 與 CSV 是本地產檔，兩種連結是純字串組裝。
+function renderExportBar() {
+  if (!curTrip) return "";
+  return `
+    <div class="exportbar">
+      <button type="button" class="exp-btn" id="exp-ics">⬇ 匯出 .ics</button>
+      <button type="button" class="exp-btn" id="exp-csv">⬇ 匯出地圖 CSV</button>
+      <div class="exp-hint">
+        .ics 只能用<b>電腦版瀏覽器</b>匯入 Google 日曆，手機匯不進去；
+        手機請用每個項目的「📅 加到日曆」。CSV 是給 Google My Maps 手動上傳用的。
+      </div>
+      <div class="mini-msg" id="exp-msg" aria-live="polite"></div>
+    </div>`;
+}
+
+// 檔名用旅程名稱，把檔案系統會有意見的字元換掉
+function safeFileName(s) {
+  return String(s || "行程").replace(/[\\/:*?"<>|]/g, "-").trim() || "行程";
+}
+
+function downloadText(filename, text, mime) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function wireExportBar() {
+  const ics = document.getElementById("exp-ics");
+  if (ics) ics.addEventListener("click", () => {
+    try {
+      const n = curItems.filter((i) => i.day_number != null).length;
+      if (n === 0) return miniMsg("exp-msg", "還沒有排入行程的項目，.ics 會是空的。", "err");
+      downloadText(`${safeFileName(curTrip.name)}.ics`,
+        window.ScoutExport.buildIcs(curTrip, curItems), "text/calendar;charset=utf-8");
+      miniMsg("exp-msg", `已產生 ${n} 個日曆事件的 .ics。`, "");
+    } catch (e) {
+      miniMsg("exp-msg", "匯出失敗：" + (e && e.message ? e.message : String(e)), "err");
+    }
+  });
+
+  const csv = document.getElementById("exp-csv");
+  if (csv) csv.addEventListener("click", () => {
+    try {
+      const n = curItems.filter((i) => String(i.location || "").trim()).length;
+      if (n === 0) return miniMsg("exp-msg", "沒有任何項目填了「地點」，地圖 CSV 會是空的。", "err");
+      downloadText(`${safeFileName(curTrip.name)}-地點.csv`,
+        window.ScoutExport.buildMapsCsv(curItems), "text/csv;charset=utf-8");
+      miniMsg("exp-msg", `已匯出 ${n} 個地點的 CSV。`, "");
+    } catch (e) {
+      miniMsg("exp-msg", "匯出失敗：" + (e && e.message ? e.message : String(e)), "err");
+    }
+  });
+}
+
 function renderApp() {
   TRIP_CTX = buildTripCtx(curTrip);
   const updated = new Date().toLocaleTimeString("zh-Hant", { hour: "2-digit", minute: "2-digit" });
@@ -290,6 +348,7 @@ function renderApp() {
       <button class="ai-import-btn" id="ai-import-open">✨ AI 匯入行程</button>
       <span class="updated">更新於 ${updated}</span>
     </div>
+    ${renderExportBar()}
     ${renderAddItem()}
     <div class="tabbar" id="tabbar">
       ${VIEWS.map((v) => `<button data-view="${v.key}" class="${v.key === currentView ? "on" : ""}">${v.label}</button>`).join("")}
@@ -329,6 +388,7 @@ function wireShell() {
     b.addEventListener("click", () => switchView(b.dataset.view)));
   wireTripBar();
   wireAddItem();
+  wireExportBar();
 }
 
 // 小表單的訊息列：失敗一律紅字，不靜默失敗（比照 buylist 的 setStatus 慣例）
@@ -440,6 +500,19 @@ function scheduleControl(it) {
   return "";
 }
 
+// 每張卡片上的兩個連結。這兩個是手機上真正會用的路徑（.ics 手機匯不進去），
+// 所以規格把它們列為 never-cut。沒有日期／沒有地點的項目就不長出對應的連結。
+function renderItemLinks(it) {
+  const X = window.ScoutExport;
+  if (!X) return "";
+  const cal = X.gcalLink(curTrip, it);
+  const map = X.mapsLink(it);
+  if (!cal && !map) return "";
+  const a = (href, text) =>
+    `<a class="item-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  return `<div class="card-links">${cal ? a(cal, "📅 加到日曆") : ""}${map ? a(map, "🗺️ 開地圖") : ""}</div>`;
+}
+
 // ── 編輯 / 刪除（Streamlit `_render_items()` 的 ✏️ 展開表單）──
 // 收在 <details> 裡：卡片預設維持原本的乾淨樣子，要改才展開。
 // 「第幾天」放在這裡就順便補回了跨天移動（Streamlit 的 new_day_label）。
@@ -488,6 +561,7 @@ function renderCard(it, kind) {
         <div class="card-cat">${cat}　·　${escapeHtml(whereLabel(it))}</div>
         <div class="card-name">${escapeHtml(it.name)}</div>
         ${booking}${notes}
+        ${renderItemLinks(it)}
         <div class="card-sched">${scheduleControl(it)}</div>
         ${renderEditForm(it)}
       </div>

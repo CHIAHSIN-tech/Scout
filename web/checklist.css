@@ -4,18 +4,34 @@
 /* styles.css — Scout 確認清單網頁版
    沿用 Streamlit 端的米色 + 森林綠配色，手機優先。 */
 
+/* ── 顏色 token（唯一定義處；這個區塊以外不准出現裸露的 hex）──
+   對齊規則：與 #panel-shop（購物 Tab）同名的 token 一律同值，
+   購物端是基準、不反向修改（TASK-ui-unify-and-calendar-maps-export §技術限制）。
+   為什麼不把兩邊的 token 上移到 shell.css 變成單一來源：規格 NON-GOALS 明確不做，
+   本次只要求「同名同值」，消滅『改一邊以為改到兩邊』這個真正的缺陷。 */
 #panel-trip{
+    /* 與 #panel-shop 同名同值 */
     --bg: #F5F0EA;
     --card: #FFFFFF;
+    --muted: #6B6558;      /* 原本叫 --sub */
+    --faint: #A8A298;      /* 原本叫 --muted，與購物端的 --muted 同名不同值，故改名 */
+    --green: #5C8C72;      /* 原本叫 --green-line */
+    --amber: #C4915A;      /* 原本是 #A85C32，改用購物端色票 */
+
+    /* 行程端專用（購物端沒有同名 token，不會衝突） */
     --border: #C2DDD1;
-    --green: #3D6B54;
+    --brand: #3D6B54;      /* 行程端主色。原本叫 --green，值與購物端 --blue 相同 */
+    --brand-d: #2A4D3A;    /* hover 用的深色，同購物端 --blue-d */
     --green-soft: #EAF2ED;
-    --green-line: #5C8C72;
-    --amber: #A85C32;
     --amber-soft: #F6E8DD;
+    --warn-ink: #7A5230;   /* 警示「文字」色。--amber 當文字對比不足，改用購物端 --red 的值 */
     --text: #3C3830;
-    --muted: #A8A298;
-    --sub: #6B6558;
+    --white: #FFFFFF;
+    --err: #B23B2E;
+    --err-soft: #FBE4E0;
+    --card-warm: #FFFDFB;
+    --card-flex: #FAF8F4;
+    --card-conflict: #FFF7F2;
 }
 
 #panel-trip *{ box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,10 +47,10 @@
 /* ── 頁首 ── */
 #panel-trip .header{ padding: 0.5rem 0 1rem; }
 #panel-trip .header .title{
-    font-family: 'Noto Serif TC', serif;
+    /* 字體不再自己指定，繼承 body 的 Noto Sans TC（與購物 Tab 統一） */
     font-size: 24px; font-weight: 600;
 }
-#panel-trip .header .sub{ font-size: 13px; color: var(--muted); margin-top: 2px; }
+#panel-trip .header .sub{ font-size: 13px; color: var(--faint); margin-top: 2px; }
 
 #panel-trip .toolbar{
     display: flex; align-items: center; justify-content: space-between;
@@ -42,24 +58,24 @@
 }
 #panel-trip .refresh-btn{
     font-family: inherit; font-size: 14px; cursor: pointer;
-    background: var(--green-soft); color: var(--green);
+    background: var(--green-soft); color: var(--brand);
     border: 1px solid var(--border); border-radius: 100px;
     padding: 7px 16px; transition: background .15s;
 }
 #panel-trip .refresh-btn:hover{ background: var(--border); }
-#panel-trip .updated{ font-size: 12px; color: var(--muted); }
+#panel-trip .updated{ font-size: 12px; color: var(--faint); }
 
 /* ── 區段標題 ── */
 #panel-trip .section-title{
-    font-size: 15px; font-weight: 600; color: var(--green);
+    font-size: 15px; font-weight: 600; color: var(--brand);
     margin: 1.4rem 0 0.6rem; display: flex; align-items: center; gap: 8px;
 }
 #panel-trip .section-title .count{
-    font-size: 12px; font-weight: 700; color: #fff;
-    background: var(--amber); border-radius: 100px; padding: 1px 9px;
+    font-size: 12px; font-weight: 700; color: var(--white);
+    background: var(--warn-ink); border-radius: 100px; padding: 1px 9px;
 }
-#panel-trip .section-title .count.zero{ background: var(--green-line); }
-#panel-trip .section-hint{ font-size: 12px; color: var(--muted); font-weight: 400; }
+#panel-trip .section-title .count.zero{ background: var(--green); }
+#panel-trip .section-hint{ font-size: 12px; color: var(--faint); font-weight: 400; }
 
 /* ── 卡片 ── */
 #panel-trip .card{
@@ -67,43 +83,43 @@
     border-radius: 14px; padding: 13px 16px; margin-bottom: 0.6rem;
     display: flex; align-items: flex-start; gap: 12px;
 }
-#panel-trip .card.priority{ border-color: var(--amber); border-width: 1px; background: #FFFDFB; }
-#panel-trip .card.flexible{ background: #FAF8F4; }
-#panel-trip .card.done .card-name{ color: var(--muted); text-decoration: line-through; }
+#panel-trip .card.priority{ border-color: var(--amber); border-width: 1px; background: var(--card-warm); }
+#panel-trip .card.flexible{ background: var(--card-flex); }
+#panel-trip .card.done .card-name{ color: var(--faint); text-decoration: line-through; }
 
 #panel-trip .card-body{ flex: 1; min-width: 0; }
-#panel-trip .card-cat{ font-size: 11px; color: var(--muted); margin-bottom: 1px; }
+#panel-trip .card-cat{ font-size: 11px; color: var(--faint); margin-bottom: 1px; }
 #panel-trip .card-name{ font-size: 16px; font-weight: 600; word-break: break-word; }
-#panel-trip .card-where{ font-size: 12px; color: var(--sub); margin-top: 2px; }
-#panel-trip .card-notes{ font-size: 12px; color: var(--muted); margin-top: 3px; word-break: break-word; }
-#panel-trip .card-booking{ font-size: 12px; color: var(--green); margin-top: 3px; }
+#panel-trip .card-where{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+#panel-trip .card-notes{ font-size: 12px; color: var(--faint); margin-top: 3px; word-break: break-word; }
+#panel-trip .card-booking{ font-size: 12px; color: var(--brand); margin-top: 3px; }
 
 /* ── 確認勾選（大一點，好按） ── */
 #panel-trip .check{
     flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
-    border: 2px solid var(--border); background: #fff; cursor: pointer;
+    border: 2px solid var(--border); background: var(--white); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; color: transparent; transition: all .15s; padding: 0;
 }
-#panel-trip .check:hover{ border-color: var(--green-line); }
-#panel-trip .check.on{ background: var(--green); border-color: var(--green); color: #fff; }
+#panel-trip .check:hover{ border-color: var(--green); }
+#panel-trip .check.on{ background: var(--brand); border-color: var(--brand); color: var(--white); }
 
 /* ── 狀態 / 空狀態 / 錯誤 ── */
-#panel-trip .status{ text-align: center; padding: 2.5rem 0; color: var(--muted); font-style: italic; }
-#panel-trip .empty{ font-size: 13px; color: var(--muted); font-style: italic; padding: 0.4rem 0 0.8rem; }
+#panel-trip .status{ text-align: center; padding: 2.5rem 0; color: var(--faint); font-style: italic; }
+#panel-trip .empty{ font-size: 13px; color: var(--faint); font-style: italic; padding: 0.4rem 0 0.8rem; }
 #panel-trip .banner{
     border-radius: 12px; padding: 12px 16px; margin: 0.4rem 0 0.8rem; font-size: 13px;
 }
-#panel-trip .banner.ok{ background: var(--green-soft); color: var(--green); }
-#panel-trip .banner.warn{ background: var(--amber-soft); color: var(--amber); font-weight: 600; }
-#panel-trip .banner.error{ background: #FBE4E0; color: #B23B2E; }
+#panel-trip .banner.ok{ background: var(--green-soft); color: var(--brand); }
+#panel-trip .banner.warn{ background: var(--amber-soft); color: var(--warn-ink); font-weight: 600; }
+#panel-trip .banner.error{ background: var(--err-soft); color: var(--err); }
 #panel-trip .banner.error code{ font-family: monospace; font-size: 11px; word-break: break-all; }
 
 /* ── 排入行程 / 退回候選 ── */
 #panel-trip .card-sched{ margin-top: 8px; }
 #panel-trip details.sched summary{
     cursor: pointer; list-style: none; display: inline-block;
-    font-size: 12px; color: var(--green); font-weight: 600;
+    font-size: 12px; color: var(--brand); font-weight: 600;
     background: var(--green-soft); border-radius: 100px; padding: 3px 12px;
 }
 #panel-trip details.sched summary::-webkit-details-marker{ display: none; }
@@ -114,25 +130,25 @@
 #panel-trip .sched-row input[type="time"]{
     font-family: inherit; font-size: 13px; color: var(--text);
     border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px;
-    background: #fff; flex: 1; min-width: 90px;
+    background: var(--white); flex: 1; min-width: 90px;
 }
 #panel-trip .sched-row .sched-btn{
     font-family: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
-    background: var(--green); color: #fff; border: none;
+    background: var(--brand); color: var(--white); border: none;
     border-radius: 100px; padding: 6px 16px;
 }
-#panel-trip .sched-row .sched-btn:hover{ background: #2A4D3A; }
+#panel-trip .sched-row .sched-btn:hover{ background: var(--brand-d); }
 #panel-trip .sched-row .sched-btn:disabled{ opacity: .5; cursor: default; }
 #panel-trip .unsched-btn{
     font-family: inherit; font-size: 12px; cursor: pointer;
-    background: none; border: none; color: var(--muted);
+    background: none; border: none; color: var(--faint);
     padding: 2px 0; text-decoration: underline;
 }
-#panel-trip .unsched-btn:hover{ color: var(--green); }
+#panel-trip .unsched-btn:hover{ color: var(--brand); }
 
 /* 已確認區可折疊 */
 #panel-trip details.done-group summary{
-    cursor: pointer; list-style: none; color: var(--green);
+    cursor: pointer; list-style: none; color: var(--brand);
     font-size: 14px; font-weight: 600; padding: 0.3rem 0;
 }
 #panel-trip details.done-group summary::-webkit-details-marker{ display: none; }
@@ -143,60 +159,60 @@
 #panel-trip .tabbar{ display: flex; gap: 6px; margin: 0.9rem 0 1rem; }
 #panel-trip .tabbar button{
   flex: 1; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
-  background: var(--card); color: var(--sub); border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); border: 1px solid var(--border);
   border-radius: 100px; padding: 9px 10px; transition: background .15s, color .15s;
 }
-#panel-trip .tabbar button.on{ background: var(--green); color: #fff; border-color: var(--green); }
+#panel-trip .tabbar button.on{ background: var(--brand); color: var(--white); border-color: var(--brand); }
 
 /* ── toolbar 內的 AI 匯入按鈕 ── */
 #panel-trip .ai-import-btn{
   font-family: inherit; font-size: 14px; cursor: pointer; white-space: nowrap;
-  background: var(--green); color: #fff; border: 1px solid var(--green);
+  background: var(--brand); color: var(--white); border: 1px solid var(--brand);
   border-radius: 100px; padding: 7px 16px; transition: background .15s;
 }
-#panel-trip .ai-import-btn:hover{ background: #2A4D3A; }
+#panel-trip .ai-import-btn:hover{ background: var(--brand-d); }
 
 /* ── 行程表（Day 分組）view ── */
 #panel-trip .dayplan-alert{
   display: flex; align-items: center; gap: 8px; width: 100%;
   font-family: inherit; text-align: left; cursor: pointer;
-  background: var(--amber-soft); color: var(--amber); font-weight: 600;
+  background: var(--amber-soft); color: var(--warn-ink); font-weight: 600;
   border: 1px solid var(--amber); border-radius: 12px;
   padding: 11px 15px; margin: 0.4rem 0 1rem; font-size: 13px;
 }
 #panel-trip .dayplan-alert:hover{ filter: brightness(0.98); }
-#panel-trip .dayplan-alert.zero{ background: var(--green-soft); color: var(--green); border-color: var(--border); cursor: default; }
+#panel-trip .dayplan-alert.zero{ background: var(--green-soft); color: var(--brand); border-color: var(--border); cursor: default; }
 #panel-trip .dayplan-alert .arrow{ margin-left: auto; font-size: 12px; }
 #panel-trip .day-block{ margin-bottom: 1.4rem; }
 #panel-trip .day-head{
-  font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 600; color: var(--green);
+  font-size: 16px; font-weight: 600; color: var(--brand);
   padding: 0.2rem 0 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem;
   display: flex; align-items: baseline; gap: 8px;
 }
-#panel-trip .day-head .day-count{ font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: var(--muted); font-weight: 400; }
-#panel-trip .day-empty{ font-size: 13px; color: var(--muted); font-style: italic; padding: 0.2rem 0 0.4rem; }
+#panel-trip .day-head .day-count{ font-size: 12px; color: var(--faint); font-weight: 400; }
+#panel-trip .day-empty{ font-size: 13px; color: var(--faint); font-style: italic; padding: 0.2rem 0 0.4rem; }
 #panel-trip .plan-row{
   display: flex; align-items: flex-start; gap: 12px;
   background: var(--card); border: 0.5px solid var(--border);
   border-radius: 12px; padding: 11px 14px; margin-bottom: 0.5rem;
 }
-#panel-trip .plan-time{ flex-shrink: 0; width: 46px; font-size: 13px; font-weight: 700; color: var(--green); text-align: right; padding-top: 1px; font-variant-numeric: tabular-nums; }
-#panel-trip .plan-time.none{ color: var(--muted); font-weight: 400; }
+#panel-trip .plan-time{ flex-shrink: 0; width: 46px; font-size: 13px; font-weight: 700; color: var(--brand); text-align: right; padding-top: 1px; font-variant-numeric: tabular-nums; }
+#panel-trip .plan-time.none{ color: var(--faint); font-weight: 400; }
 #panel-trip .plan-icon{ flex-shrink: 0; font-size: 18px; line-height: 1.3; }
 #panel-trip .plan-body{ flex: 1; min-width: 0; }
 #panel-trip .plan-name{ font-size: 15px; font-weight: 600; word-break: break-word; }
-#panel-trip .plan-place{ font-size: 12px; color: var(--sub); margin-top: 2px; word-break: break-word; }
+#panel-trip .plan-place{ font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-word; }
 
 /* ── 時間軸 view ── */
 #panel-trip .tl-head{ display: flex; align-items: center; gap: 10px; margin: 0.8rem 0 1rem; flex-wrap: wrap; }
-#panel-trip .tl-daysel{ font-family: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--border); border-radius: 100px; padding: 6px 12px; background: #fff; }
-#panel-trip .tl-daysel.is-today{ border-color: var(--green); color: var(--green); font-weight: 700; }
-#panel-trip .tl-today-badge{ font-size: 12px; font-weight: 700; color: #fff; background: var(--green); border-radius: 100px; padding: 2px 10px; }
-#panel-trip .tl-hint{ font-size: 12px; color: var(--muted); }
+#panel-trip .tl-daysel{ font-family: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--border); border-radius: 100px; padding: 6px 12px; background: var(--white); }
+#panel-trip .tl-daysel.is-today{ border-color: var(--brand); color: var(--brand); font-weight: 700; }
+#panel-trip .tl-today-badge{ font-size: 12px; font-weight: 700; color: var(--white); background: var(--brand); border-radius: 100px; padding: 2px 10px; }
+#panel-trip .tl-hint{ font-size: 12px; color: var(--faint); }
 #panel-trip .tl-grid.is-today{ background: var(--green-soft); border-radius: 14px; }
 #panel-trip .tl-grid{ position: relative; margin-top: 0.4rem; padding-left: 52px; }
 #panel-trip .tl-hourline{ position: absolute; left: 52px; right: 0; border-top: 1px solid var(--border); opacity: .55; }
-#panel-trip .tl-hourlabel{ position: absolute; left: 0; width: 46px; text-align: right; font-size: 11px; color: var(--muted); transform: translateY(-6px); }
+#panel-trip .tl-hourlabel{ position: absolute; left: 0; width: 46px; text-align: right; font-size: 11px; color: var(--faint); transform: translateY(-6px); }
 #panel-trip .tl-track{ position: relative; }
 #panel-trip .tl-item{
   position: absolute; box-sizing: border-box; background: var(--card); border: 1px solid var(--border);
@@ -205,26 +221,26 @@
 }
 #panel-trip .tl-item:active{ cursor: grabbing; }
 #panel-trip .tl-item.dragging{ z-index: 30; box-shadow: 0 6px 16px rgba(0,0,0,.18); opacity: .96; }
-#panel-trip .tl-item.conflict{ border-color: var(--amber); border-width: 2px; background: #FFF7F2; }
-#panel-trip .tl-item-time{ font-size: 10px; color: var(--muted); }
-#panel-trip .tl-item.conflict .tl-item-time{ color: var(--amber); font-weight: 700; }
+#panel-trip .tl-item.conflict{ border-color: var(--amber); border-width: 2px; background: var(--card-conflict); }
+#panel-trip .tl-item-time{ font-size: 10px; color: var(--faint); }
+#panel-trip .tl-item.conflict .tl-item-time{ color: var(--warn-ink); font-weight: 700; }
 #panel-trip .tl-item-name{ font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; margin-top: 1px; }
-#panel-trip .tl-item-warn{ color: var(--amber); font-weight: 700; }
-#panel-trip .tl-empty{ font-size: 13px; color: var(--muted); font-style: italic; padding: 1rem 0; text-align: center; }
+#panel-trip .tl-item-warn{ color: var(--warn-ink); font-weight: 700; }
+#panel-trip .tl-empty{ font-size: 13px; color: var(--faint); font-style: italic; padding: 1rem 0; text-align: center; }
 
 /* ── AC-7：可以彈性 / 已確認 收合群組 ── */
 #panel-trip details.flex-group{ margin-top: 1.4rem; }
 #panel-trip details.flex-group > summary{
-  cursor: pointer; list-style: none; color: var(--green); font-size: 15px; font-weight: 600;
+  cursor: pointer; list-style: none; color: var(--brand); font-size: 15px; font-weight: 600;
   padding: 0.3rem 0; display: flex; align-items: center; gap: 8px;
 }
 #panel-trip details.flex-group > summary::-webkit-details-marker{ display: none; }
 #panel-trip details.flex-group > summary .count,
 #panel-trip details.done-group > summary .count{
-  font-size: 12px; font-weight: 700; color: #fff; background: var(--green-line); border-radius: 100px; padding: 1px 9px;
+  font-size: 12px; font-weight: 700; color: var(--white); background: var(--green); border-radius: 100px; padding: 1px 9px;
 }
 #panel-trip details.flex-group > summary::after,
-#panel-trip details.done-group > summary::after{ content: "▾"; color: var(--muted); font-size: 12px; margin-left: auto; transition: transform .15s; }
+#panel-trip details.done-group > summary::after{ content: "▾"; color: var(--faint); font-size: 12px; margin-left: auto; transition: transform .15s; }
 #panel-trip details.flex-group[open] > summary::after,
 #panel-trip details.done-group[open] > summary::after{ transform: rotate(180deg); }
 #panel-trip details.flex-group > summary .section-hint{ margin-left: 4px; }
@@ -236,12 +252,12 @@
 #panel-trip .tripbar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0.6rem 0 0.2rem; }
 #panel-trip #trip-sel{
     flex: 1; min-width: 180px;
-    font-family: inherit; font-size: 15px; font-weight: 600; color: var(--green);
-    border: 1px solid var(--border); border-radius: 100px; padding: 8px 14px; background: #fff; cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 600; color: var(--brand);
+    border: 1px solid var(--border); border-radius: 100px; padding: 8px 14px; background: var(--white); cursor: pointer;
 }
 #panel-trip details.tripnew > summary,
 #panel-trip details.additem > summary{
-    font-size: 13px; font-weight: 600; color: var(--green);
+    font-size: 13px; font-weight: 600; color: var(--brand);
     cursor: pointer; list-style: none; user-select: none; padding: 6px 2px;
 }
 #panel-trip details.tripnew > summary::-webkit-details-marker,
@@ -254,42 +270,63 @@
 #panel-trip .mini-form input,
 #panel-trip .mini-form select{
     font-family: inherit; font-size: 14px; color: var(--text);
-    border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px; background: #fff;
+    border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px; background: var(--white);
 }
 #panel-trip .mini-form input:focus,
-#panel-trip .mini-form select:focus{ outline: none; border-color: var(--green-line); }
-#panel-trip .mini-check{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sub); cursor: pointer; }
+#panel-trip .mini-form select:focus{ outline: none; border-color: var(--green); }
+#panel-trip .mini-check{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+
+/* ── 匯出到 Google 日曆 / Maps ── */
+#panel-trip .exportbar{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 0.9rem; }
+#panel-trip .exp-btn{
+    font-family: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
+    background: var(--card); color: var(--brand);
+    border: 1px solid var(--border); border-radius: 100px; padding: 7px 14px;
+}
+#panel-trip .exp-btn:hover{ background: var(--green-soft); }
+/* 手機匯不進 .ics 這件事一定要寫在畫面上，不能只寫在文件裡 */
+#panel-trip .exp-hint{ flex: 1 0 100%; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+#panel-trip .exp-hint b{ color: var(--warn-ink); }
+#panel-trip #exp-msg{ flex: 1 0 100%; }
+
+/* 卡片上的單筆連結（手機唯一可用的日曆路徑） */
+#panel-trip .card-links{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+#panel-trip .item-link{
+    font-size: 11.5px; text-decoration: none; color: var(--brand);
+    background: var(--green-soft); border-radius: 100px; padding: 3px 10px;
+}
+#panel-trip .item-link:hover{ background: var(--border); }
 
 /* ── 卡片上的編輯 / 刪除（補回 Streamlit 的 ✏️ 展開表單）──
    風格沿用 details.sched 的膠囊 summary，不另立一套語彙。 */
 #panel-trip details.edititem{ margin-top: 8px; }
 #panel-trip details.edititem > summary{
     cursor: pointer; list-style: none; display: inline-block;
-    font-size: 12px; color: var(--sub); font-weight: 600;
+    font-size: 12px; color: var(--muted); font-weight: 600;
     background: var(--bg); border-radius: 100px; padding: 3px 12px;
 }
 #panel-trip details.edititem > summary::-webkit-details-marker{ display: none; }
-#panel-trip details.edititem[open] > summary{ color: var(--green); background: var(--green-soft); }
+#panel-trip details.edititem[open] > summary{ color: var(--brand); background: var(--green-soft); }
 /* 手機優先：欄位一律可換行、寬度吃滿，不硬撐成一列（AC-9） */
 #panel-trip details.edititem .mini-form input,
 #panel-trip details.edititem .mini-form select{ flex: 1; min-width: 120px; }
 #panel-trip .ed-notes{
     flex: 1 0 100%; font-family: inherit; font-size: 14px; color: var(--text);
     border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px;
-    background: #fff; resize: vertical;
+    background: var(--white); resize: vertical;
 }
-#panel-trip .ed-notes:focus{ outline: none; border-color: var(--green-line); }
+#panel-trip .ed-notes:focus{ outline: none; border-color: var(--green); }
 #panel-trip .ed-actions{ display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 #panel-trip .ed-save{
     font-family: inherit; font-size: 13px; cursor: pointer;
-    background: var(--green); color: #fff; border: none; border-radius: 100px; padding: 7px 18px;
+    background: var(--brand); color: var(--white); border: none; border-radius: 100px; padding: 7px 18px;
 }
-#panel-trip .ed-save:hover{ background: #2A4D3A; }
+#panel-trip .ed-save:hover{ background: var(--brand-d); }
 /* 刪除鈕做成低調的邊框樣式：破壞性動作不該比「儲存」更顯眼、更好誤按 */
 #panel-trip .ed-del,
 #panel-trip .trip-del{
     font-family: inherit; font-size: 13px; cursor: pointer;
-    background: none; color: var(--amber); border: 1px solid var(--amber);
+    background: none; color: var(--warn-ink); border: 1px solid var(--amber);
     border-radius: 100px; padding: 6px 14px; margin-left: auto;
 }
 #panel-trip .ed-del:hover,
@@ -301,8 +338,8 @@
 /* tripbar 是會換行的 flex row，訊息列要自己佔滿一整列才看得到 */
 #panel-trip #tripbar-msg{ flex: 1 0 100%; margin-top: 2px; }
 #panel-trip .mini-msg{ font-size: 12.5px; margin-top: 6px; min-height: 1em; word-break: break-word; }
-#panel-trip .mini-msg.err{ color: #B23B2E; }
-#panel-trip .mini-msg.busy{ color: var(--sub); font-style: italic; }
+#panel-trip .mini-msg.err{ color: var(--err); }
+#panel-trip .mini-msg.busy{ color: var(--muted); font-style: italic; }
 
 #panel-trip .ai-backdrop{ position: fixed; inset: 0; z-index: 100; background: rgba(60,56,48,.45); display: flex; align-items: flex-end; justify-content: center; }
 @media (min-width: 560px) { #panel-trip .ai-backdrop{ align-items: center; padding: 1rem; } }
@@ -310,20 +347,20 @@
 #panel-trip .ai-modal{ background: var(--bg); width: 100%; max-width: 560px; border-radius: 18px 18px 0 0; padding: 1.2rem 1.1rem 1.3rem; box-shadow: 0 -6px 30px rgba(0,0,0,.18); max-height: 92vh; overflow-y: auto; }
 @media (min-width: 560px) { #panel-trip .ai-modal{ border-radius: 18px; } }
 #panel-trip .ai-modal-head{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-#panel-trip .ai-modal-title{ font-family: 'Noto Serif TC', serif; font-size: 19px; font-weight: 600; color: var(--green); }
-#panel-trip .ai-modal-x{ font-family: inherit; font-size: 18px; line-height: 1; cursor: pointer; background: none; border: none; color: var(--muted); padding: 4px 6px; }
+#panel-trip .ai-modal-title{ font-size: 19px; font-weight: 600; color: var(--brand); }
+#panel-trip .ai-modal-x{ font-family: inherit; font-size: 18px; line-height: 1; cursor: pointer; background: none; border: none; color: var(--faint); padding: 4px 6px; }
 #panel-trip .ai-modal-x:hover{ color: var(--text); }
-#panel-trip .ai-modal-hint{ font-size: 12px; color: var(--sub); margin: 2px 0 12px; }
-#panel-trip .ai-textarea{ width: 100%; font-family: inherit; font-size: 14px; color: var(--text); line-height: 1.5; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: #fff; resize: vertical; min-height: 140px; }
-#panel-trip .ai-textarea:focus{ outline: none; border-color: var(--green-line); }
+#panel-trip .ai-modal-hint{ font-size: 12px; color: var(--muted); margin: 2px 0 12px; }
+#panel-trip .ai-textarea{ width: 100%; font-family: inherit; font-size: 14px; color: var(--text); line-height: 1.5; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: var(--white); resize: vertical; min-height: 140px; }
+#panel-trip .ai-textarea:focus{ outline: none; border-color: var(--green); }
 #panel-trip .ai-msg{ font-size: 13px; margin: 10px 0 2px; min-height: 1em; word-break: break-word; }
-#panel-trip .ai-msg.err{ color: #B23B2E; }
-#panel-trip .ai-msg.ok{ color: var(--green); font-weight: 600; }
-#panel-trip .ai-msg.busy{ color: var(--sub); font-style: italic; }
+#panel-trip .ai-msg.err{ color: var(--err); }
+#panel-trip .ai-msg.ok{ color: var(--brand); font-weight: 600; }
+#panel-trip .ai-msg.busy{ color: var(--muted); font-style: italic; }
 #panel-trip .ai-modal-actions{ display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
-#panel-trip .ai-btn-ghost{ font-family: inherit; font-size: 14px; cursor: pointer; background: none; border: 1px solid var(--border); color: var(--sub); border-radius: 100px; padding: 8px 18px; }
+#panel-trip .ai-btn-ghost{ font-family: inherit; font-size: 14px; cursor: pointer; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 100px; padding: 8px 18px; }
 #panel-trip .ai-btn-ghost:hover{ background: var(--green-soft); }
-#panel-trip .ai-btn-primary{ font-family: inherit; font-size: 14px; cursor: pointer; background: var(--green); color: #fff; border: none; border-radius: 100px; padding: 8px 20px; }
-#panel-trip .ai-btn-primary:hover{ background: #2A4D3A; }
+#panel-trip .ai-btn-primary{ font-family: inherit; font-size: 14px; cursor: pointer; background: var(--brand); color: var(--white); border: none; border-radius: 100px; padding: 8px 20px; }
+#panel-trip .ai-btn-primary:hover{ background: var(--brand-d); }
 #panel-trip .ai-btn-primary:disabled,
 #panel-trip .ai-btn-ghost:disabled{ opacity: .5; cursor: default; }
