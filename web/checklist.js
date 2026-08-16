@@ -173,6 +173,19 @@ async function patchItem(itemId, fields) {
   });
 }
 
+// 刪除單一行程項目。破壞性且不可復原，呼叫端必須先做二次確認。
+async function deleteItem(itemId) {
+  await sb(`itinerary_items?id=eq.${encodeURIComponent(itemId)}`, { method: "DELETE" });
+}
+
+// 刪除旅程。先刪自己的項目再刪旅程本身——
+// 珈欣的 Supabase 上外鍵有沒有設 CASCADE 無法從這裡確認（spec §10 R1），
+// 先刪子表在「有 CASCADE」與「沒有」兩種情況下都正確，不會留孤兒或撞外鍵錯誤。
+async function deleteTrip(tripId) {
+  await sb(`itinerary_items?trip_id=eq.${encodeURIComponent(tripId)}`, { method: "DELETE" });
+  await sb(`trips?id=eq.${encodeURIComponent(tripId)}`, { method: "DELETE" });
+}
+
 // 新增一筆項目（AI 匯入用）
 async function addItem(fields) {
   await sb(`itinerary_items`, {
@@ -218,6 +231,8 @@ function renderTripBar() {
         </div>
         <div class="mini-msg" id="trip-msg" aria-live="polite"></div>
       </details>
+      ${curTrip ? `<button type="button" class="trip-del" id="trip-del">🗑️ 刪除旅程</button>` : ""}
+      <div class="mini-msg" id="tripbar-msg" aria-live="polite"></div>
     </div>`;
 }
 
@@ -331,6 +346,26 @@ function wireTripBar() {
     load();
   });
 
+  // 刪除旅程：確認訊息必須明講會連同行程項目一起消失（spec AC-7）
+  const del = document.getElementById("trip-del");
+  if (del) del.addEventListener("click", async () => {
+    if (!curTrip) return;
+    const n = curItems.length;
+    if (!confirm(`確定要刪除旅程「${curTrip.name}」嗎？\n` +
+                 `它底下的 ${n} 個行程項目也會一併刪除，無法復原。`)) return;
+    del.disabled = true;
+    try {
+      await deleteTrip(curTrip.id);
+      clearTripId();
+      curTrip = null; curItems = [];
+      await load();                 // 回到「未選旅程」畫面
+    } catch (e) {
+      del.disabled = false;
+      // 用 tripbar 上的訊息列，不用 trip-msg——後者在收合的「＋ 新旅程」裡，錯誤會看不到
+      miniMsg("tripbar-msg", "刪除旅程失敗：" + (e && e.message ? e.message : String(e)), "err");
+    }
+  });
+
   const btn = document.getElementById("trip-create");
   if (!btn) return;
   btn.addEventListener("click", async () => {
@@ -405,6 +440,41 @@ function scheduleControl(it) {
   return "";
 }
 
+// ── 編輯 / 刪除（Streamlit `_render_items()` 的 ✏️ 展開表單）──
+// 收在 <details> 裡：卡片預設維持原本的乾淨樣子，要改才展開。
+// 「第幾天」放在這裡就順便補回了跨天移動（Streamlit 的 new_day_label）。
+function renderEditForm(it) {
+  const attr = (v) => escapeHtml(v ?? "");
+  let dayOpts = `<option value=""${it.day_number == null ? " selected" : ""}>候選（未排定）</option>`;
+  // 沒填旅程日期時 totalDays 是 0，至少要讓目前這天留在選單裡，否則一存檔就被打回候選
+  const maxDay = Math.max(TRIP_CTX.totalDays, it.day_number || 0);
+  for (let d = 1; d <= maxDay; d++) {
+    dayOpts += `<option value="${d}"${it.day_number === d ? " selected" : ""}>${TRIP_CTX.dayLabel(d)}</option>`;
+  }
+  const catOpts = Object.keys(CATEGORY_LABEL)
+    .map((k) => `<option value="${k}"${k === it.category ? " selected" : ""}>${CATEGORY_LABEL[k]}</option>`).join("");
+  return `
+    <details class="edititem">
+      <summary>✏️ 編輯</summary>
+      <div class="mini-form">
+        <input type="text" id="ed-name-${it.id}" value="${attr(it.name)}" placeholder="名稱（必填）" autocomplete="off">
+        <select id="ed-cat-${it.id}" aria-label="分類">${catOpts}</select>
+        <select id="ed-day-${it.id}" aria-label="第幾天">${dayOpts}</select>
+        <input type="time" id="ed-time-${it.id}" value="${attr(it.start_time)}" aria-label="開始時間">
+        <input type="number" id="ed-dur-${it.id}" value="${attr(it.duration_minutes)}" min="5" step="5" placeholder="停留分鐘" aria-label="停留分鐘">
+        <input type="text" id="ed-loc-${it.id}" value="${attr(it.location)}" placeholder="地點 / 店名" autocomplete="off">
+        <input type="text" id="ed-addr-${it.id}" value="${attr(it.address)}" placeholder="地址" autocomplete="off">
+        <input type="text" id="ed-book-${it.id}" value="${attr(it.booking_ref)}" placeholder="預約編號" autocomplete="off">
+        <textarea id="ed-notes-${it.id}" class="ed-notes" rows="2" placeholder="備註">${attr(it.notes)}</textarea>
+      </div>
+      <div class="ed-actions">
+        <button type="button" class="ed-save" data-id="${it.id}">儲存</button>
+        <button type="button" class="ed-del" data-id="${it.id}" data-name="${attr(it.name)}">🗑️ 刪除</button>
+      </div>
+      <div class="mini-msg" id="ed-msg-${it.id}" aria-live="polite"></div>
+    </details>`;
+}
+
 function renderCard(it, kind) {
   const cat = CATEGORY_LABEL[it.category] || "📌 其他";
   const notes = it.notes ? `<div class="card-notes">${escapeHtml(it.notes)}</div>` : "";
@@ -419,6 +489,7 @@ function renderCard(it, kind) {
         <div class="card-name">${escapeHtml(it.name)}</div>
         ${booking}${notes}
         <div class="card-sched">${scheduleControl(it)}</div>
+        ${renderEditForm(it)}
       </div>
     </div>`;
 }
@@ -456,7 +527,9 @@ function wireEvents() {
   document.querySelectorAll(".check").forEach((btn) => {
     btn.addEventListener("click", () => guard(btn, () => setConfirmed(btn.dataset.id, btn.dataset.confirmed !== "1")));
   });
-  document.querySelectorAll(".sched-btn").forEach((btn) => {
+  // 限定在 #view 內：外殼的「建立旅程」「加入項目」也用 .sched-btn 這個樣式 class，
+  // 不限定的話它們會被綁上這裡的排入邏輯，一按就找不到 sched-day-undefined 而丟錯。
+  document.querySelectorAll("#view .sched-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.id;
       const day = Number(document.getElementById(`sched-day-${id}`).value);
@@ -468,6 +541,61 @@ function wireEvents() {
   document.querySelectorAll(".unsched-btn").forEach((btn) => {
     btn.addEventListener("click", () => guard(btn, () => unscheduleItem(btn.dataset.id)));
   });
+  document.querySelectorAll(".ed-save").forEach((btn) => {
+    btn.addEventListener("click", () => saveEdit(btn, btn.dataset.id));
+  });
+  document.querySelectorAll(".ed-del").forEach((btn) => {
+    btn.addEventListener("click", () => removeItem(btn, btn.dataset.id, btn.dataset.name));
+  });
+}
+
+// 儲存編輯。一次 PATCH 全部欄位（含 day_number，所以跨天移動也走這條）。
+async function saveEdit(btn, id) {
+  const el = (f) => document.getElementById(`ed-${f}-${id}`);
+  const val = (f) => (el(f).value || "").trim();
+  const name = val("name");
+  if (!name) return miniMsg(`ed-msg-${id}`, "請填名稱。", "err");
+
+  const day = el("day").value;
+  const time = el("time").value;
+  const dur = parseInt(el("dur").value, 10);
+  // 空字串一律寫回 null，而不是留下空字串——否則欄位「清空」後查詢與顯示會不一致
+  const fields = {
+    name,
+    category: el("cat").value,
+    day_number: day ? Number(day) : null,
+    // 退回候選就不該還留著時間（與 unscheduleItem 的規則一致）
+    start_time: day && time ? time : null,
+    duration_minutes: Number.isFinite(dur) && dur > 0 ? dur : null,
+    location: val("loc") || null,
+    address: val("addr") || null,
+    booking_ref: val("book") || null,
+    notes: val("notes") || null,
+  };
+
+  btn.disabled = true;
+  miniMsg(`ed-msg-${id}`, "儲存中…", "busy");
+  try {
+    await patchItem(id, fields);
+    await load();
+  } catch (e) {
+    btn.disabled = false;
+    miniMsg(`ed-msg-${id}`, "儲存失敗：" + (e && e.message ? e.message : String(e)), "err");
+  }
+}
+
+// 刪除項目。二次確認是唯一的保護（spec §10 R2：不做軟刪除／垃圾桶）。
+async function removeItem(btn, id, name) {
+  if (!confirm(`確定要刪除「${name}」嗎？\n刪除後無法復原。`)) return;
+  btn.disabled = true;
+  miniMsg(`ed-msg-${id}`, "刪除中…", "busy");
+  try {
+    await deleteItem(id);
+    await load();
+  } catch (e) {
+    btn.disabled = false;
+    miniMsg(`ed-msg-${id}`, "刪除失敗：" + (e && e.message ? e.message : String(e)), "err");
+  }
 }
 
 async function guard(btn, action) {

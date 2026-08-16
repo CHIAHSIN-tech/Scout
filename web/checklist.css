@@ -259,6 +259,47 @@
 #panel-trip .mini-form input:focus,
 #panel-trip .mini-form select:focus{ outline: none; border-color: var(--green-line); }
 #panel-trip .mini-check{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sub); cursor: pointer; }
+
+/* ── 卡片上的編輯 / 刪除（補回 Streamlit 的 ✏️ 展開表單）──
+   風格沿用 details.sched 的膠囊 summary，不另立一套語彙。 */
+#panel-trip details.edititem{ margin-top: 8px; }
+#panel-trip details.edititem > summary{
+    cursor: pointer; list-style: none; display: inline-block;
+    font-size: 12px; color: var(--sub); font-weight: 600;
+    background: var(--bg); border-radius: 100px; padding: 3px 12px;
+}
+#panel-trip details.edititem > summary::-webkit-details-marker{ display: none; }
+#panel-trip details.edititem[open] > summary{ color: var(--green); background: var(--green-soft); }
+/* 手機優先：欄位一律可換行、寬度吃滿，不硬撐成一列（AC-9） */
+#panel-trip details.edititem .mini-form input,
+#panel-trip details.edititem .mini-form select{ flex: 1; min-width: 120px; }
+#panel-trip .ed-notes{
+    flex: 1 0 100%; font-family: inherit; font-size: 14px; color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px;
+    background: #fff; resize: vertical;
+}
+#panel-trip .ed-notes:focus{ outline: none; border-color: var(--green-line); }
+#panel-trip .ed-actions{ display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+#panel-trip .ed-save{
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    background: var(--green); color: #fff; border: none; border-radius: 100px; padding: 7px 18px;
+}
+#panel-trip .ed-save:hover{ background: #2A4D3A; }
+/* 刪除鈕做成低調的邊框樣式：破壞性動作不該比「儲存」更顯眼、更好誤按 */
+#panel-trip .ed-del,
+#panel-trip .trip-del{
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    background: none; color: var(--amber); border: 1px solid var(--amber);
+    border-radius: 100px; padding: 6px 14px; margin-left: auto;
+}
+#panel-trip .ed-del:hover,
+#panel-trip .trip-del:hover{ background: var(--amber-soft); }
+#panel-trip .ed-save:disabled,
+#panel-trip .ed-del:disabled,
+#panel-trip .trip-del:disabled{ opacity: .5; cursor: default; }
+#panel-trip .trip-del{ margin-left: 0; font-size: 12px; padding: 5px 12px; }
+/* tripbar 是會換行的 flex row，訊息列要自己佔滿一整列才看得到 */
+#panel-trip #tripbar-msg{ flex: 1 0 100%; margin-top: 2px; }
 #panel-trip .mini-msg{ font-size: 12.5px; margin-top: 6px; min-height: 1em; word-break: break-word; }
 #panel-trip .mini-msg.err{ color: #B23B2E; }
 #panel-trip .mini-msg.busy{ color: var(--sub); font-style: italic; }
