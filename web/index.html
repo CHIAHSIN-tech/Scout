@@ -84,15 +84,29 @@
       </div>
 
       <div class="filters">
+        <input type="text" id="bl-search" class="blsearch" placeholder="🔍 搜尋名稱／備註／情境" autocomplete="off">
         <span class="seg" id="f-status"><button data-v="all" class="on">全部</button><button data-v="month">本月</button><button data-v="bought">已買</button><button data-v="starred">已買・星號</button></span>
         <select id="f-cat"></select>
         <select id="f-tag"></select>
         <select id="f-sort"><option value="default">預設排序</option><option value="price">價格高→低</option><option value="days">想最久</option></select>
+        <button id="bl-repeat" class="expbtn" title="從已買星號收藏挑幾樣，一鍵加回待買">🔁 再買一次</button>
         <button id="bl-export" class="expbtn" title="把整張清單匯出成 .md（全部項目，不受篩選影響）">⬇ 匯出 .md</button>
-        <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="matrix">2×2</button></span>
+        <span class="viewtabs" id="viewtabs"><button data-view="list" class="on">清單</button><button data-view="cat">分類</button><button data-view="matrix">2×2</button></span>
+      </div>
+
+      <!-- 快速複製常買清單：從星號收藏（＝已買且標記可回購）挑要重買的 -->
+      <div id="repeat-box" class="card repeatbox hidden">
+        <div class="rphead">從「已買・星號」挑要再買的，加回待買清單：</div>
+        <div class="rplist" id="rplist"></div>
+        <div class="rpactions">
+          <button class="addbtn" id="rp-go">加回待買</button>
+          <button class="addbtn ghost" id="rp-cancel">取消</button>
+          <span class="rpmsg" id="rp-msg"></span>
+        </div>
       </div>
 
       <div id="view-list" class="card" style="padding:6px 0;"><div class="list" id="list"></div></div>
+      <div id="view-cat" class="hidden"><div id="catlist"></div></div>
       <div id="view-matrix" class="hidden">
         <div class="matrix" id="matrix"></div>
         <div class="maxis"><span>← 價格低</span><span>價格高 →</span></div>

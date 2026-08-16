@@ -29,7 +29,7 @@
   let me=localStorage.getItem('buylist_me')||'';
   let addUrg='maybe', addAcc='tw_easy';
   let addingItem=false;
-  let fStatus='all', fCat='all', fSort='default', fTag='all';
+  let fStatus='all', fCat='all', fSort='default', fTag='all', fSearch='';
   // 辣醬庫狀態（獨立資料域，不與購物清單相干）
   let sauces=[], activeTab='buy', scSearch='';
   let newSauce={spiciness:0, aroma:0, cp:0, repurchase:0};
@@ -75,8 +75,16 @@
   }
 
   function tag(cls,txt){return '<span class="tag '+cls+'">'+txt+'</span>';}
+  // 關鍵字搜尋：名稱／備註／情境標籤／分類 任一命中即可。
+  // 大小寫不敏感（英文商品名常大小寫混用），中文不受影響。
+  function matchSearch(i){
+    const q=fSearch.trim().toLowerCase();
+    if(!q) return true;
+    return [i.name,i.note,i.tag,i.category].some(v=>String(v||'').toLowerCase().includes(q));
+  }
   function visibleItems(){
     let arr=items.filter(i=>{
+      if(!matchSearch(i)) return false;
       if(fStatus==='month' && !(i.this_month && !i.bought)) return false;
       if(fStatus==='bought' && !i.bought) return false;
       if(fStatus==='starred' && !(i.bought && i.starred)) return false;   // 已買且加星
@@ -111,10 +119,9 @@
     return '<div class="actual">實付 <input type="number" class="ainput" data-id="'+i.id+'" value="'+val+'" min="0" step="1">'
       +diffText(i.price,i.actual_price)+'</div>';
   }
-  function renderList(){
-    const box=$('list'); const arr=visibleItems();
-    if(!arr.length){box.innerHTML='<div class="empty">沒有符合的項目。<br>上面加一個，或換個篩選看看。</div>';return;}
-    box.innerHTML=arr.map(i=>{
+  // 單張項目卡片。抽出來是因為「清單」與「分類分組」兩個檢視都要用（第二個使用點才抽）。
+  function itemCardHtml(i){
+    {
       const u=URG[i.urgency]||URG.maybe, a=ACC[i.accessibility]||ACC.tw_easy;
       const tags=tag(u.cls,u.label)+tag(a.cls,a.label)+tag('cat',esc(i.category||'其他'))
         +((i.tag||'').trim()?tag('ctx','📍'+esc(i.tag.trim())):'')
@@ -133,11 +140,42 @@
           +(i.note?'<div class="inote">'+esc(i.note)+'</div>':'')
           +(i.bought?actualPriceHtml(i):'')
         +'</div><button class="idel" data-del="'+i.id+'" title="刪除">✕</button></div>';
-    }).join('');
+    }
+  }
+  // 卡片上的互動綁定。兩個檢視共用，所以跟著卡片一起抽出來。
+  function wireItemEvents(box){
     box.querySelectorAll('.chk').forEach(b=>b.addEventListener('click',()=>toggleBought(b.dataset.id,b.dataset.b!=='1')));
     box.querySelectorAll('.star').forEach(b=>b.addEventListener('click',()=>toggleStarred(b.dataset.id,b.dataset.s!=='1')));
     box.querySelectorAll('.ainput').forEach(inp=>inp.addEventListener('change',()=>updateActualPrice(inp.dataset.id,inp.value)));
     box.querySelectorAll('.idel').forEach(b=>b.addEventListener('click',()=>delItem(b.dataset.del)));
+  }
+  const EMPTY_HTML='<div class="empty">沒有符合的項目。<br>上面加一個，或換個篩選看看。</div>';
+
+  function renderList(){
+    const box=$('list'); const arr=visibleItems();
+    box.innerHTML = arr.length ? arr.map(itemCardHtml).join('') : EMPTY_HTML;
+    wireItemEvents(box);
+  }
+
+  // 依分類分區折疊。分類是寫死的八類（CATS），所以分組順序固定、不隨資料跳動；
+  // 有東西的類別才顯示，預設全部展開（收合狀態由使用者自己決定，不記憶）。
+  function renderCatGroups(){
+    const box=$('catlist'); const arr=visibleItems();
+    if(!arr.length){box.innerHTML=EMPTY_HTML; return;}
+    const order=[...CATS];
+    // 資料裡出現過但不在 CATS 的分類（例如舊資料）也要顯示，不能默默吃掉
+    arr.forEach(i=>{const c=i.category||'其他'; if(!order.includes(c)) order.push(c);});
+    box.innerHTML=order.map(cat=>{
+      const group=arr.filter(i=>(i.category||'其他')===cat);
+      if(!group.length) return '';
+      const unbought=group.filter(i=>!i.bought).length;
+      const sum=group.filter(i=>!i.bought).reduce((s,i)=>s+(+i.price||0),0);
+      return '<details class="catgroup" open><summary>'+esc(cat)
+        +'<span class="cgcount">'+group.length+' 項</span>'
+        +(unbought?'<span class="cgsum">未購 '+money(sum)+'</span>':'<span class="cgsum done">都買齊了</span>')
+        +'</summary>'+group.map(itemCardHtml).join('')+'</details>';
+    }).join('');
+    wireItemEvents(box);
   }
   function renderMatrix(){
     const data=thisMonthUnbought();
@@ -160,7 +198,52 @@
     $('f-tag').value=fTag;
     $('tag-list').innerHTML=tags.map(t=>'<option value="'+esc(t)+'">').join('');
   }
-  function renderAll(){renderTagOptions();renderBudget();renderList();renderMatrix();}
+  function renderAll(){renderTagOptions();renderBudget();renderList();renderCatGroups();renderMatrix();}
+
+  // ── 快速複製常買清單 ──
+  // 「星號」在既有語意裡就是「已買且可回購」（spec-buylist-starred），所以重買的來源直接用它，
+  // 不另外發明一個「常買」欄位。
+  function repeatCandidates(){
+    return items.filter(i=>i.bought && i.starred)
+                .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  }
+  function renderRepeat(){
+    const box=$('rplist'), arr=repeatCandidates();
+    if(!arr.length){
+      box.innerHTML='<div class="empty">還沒有星號收藏。<br>把買過、之後還會再買的東西按 ★ 標起來，這裡就會出現。</div>';
+      return;
+    }
+    box.innerHTML=arr.map(i=>'<label class="rpitem"><input type="checkbox" value="'+i.id+'">'
+      +'<span class="rpname">'+esc(i.name)+'</span>'
+      +(i.price?'<span class="rpprice">'+money(i.price)+'</span>':'')
+      +((i.tag||'').trim()?'<span class="rptag">📍'+esc(i.tag.trim())+'</span>':'')+'</label>').join('');
+  }
+  function toggleRepeat(show){
+    $('repeat-box').classList.toggle('hidden',!show);
+    $('rp-msg').textContent='';
+    if(show) renderRepeat();
+  }
+  async function repeatAdd(){
+    const picked=[...$('rplist').querySelectorAll('input:checked')].map(c=>c.value);
+    if(!picked.length){$('rp-msg').textContent='先勾幾樣。';$('rp-msg').className='rpmsg err';return;}
+    // 複製既有設定（價格/分類/情境/迫切度…），但重置成「還沒買」的新一筆：
+    // 不帶 bought / starred / actual_price，created_at 讓資料庫給新的（想買 N 天要從現在算）
+    const rows=picked.map(id=>{
+      const s=items.find(x=>String(x.id)===String(id))||{};
+      return {name:s.name, price:s.price||0, quantity:s.quantity||1, category:s.category||'其他',
+              tag:s.tag||'', urgency:s.urgency||'maybe', accessibility:s.accessibility||'tw_easy',
+              recurring_cost:s.recurring_cost||0, link:s.link||'', note:s.note||'',
+              this_month:true, bought:false, starred:false, actual_price:null, added_by:me||''};
+    });
+    $('rp-go').disabled=true;
+    $('rp-msg').className='rpmsg'; $('rp-msg').textContent='加入中…';
+    const {error}=await sb.from('buylist_items').insert(rows);
+    $('rp-go').disabled=false;
+    if(error){$('rp-msg').className='rpmsg err';$('rp-msg').textContent='加入失敗：'+error.message;return;}
+    $('rp-msg').textContent='';
+    toggleRepeat(false);
+    setStatus('已把 '+rows.length+' 樣加回待買清單','live');
+  }
 
   // ── 動作 ──
   async function addItem(){
@@ -335,13 +418,23 @@
   $('bl-budget').addEventListener('change',e=>saveBudget(e.target.value));
   $('bl-budget').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
   $('whoSel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;me=b.dataset.me;localStorage.setItem('buylist_me',me);renderWho();});
-  $('f-status').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fStatus=b.dataset.v;$('f-status').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderList();});
-  $('f-cat').addEventListener('change',e=>{fCat=e.target.value;renderList();});
-  $('f-tag').addEventListener('change',e=>{fTag=e.target.value;renderList();});
-  $('f-sort').addEventListener('change',e=>{fSort=e.target.value;renderList();});
+  // 篩選改變時兩個清單檢視都要重畫（使用者可能正看著分類檢視）
+  function refreshLists(){renderList();renderCatGroups();}
+  $('f-status').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fStatus=b.dataset.v;$('f-status').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));refreshLists();});
+  $('f-cat').addEventListener('change',e=>{fCat=e.target.value;refreshLists();});
+  $('f-tag').addEventListener('change',e=>{fTag=e.target.value;refreshLists();});
+  $('f-sort').addEventListener('change',e=>{fSort=e.target.value;refreshLists();});
+  // 邊打邊篩。中文輸入法組字中不要觸發，否則注音還沒選字就先把清單清空
+  $('bl-search').addEventListener('input',e=>{if(e.isComposing)return;fSearch=e.target.value;refreshLists();});
+  $('bl-search').addEventListener('compositionend',e=>{fSearch=e.target.value;refreshLists();});
   $('viewtabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
     document.querySelectorAll('#viewtabs button').forEach(x=>x.classList.toggle('on',x===b));
-    $('view-list').classList.toggle('hidden',view!=='list');$('view-matrix').classList.toggle('hidden',view!=='matrix');});
+    $('view-list').classList.toggle('hidden',view!=='list');
+    $('view-cat').classList.toggle('hidden',view!=='cat');
+    $('view-matrix').classList.toggle('hidden',view!=='matrix');});
+  $('bl-repeat').addEventListener('click',()=>toggleRepeat($('repeat-box').classList.contains('hidden')));
+  $('rp-cancel').addEventListener('click',()=>toggleRepeat(false));
+  $('rp-go').addEventListener('click',repeatAdd);
   // 辣醬庫事件
   $('apptabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;switchTab(b.dataset.tab);});
   $('sc-add').addEventListener('click',addSauce);

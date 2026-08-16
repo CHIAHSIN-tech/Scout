@@ -144,6 +144,38 @@
 /* 辣醬：卡片評分顯示 + 搜尋框 */
 #panel-shop .scmeta{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:12px;flex-wrap:wrap;}
 #panel-shop .scmeta .rd b{color:var(--ink);} #panel-shop .scmeta .rd.key b{color:var(--blue-d);}
+/* ── 關鍵字搜尋 ── */
+#panel-shop .blsearch{flex:1 0 100%;font-family:inherit;font-size:13.5px;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:999px;padding:9px 15px;outline:none;}
+#panel-shop .blsearch:focus{border-color:var(--blue);}
+
+/* ── 依分類折疊分組 ── */
+#panel-shop .catgroup{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  margin-bottom:10px;padding:4px 0;}
+#panel-shop .catgroup > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:9px;
+  font-weight:700;font-size:14px;padding:10px 16px;}
+#panel-shop .catgroup > summary::-webkit-details-marker{display:none;}
+#panel-shop .catgroup > summary::after{content:"▾";color:var(--faint);font-size:12px;margin-left:auto;transition:transform .15s;}
+#panel-shop .catgroup[open] > summary::after{transform:rotate(180deg);}
+#panel-shop .cgcount{font-size:11.5px;font-weight:600;color:var(--muted);}
+#panel-shop .cgsum{font-size:11.5px;font-weight:600;color:var(--blue);}
+#panel-shop .cgsum.done{color:var(--faint);font-weight:400;}
+#panel-shop .catgroup .item{border-radius:0;}
+
+/* ── 再買一次（從星號收藏重建）── */
+#panel-shop .repeatbox{padding:14px 16px;margin-bottom:12px;}
+#panel-shop .repeatbox.hidden{display:none;}
+#panel-shop .rphead{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
+#panel-shop .rplist{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow-y:auto;}
+#panel-shop .rpitem{display:flex;align-items:center;gap:9px;padding:8px 6px;border-radius:var(--r-md);cursor:pointer;font-size:14px;}
+#panel-shop .rpitem:hover{background:var(--line-soft);}
+#panel-shop .rpname{flex:1;min-width:0;word-break:break-word;}
+#panel-shop .rpprice{font-size:12.5px;font-weight:600;color:var(--muted);}
+#panel-shop .rptag{font-size:11px;color:var(--blue);background:var(--line-soft);border-radius:999px;padding:2px 8px;}
+#panel-shop .rpactions{display:flex;align-items:center;gap:9px;margin-top:12px;flex-wrap:wrap;}
+#panel-shop .rpmsg{font-size:12.5px;color:var(--muted);}
+#panel-shop .rpmsg.err{color:var(--red);font-weight:600;}
+
 #panel-shop .scsearch{flex:1;min-width:160px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;outline:none;}
 #panel-shop .scsearch:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
 #panel-shop .hidden{display:none;}
