@@ -223,7 +223,7 @@ TBD（待實際開發中出現時補充）
 ### 2.1 當前階段
 
 **目前在哪：** 轉型中。專案在 2026-04～07 分裂成三套並存的東西（Streamlit app、buylist 靜態 app、scout-checklist 靜態 app），現正收斂成**單一靜態雙 Tab web app**，Streamlit 退役。
-**本週焦點：** 收斂已完成——合併版雙 Tab app 已上線，`specs/` 內**沒有待執行的規格**。下一個要決定的是「AI 生成行程」要不要補（Streamlit 退役後唯一沒有替代品的缺口）。
+**本週焦點：** 收斂已完成——合併版雙 Tab app 已上線。新增了 MCP server（ADR-016），程式完成但 AC-1~4 待真實環境驗收。下一個要決定的是「AI 生成行程」要不要補（Streamlit 退役後唯一沒有替代品的缺口）。
 
 ### 2.2 MoSCoW 範疇
 
@@ -863,12 +863,74 @@ Claude Code 一開始把「Netlify 選單顯示 CHIAHSIN-tech」誤判為帳號�
 
 **關聯：** ADR-010（單一靜態 app、無 build step）、`specs/TASK-ui-unify-and-calendar-maps-export.md`、`DECISIONS.md`
 
+---
+
+### ADR-016: 新增 Python MCP server，讓 Claude 直接讀寫 Scout 資料
+
+**日期：** 2026-08-16
+**狀態：** 已採納
+**決策者：** Stanley
+
+**背景：**
+兩人用 Claude 討論旅程時，Scout 的資料只存在網頁介面裡，Claude 看不到也改不了，
+規劃產出要靠人工在對話與網頁之間抄寫。
+
+**決策：** 新增 `mcp-server/`（Python + 官方 MCP SDK，stdio transport），
+以純 PostgREST HTTP client 讀寫，與網頁前端走同一條 REST 路、同一把 publishable key。
+
+**與 ADR-010 的關係（重要）：**
+ADR-010 讓 Streamlit 退役、收斂成單一靜態 web app，等於把 Python 從產品面移除。
+本 ADR **重新引入 Python，但只在開發工具面**——MCP server 在兩人各自的電腦上跑，
+不部署、不是產品的一部分、不影響「產品是單一靜態 app」這個決策。
+根目錄既有的 `requirements.txt`（Streamlit 時代）刻意不動，`mcp-server/` 自帶 pyproject。
+
+**與 ADR-012 的關係：**
+行程與購物分屬兩個 Supabase 專案且不合併，所以 MCP server 需要**四個**連線環境變數
+（`SCOUT_SUPABASE_URL/KEY` ＋ `SCOUT_BUYLIST_URL/KEY`）。原規格假設只有一個專案，
+執行時修正。同時發現 `supabase_schema.sql` 的 `wishlist` 表是 Streamlit 遺留，
+**現行購物 Tab 讀的是另一個專案的 `buylist_items`**，購物工具因此改接後者。
+
+**寫入面刻意很窄：**
+沒有任何刪除工具，而且不是靠工具自律——`rest.py` 的動詞允許清單是正面表列的
+`frozenset({"GET","POST","PATCH"})`，清單外的動詞在組出請求前就被擋下。
+理由：agent 誤刪的是兩人真實的旅程資料，且 ADR-013 的安全姿態下沒有帳號層保護。
+要刪除請到網頁介面，那裡有二次確認。
+
+**代價 / 已知風險：**
+- publishable key 在手即可全讀寫（ADR-013 既有姿態，本版不改）。「無刪除」是本 server
+  的自我限制，不是資料庫層強制——任何人拿 key 直接打 REST 仍可刪。
+- 四個環境變數容易對調（行程的 key 填到購物那組）。錯誤訊息有針對這點寫提示。
+
+**關聯：** ADR-010、ADR-012、ADR-013、`specs/spec-scout-mcp-server.md`、`ACCEPTANCE-mcp-server.md`
+
 ## 5. 開發日誌
 
 > **只增不改（但會週期性壓縮舊內容）。**
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-08-16] 新增 Scout MCP server
+
+**類型：** 進度
+**關聯 ADR：** ADR-016（新增）、ADR-010／012／013
+**關聯 MoSCoW：** 工具鏈（新面向，不在原 MoSCoW 內）
+
+`mcp-server/` 落地，八個工具（七個 Must ＋ create_trip）。commit `9e92ec9`。
+
+偵察時撞到規格的一個錯誤前提：規格假設「與網頁前端讀寫同一個 Supabase」，
+但行程與購物本來就分屬兩個專案（ADR-012），且規格指名的 `wishlist` 表是 Streamlit
+遺留、現行購物 Tab 不讀它——照字面實作會做出沒人看得到的工具。已拍板改接 `buylist_items`，
+環境變數從兩個變成四個。此為 ADR-016 的一部分。
+
+**驗收狀態誠實記錄：** AC-5／AC-6／AC-7 由命令驗證通過（79 項測試，全程無網路）。
+**AC-1～AC-4 尚未驗**——開發環境連不到 Supabase，且不該拿兩人的正式資料庫做寫入測試。
+待在真實 Claude Code 環境跑過，做法寫在 `ACCEPTANCE-mcp-server.md`。
+
+過程中修掉兩個「測試綠但其實錯」：fake Supabase 在 POST 丟掉 null 欄位（不忠實於真
+PostgREST）；以及 insert 送出明確 null 會蓋掉資料表 DEFAULT。後者只有在 fake 修正後才浮得出來。
+
+---
 
 ### [2026-08-16] 清掉 specs/ 裡最後兩份待執行規格
 

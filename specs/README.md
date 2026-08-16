@@ -36,8 +36,11 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 | [合併為單一雙 Tab App](spec-scout-app-merge.md) | 全站 | ✅ done |
 | [行程 Tab 補回編輯與刪除](spec-itinerary-restore-edit-delete.md) | 行程 | ✅ done |
 | [雙 Tab 視覺統一＋日曆／地圖匯出](TASK-ui-unify-and-calendar-maps-export.md) | 全站 | ✅ done |
+| [Scout MCP Server](spec-scout-mcp-server.md) | 工具鏈 | 🟡 程式完成，AC-1~4 待真實環境驗 |
 
-**目前沒有待執行的 spec。** 下一批候選見 [`buylist/BACKLOG.md`](../buylist/BACKLOG.md)
+**目前沒有待執行的 spec**（MCP server 的程式已完成，只剩需要真實環境的驗收步驟，
+見 [`ACCEPTANCE-mcp-server.md`](../ACCEPTANCE-mcp-server.md)）。
+下一批候選見 [`buylist/BACKLOG.md`](../buylist/BACKLOG.md)
 （最大的缺口是 Streamlit 退役後沒有替代品的「AI 生成行程」，需先決定做不做）。
 
 ### 已作廢
