@@ -7,6 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <!-- 全站單一字體 Noto Sans TC（以購物 Tab 為準）。襯線體連同字重一起移除，少載一套。 --><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- 順序有意義：shell 先定義全域重設與 body，兩邊各自的樣式再蓋上去（都有前綴，不會互撞） -->
+<!-- ── PWA：可以「加到主畫面」，開起來全螢幕、沒有網址列 ──
+     刻意不含離線快取，理由寫在 sw.js 檔頭。 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3D6B54">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scout">
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="buylist.css">
 <link rel="stylesheet" href="checklist.css">
@@ -184,5 +192,14 @@
 <script src="checklist.js"></script>
 <!-- shell 最後載入：兩個 panel 的內容都就緒後再決定顯示哪一個 -->
 <script src="shell.js"></script>
+<!-- service worker 只為了「可安裝」，不做快取（見 sw.js）。
+     註冊失敗不影響任何功能，所以吞掉錯誤、不干擾使用者。 -->
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* 裝不了就算了 */ });
+  });
+}
+</script>
 </body>
 </html>
