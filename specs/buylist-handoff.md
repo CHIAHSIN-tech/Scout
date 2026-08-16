@@ -9,7 +9,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：不設時間上限（CHIA 決定不以時間卡範疇）。→ 範疇紀律改由 §4 的 **Won't** 把關。新點子若不在 Must/Should/Could，就進 Won't。
-- **Status**：approved
+- **Status**：done（整個 app 完成、AC-1～AC-7 實測全綠，見 `buylist/BUYLIST_STATE.md` §5）
 - **Date**：2026-06-20
 
 ## 1. Problem Statement

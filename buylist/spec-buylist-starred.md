@@ -10,7 +10,7 @@
 
 ## 0. Meta
 - **Appetite**：Part A 半天可完工；Part B 因為要盤點並改動全部色彩定義點，抓 1 天
-- **Status**：approved（Part A + Part B 皆已確認，可交付 Stanley）
+- **Status**：done（Part A + Part B 皆已落地，commit `de84c78`）
 - **Date**：2026-07-12
 - **Assignee**：Stanley（實作，延續既有 one-shot 執行模式）/ CHIA（審核 & 決策）
 - **Technology Stack**：Vanilla HTML/CSS/JS（單檔 `index.html`，無 build）/ Supabase（專案 `kdmmjlaajqxjmiahfvos`，表 `buylist_items`）

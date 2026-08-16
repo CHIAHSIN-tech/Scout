@@ -9,7 +9,7 @@
 
 ## 0. Meta
 - **Appetite（時間預算）**：幾週；超過就砍範疇或交付當下能用的，不無限延伸
-- **Status**：approved
+- **Status**：done（見檔頭：2026-06-20 落地，commits `55c429c` … `38522bd`）
 - **Date**：2026-06-20
 
 ## 1. Problem Statement
