@@ -1,0 +1,16 @@
+{
+  "_說明": "複製本檔為 .mcp.json（已被 gitignore）後填入實際值。四個變數的來源見 mcp-server/README.md。",
+  "mcpServers": {
+    "scout": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp-server", "scout-mcp"],
+      "env": {
+        "SCOUT_SUPABASE_URL": "https://填入行程專案.supabase.co",
+        "SCOUT_SUPABASE_KEY": "填入行程專案的 publishable key",
+        "SCOUT_BUYLIST_URL": "https://填入購物專案.supabase.co",
+        "SCOUT_BUYLIST_KEY": "填入購物專案的 publishable key",
+        "SCOUT_USERNAME": "stanley"
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+[project]
+name = "scout-mcp"
+version = "0.1.0"
+description = "Scout 的 MCP server：讓 Claude 直接讀寫行程與購物資料"
+readme = "README.md"
+authors = [
+    { name = "witsper-stanley", email = "stanley.luke.de@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp>=1.2",
+    "pydantic>=2.13.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[project.scripts]
+scout-mcp = "scout_mcp.server:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

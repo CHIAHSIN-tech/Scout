@@ -15,3 +15,7 @@ __pycache__/
 .DS_Store
 .claude/
 test_gemini.py
+
+# MCP 設定含 Supabase key，只留 .example 進版控
+.mcp.json
+mcp-server/.env
