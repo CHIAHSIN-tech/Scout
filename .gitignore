@@ -1,20 +1,36 @@
+# 機密設定（絕對不能上傳）
+# checklist/ 與 scout-checklist/ 兩個資料夾已不存在，規則保留當防呆——
+# 萬一有人在別台機器還原成舊佈局，config.js 一樣進不了版控。
 .streamlit/secrets.toml
 secrets.toml
 checklist/config.js
+scout-checklist/config.js
 buylist/config.js
 web/config.js
 web/_buylist-body.htmlpart
+test_gemini.py
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+.env
+.venv/
+
+# 資料庫本地檔案
 *.db
 *.db-shm
 *.db-wal
-.env
-.venv/
+*.sqlite
+
+# 系統檔案
 .DS_Store
+Thumbs.db
+
+# 編輯器 / 工具
 .claude/
-test_gemini.py
+.cursor/
+.vscode/
 
 # MCP 設定含 Supabase key，只留 .example 進版控
 .mcp.json

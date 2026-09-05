@@ -310,9 +310,11 @@ Scout/                          ← private repo
 ├── page_itinerary.py / page_ai_suggest.py / page_shopping.py
 ├── tests/test_itinerary.py
 ├── requirements.txt
-├── scout.db                    # 死檔案（SQLite 時代遺留，2026-04-04 後未寫入）
 └── .streamlit/{config,secrets}.toml
 ```
+
+（`scout.db` 已於 2026-09-05 移出 repo 到 `Desktop/AI/_archive/`；本機 `scout-checklist/`
+資料夾同日封存，該資料夾只剩一支未進版控的 `config.js`。）
 
 **repo 外**：`witsper-stanley/scout-checklist`（private）—— 已上線的行程 app，三檔結構（`index.html` + `app.js` 33 KB + `styles.css`）+ `netlify.toml` + `netlify/functions/ai-parse.js`。合併後併入 Scout 的 `web/`，該 repo 退役（ADR-010）。
 
