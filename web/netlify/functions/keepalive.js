@@ -60,7 +60,22 @@ exports.handler = async () => {
   });
 
   const allOk = results.every((r) => r.ok);
-  if (!allOk) console.error("[keepalive] 有專案沒回應——可能已被暫停，請到 Supabase 後台確認。");
+  if (!allOk) {
+    // 這行是「有人終於去看 log」時唯一的線索，所以要直接給得出下一步，
+    // 不能只說「失敗了」。dashboard 網址由專案 URL 推出，換專案不會漏改。
+    const dead = results.filter((r) => !r.ok).map((r) => {
+      const t = TARGETS.find((x) => x.name === r.name);
+      const m = /^https?:\/\/([a-z0-9]+)\.supabase\.co/i.exec((t && t.url) || "");
+      const dash = m ? `https://supabase.com/dashboard/project/${m[1]}` : "https://supabase.com/dashboard";
+      return `  ${r.name} → ${dash}`;
+    });
+    console.error([
+      "[keepalive] 有專案沒回應，很可能已被 Supabase 自動暫停。",
+      "keepalive 只能『防止』暫停，無法『喚醒』已暫停的專案——",
+      "必須有人到後台按 Resume project（資料不會遺失）。",
+      ...dead,
+    ].join("\n"));
+  }
 
   // 排程 function 的回傳值沒人看，但給個明確狀態碼方便從 Netlify 後台掃歷史紀錄。
   return {

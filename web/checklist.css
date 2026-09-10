@@ -113,6 +113,8 @@
 #panel-trip .banner.ok{ background: var(--green-soft); color: var(--brand); }
 #panel-trip .banner.warn{ background: var(--amber-soft); color: var(--warn-ink); font-weight: 600; }
 #panel-trip .banner.error{ background: var(--err-soft); color: var(--err); }
+#panel-trip .banner.error a{ color: var(--err); font-weight: 700; text-decoration: underline; }
+#panel-trip .banner.error a:hover{ text-decoration: none; }
 #panel-trip .banner.error code{ font-family: monospace; font-size: 11px; word-break: break-all; }
 
 /* ── 排入行程 / 退回候選 ── */

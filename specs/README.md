@@ -37,7 +37,7 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 | [行程 Tab 補回編輯與刪除](spec-itinerary-restore-edit-delete.md) | 行程 | ✅ done |
 | [雙 Tab 視覺統一＋日曆／地圖匯出](TASK-ui-unify-and-calendar-maps-export.md) | 全站 | ✅ done |
 | [Scout MCP Server](spec-scout-mcp-server.md) | 工具鏈 | 🟡 程式完成，AC-1~4 待真實環境驗 |
-| [讓「資料庫被暫停」有人會知道](spec-keepalive-visibility.md) | 全站 / 維運 | 📝 draft |
+| [讓「資料庫被暫停」有人會知道](spec-keepalive-visibility.md) | 全站 / 維運 | ✅ done |
 
 > **AC 勾選框的說明**：只有我親自逐條驗過的 spec 會把 `- [ ]` 改成 `- [x]`。
 > 其餘標 done 的 spec，依據是 commit 與 `BUYLIST_STATE.md` 的紀錄，AC 框維持未勾——

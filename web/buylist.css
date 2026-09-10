@@ -178,4 +178,7 @@
 
 #panel-shop .scsearch{flex:1;min-width:160px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;outline:none;}
 #panel-shop .scsearch:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,107,84,.15);}
+#panel-shop .connbanner{background:var(--card);border:1.5px solid var(--red);border-radius:var(--r-md);
+  padding:13px 16px;margin-bottom:14px;font-size:13px;line-height:1.7;color:var(--ink);}
+#panel-shop .connbanner a{color:var(--red);font-weight:700;}
 #panel-shop .hidden{display:none;}

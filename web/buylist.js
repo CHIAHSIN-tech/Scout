@@ -41,9 +41,38 @@
 
   function renderWho(){document.querySelectorAll('#whoSel button').forEach(b=>b.classList.toggle('on',b.dataset.me===me));}
 
+  // ── 「連不上」與「連得到但被拒」要分開（理由與 checklist.js 相同）──
+  // 刻意各寫一份 5 行判斷，不為了 DRY 抽第三個檔案：兩個 IIFE 本來就互相隔離，
+  // 為了兩處共用而多一個載入順序相依，代價比重複大。
+  function isUnreachable(e){
+    const m=String((e&&e.message)||e||'');
+    return /Failed to fetch|NetworkError|Load failed|fetch failed|ERR_NAME_NOT_RESOLVED/i.test(m);
+  }
+  function dashUrl(u){
+    const m=/^https?:\/\/([a-z0-9]+)\.supabase\.co/i.exec(String(u||''));
+    return m?('https://supabase.com/dashboard/project/'+m[1]):'https://supabase.com/dashboard';
+  }
+  // 指向「購物」那個專案，不是行程那個——給錯網址比不給更糟
+  function showUnreachable(){
+    let el=$('bl-conn');
+    if(!el){
+      el=document.createElement('div'); el.id='bl-conn'; el.className='connbanner';
+      const wrap=document.querySelector('#panel-shop .wrap');
+      if(wrap) wrap.insertBefore(el, wrap.firstChild.nextSibling);
+    }
+    el.innerHTML='<b>連不上購物資料庫。</b><br>'+
+      '最常見的原因是 Supabase 免費方案<b>閒置太久被自動暫停</b>。到 '+
+      '<a href="'+dashUrl(SUPABASE_URL)+'" target="_blank" rel="noopener">Supabase 後台</a>'+
+      ' 按 <b>Resume project</b> 就會回來，<b>資料不會遺失</b>。<br>'+
+      '也可能只是你這邊的網路問題（斷線、VPN、擋廣告的擴充套件）——先確認其他網站打得開。';
+    setStatus('連線失敗','err');
+  }
+
   // ── 載入（含月初自動清已買）──
   async function loadAll(){
     const r2=await sb.from('buylist_budget').select('*').eq('id',1).maybeSingle();
+    // 連不上時第一個查詢就會失敗，這裡先攔，否則會一路走到下面才報一個看不懂的錯
+    if(r2 && r2.error && isUnreachable(r2.error.message)){ showUnreachable(); return; }
     let brow=(r2 && !r2.error)?r2.data:null;
     const ym=new Date().toISOString().slice(0,7);
     if(brow){
@@ -53,7 +82,11 @@
     }
     budget=brow?(+brow.monthly_budget||0):0;
     const r1=await sb.from('buylist_items').select('*').order('created_at');
-    if(r1.error){setStatus('讀取失敗：'+r1.error.message,'err');return;}
+    if(r1.error){
+      if(isUnreachable(r1.error.message)) showUnreachable();
+      else setStatus('讀取失敗：'+r1.error.message,'err');
+      return;
+    }
     items=r1.data||[];
     renderAll();
   }

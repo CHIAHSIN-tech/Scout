@@ -120,18 +120,50 @@ function configError() {
   return null;
 }
 
+// ── 「連不上」與「連得到但被拒」要分開 ──
+// 專案被 Supabase 自動暫停時，DNS 記錄會被移除，所以 fetch 是直接 reject，
+// 不是回一個狀態碼（2026-09-05 實測：nslookup 回 Non-existent domain）。
+// ⚠️ 但斷網、VPN、擋廣告的擴充套件、防火牆擋掉 *.supabase.co，表現一模一樣。
+// 所以訊息一律用「可能」並同時給出替代解釋，不武斷——猜錯的代價是讓人跑去
+// 後台找一個不存在的問題。
+function isUnreachable(err) {
+  const m = String((err && err.message) || err || "");
+  return err instanceof TypeError ||
+         /Failed to fetch|NetworkError|Load failed|fetch failed|ERR_NAME_NOT_RESOLVED/i.test(m);
+}
+
+// https://<ref>.supabase.co → https://supabase.com/dashboard/project/<ref>
+// 從既有的 URL 推出來，不寫死——換專案時才不會漏改成指向別人的專案。
+function dashboardUrl(supabaseUrl) {
+  const m = /^https?:\/\/([a-z0-9]+)\.supabase\.co/i.exec(String(supabaseUrl || ""));
+  return m ? "https://supabase.com/dashboard/project/" + m[1] : "https://supabase.com/dashboard";
+}
+
 // ── Supabase REST ──
 async function sb(path, opts = {}) {
   const cfg = window.SCOUT_CONFIG;
-  const res = await fetch(`${cfg.SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      apikey: cfg.SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${cfg.SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
+  let res;
+  try {
+    res = await fetch(`${cfg.SUPABASE_URL}/rest/v1/${path}`, {
+      ...opts,
+      headers: {
+        apikey: cfg.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${cfg.SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        ...(opts.headers || {}),
+      },
+    });
+  } catch (e) {
+    // 連線層失敗（很可能是專案被暫停）。標記起來讓 showError 能分流，
+    // 原始錯誤保留在 cause，需要時還查得到。
+    if (isUnreachable(e)) {
+      const err = new Error("連不上行程資料庫");
+      err.unreachable = true;
+      err.cause = e;
+      throw err;
+    }
+    throw e;
+  }
   if (!res.ok) { const body = await res.text(); throw new Error(`${res.status} ${body}`); }
   return res;
 }
@@ -1275,6 +1307,17 @@ function wireAiSuggestModalOnce() {
 }
 
 function showError(err) {
+  // 連不上 → 給可執行的下一步；連得到但被拒 → 維持原本的設定／權限訊息。
+  if (err && err.unreachable) {
+    const url = dashboardUrl(window.SCOUT_CONFIG.SUPABASE_URL);
+    app.innerHTML = renderBanner("error",
+      `<b>連不上行程資料庫。</b><br><br>` +
+      `最常見的原因是 Supabase 免費方案<b>閒置太久被自動暫停</b>了。到 ` +
+      `<a href="${url}" target="_blank" rel="noopener">Supabase 後台</a>` +
+      ` 按 <b>Resume project</b> 就會回來，<b>資料不會遺失</b>。<br><br>` +
+      `也可能只是你這邊的網路問題（斷線、VPN、擋廣告的擴充套件）——先確認其他網站打得開。`);
+    return;
+  }
   app.innerHTML = renderBanner("error",
     `操作失敗：<br><code>${escapeHtml(err.message)}</code><br><br>` +
     `請確認 config.js 的 SUPABASE_URL / anon key 正確、且 itinerary_items 表已對 anon 開放存取。`);
