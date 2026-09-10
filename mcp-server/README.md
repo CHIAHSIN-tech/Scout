@@ -164,6 +164,40 @@ uv run pytest          # 79 項測試，全程無網路（接 fake Supabase）
 
 ---
 
+## 疑難排解
+
+### 啟動失敗：`invalid peer certificate: UnknownIssuer`
+
+症狀：Claude Code 顯示 `scout (CONNECTION_CLOSED)`，手動跑
+`uv run --directory mcp-server scout-mcp` 會看到 uv 在 build 階段就死掉：
+
+```
+Failed to fetch: `https://pypi.org/simple/uv-build/`
+invalid peer certificate: UnknownIssuer
+```
+
+原因：企業網路／防毒做 TLS 中間人，根憑證只在作業系統憑證庫裡，
+uv 內建的憑證清單沒有它。**注意這跟 server 執行期的憑證是兩回事**——
+`server.py` 已經用 truststore 處理過執行期，但 uv 的 build／resolve 發生在
+Python 起來之前，truststore 幫不上忙，要在 uv 這一層解。
+
+修法：在 `.mcp.json` 的 `args` **最前面**加上 `--system-certs`：
+
+```json
+"args": ["--system-certs", "run", "--directory", "mcp-server", "scout-mcp"]
+```
+
+同理，手動裝相依時也要加：`uv sync --system-certs`。
+（舊版旗標叫 `--native-tls`，已 deprecated。）
+
+沒有這個問題的機器不需要加，加了也無害——它只是改用 OS 憑證庫。
+
+### 啟動失敗：缺環境變數
+
+server 會以非零 exit code 結束並在 stderr 指名缺哪一個變數、該填什麼、給範例值。
+照著訊息補進 `.mcp.json` 的 `env` 區塊即可。
+
+
 ## 驗收狀態
 
 AC-5、AC-6、AC-7 可由命令判定，已通過（見 `../ACCEPTANCE-mcp-server.md`）。

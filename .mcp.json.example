@@ -3,7 +3,12 @@
   "mcpServers": {
     "scout": {
       "command": "uv",
-      "args": ["run", "--directory", "mcp-server", "scout-mcp"],
+      "args": [
+        "run",
+        "--directory",
+        "mcp-server",
+        "scout-mcp"
+      ],
       "env": {
         "SCOUT_SUPABASE_URL": "https://填入行程專案.supabase.co",
         "SCOUT_SUPABASE_KEY": "填入行程專案的 publishable key",
@@ -12,5 +17,6 @@
         "SCOUT_USERNAME": "stanley"
       }
     }
-  }
+  },
+  "_疑難排解": "若啟動時出現 invalid peer certificate: UnknownIssuer（企業網路 TLS 中間人），在 args 最前面加上 \"--system-certs\"。詳見 mcp-server/README.md 的疑難排解。"
 }
