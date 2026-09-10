@@ -912,6 +912,35 @@ ADR-010 讓 Streamlit 退役、收斂成單一靜態 web app，等於把 Python 
 
 <!-- LOG_INSERTION_POINT -->
 
+### [2026-09-11] MCP server 啟動失敗的第二層憑證問題 ＋ 文件回到可信狀態
+
+**類型：** 修復 / 維護
+**關聯 ADR：** ADR-016（MCP server）
+**關聯 MoSCoW：** —
+
+Stanley 問「這個 repo 還有沒有什麼沒做完的」。掃過遠端分支（0 條未合併）、
+12 份 spec（全 done）之後，發現三件事。
+
+**其一：MCP server 這個 session 起不來（`CONNECTION_CLOSED`）。**
+2026-09-06 那次只修到 server 的**執行期**憑證（`server.py` 用 truststore 走 OS 憑證庫），
+但 `.mcp.json` 是用 `uv run` 啟動的，**uv 每次啟動都會先 build/resolve 套件**，
+uv 自己的 HTTP client 撞的是同一個中間人根憑證——那時候 Python 還沒起來，truststore 幫不上忙。
+
+**這是同一個根因的兩層，當時只看到一層。** 修法是 `.mcp.json` 的 args 加 `--system-certs`
+（本機已加，實測 initialize handshake 通過）。這件事無法由程式碼解決，只能靠文件，
+所以寫進 `mcp-server/README.md` 的疑難排解，並在 `.mcp.json.example` 留指標。
+
+**其二：Chia 已把 Netlify 接上 GitHub 自動部署。** 2026-09-11 實測線上已是完整新版。
+但 `GEMINI_API_KEY` 仍未設，`ai-suggest` 與 `ai-parse` 線上回 500——AI 生成行程與 AI 匯入
+兩個功能等於沒上線。`share` 不吃這把金鑰，正常。
+
+**其三：context.md §6 有四處與現實不符**（公開站落後、AI 生成行程待決定、`scout.db` 應刪、
+本機 scout-checklist 資料夾應刪）。原因是 2026-09-05 那次的 context.md 更新寫在後來被丟棄的
+分支上，一起沒了。本次補正。
+
+順帶把 keepalive 的可見性缺口開成獨立規格（`specs/spec-keepalive-visibility.md`）——
+它只能防止暫停、不能喚醒已暫停的專案，而失敗只寫進 log，2026-09-05 那次就是這樣沒被發現的。
+
 ### [2026-08-16] 新增 Scout MCP server
 
 **類型：** 進度
@@ -1046,19 +1075,30 @@ _(目前尚無壓縮紀錄)_
 ### 6.2 待決定
 
 - **Netlify 站台命名**：合併後沿用 `shoppingtool.netlify.app`（名字不再貼切但書籤不變）還是改名（舊網址失效、要重發連結給 Chia）？見 `spec-scout-app-merge.md` R1。
-- **AI 生成行程要不要救**：Streamlit 的多輪問答 → Gemini 產出整份行程（`page_ai_suggest.py`），合併版沒有替代品。本週末刻意不補，之後再議。見 spec R2。
+- ~~**AI 生成行程要不要救**~~ — **已決定救，且已上線**（2026-08-17，`specs/spec-ai-suggest-web.md`）。web 版六題問答生成整份行程，金鑰走 Netlify Function（`ai-suggest.js`）。
+  ⚠️ 但**正式站的 `GEMINI_API_KEY` 至今未設**，線上呼叫回 500，功能等於沒上線。只有 Chia 能設（見 `for-chia-access.md` 第 ④ 項）。
 - **測試框架**：`tests/test_itinerary.py` 只涵蓋待退役的 Streamlit 邏輯，靜態 app 完全無測試。要不要引入？
 
 ### 6.3 已知的 Bug
 
-- **公開站版本落後**：`shoppingtool.netlify.app` 仍是舊版，沒有辣醬庫 tab。成因是手動 drag-and-drop 部署造成的漂移，合併時接 Git 自動部署解決。
+- ~~**公開站版本落後**~~ — **已解決**（2026-09 上旬，Chia 把 Netlify 接上 GitHub 自動部署）。
+  2026-09-11 實測線上已是完整新版：`checklist.js` 52 KB（含 `deleteItem` / `ed-save` / `exportbar`）、`export-formats.js` 與 PWA manifest 都在。
+- **🔴 正式站的兩個 AI 功能是壞的**：`GEMINI_API_KEY` 未設，`ai-suggest` 與 `ai-parse` 皆回 HTTP 500。
+  影響「AI 生成行程」與「AI 匯入行程」；分享連結（`share`）不吃這把金鑰，正常。
+  修法不在程式碼，在 Netlify 環境變數，只有 Chia 能做。
+- **keepalive 失敗時沒有任何人會知道**：排程函式只能**防止**暫停，**無法喚醒**已暫停的專案
+  （打過去直接失敗），而失敗只寫進 function log。2026-09-05 購物專案被暫停就是這樣沒被發現的。
+  已另開規格處理：`specs/spec-keepalive-visibility.md`。
 
 ### 6.4 技術債（Technical Debt）
 
 - **同一批需求做了三次**：Streamlit / buylist / checklist 三套並存，兩套技術棧、三個部署位置。ADR-010 的合併就是在還這筆債。
-- **`scout.db`**：SQLite 時代的死檔案，應刪除。
+- ~~**`scout.db`**~~ — 2026-09-05 已移出 repo 到 `Desktop/AI/_archive/`。
 - **`scout-checklist` repo 內有過時的 buylist 複本**（`buylist.html` / `buylist-schema.sql` / `BUYLIST_STATE.md`），是 2026-06 的 tracer bullet，合併時刪。
-- **本機 `scout-checklist/` 資料夾是舊 Firebase 版**，remote 指向不同帳號（`CHIAHSIN-tech/scout-checklist`），極易誤認為現行版——`spec-scout-app-merge.md` v1 就差點踩到。應刪。
+- ~~**本機 `scout-checklist/` 資料夾**~~ — 2026-09-05 已封存到 `Desktop/AI/_archive/scout-checklist-2026-09-05/`（當時只剩一支未進版控的 `config.js`）。
+- **`.mcp.json` 的憑證設定是機器相依的**：在有 TLS 中間人的機器上，`uv run` 的 build 階段會失敗，
+  必須在 args 加 `--system-certs`。這件事**無法**由程式碼解決（發生在 Python 起來之前），
+  只能靠文件（`mcp-server/README.md` 疑難排解）。換機器時會再踩一次。
 - **無測試覆蓋**：`tests/test_itinerary.py` 只涵蓋已退役的 Streamlit 邏輯。靜態 app 現在有兩支驗收腳本（`scripts/check-style.mjs`、`scripts/check-exports.mjs`，只用 Node 內建模組），但它們涵蓋的是樣式 token 與匯出格式，**不是**應用邏輯，而且沒有掛進任何 CI，要有人記得跑。
 - **buylist 單檔已 584 行 / 42 KB**，HTML+CSS+JS 全內聯；合併時會拆成獨立 `.js` / `.css`。
 - **兩邊同步機制不一致**：購物有 Realtime、行程要手動重新整理。合併後同一頁兩種行為，使用者可能困惑。

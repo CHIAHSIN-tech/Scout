@@ -81,6 +81,16 @@ AI 生成行程和分享連結需要金鑰才會動，沒設的話那兩個功�
 
 **金鑰另外私訊給你，不寫在這份文件裡**（這個 repo 的規矩：機密一律不進版控）。
 
+## ④-b 順手打開「function 失敗通知」
+
+**為什麼**：有一支排程程式每週會去戳兩個資料庫，避免它們因為閒置被自動暫停。
+但它失敗的時候**只會寫進 Netlify 的 log，不會通知任何人**——而那個 log 只有你進得去。
+2026-09-05 購物資料庫被暫停就是這樣拖了很久才被發現。
+
+做法：Netlify 後台 → 這個站 → **Site configuration** → **Notifications**
+（有的版本在 **Build & deploy → Deploy notifications** 底下）→
+加一個 email 通知，事件選跟 **function 錯誤 / deploy 失敗**有關的那幾項，收件人填你自己。
+
 ## ⑤ 確認 Stanley 在 GitHub repo 是 Admin
 
 repo 現在在你名下（ADR-014）。
@@ -116,3 +126,68 @@ repo 現在在你名下（ADR-014）。
 - **keepalive 失敗時沒有人會知道。** 現在有一支排程函式在保活兩個資料庫，
   但它只能「防止暫停」，**不能把已經暫停的專案叫醒**，而且失敗只寫進 log，沒有通知。
   這個洞會再發生一次，值得另開一份 spec 處理。
+
+---
+
+# 🤖 最省事的做法：把下面這段貼進 Claude Code
+
+如果你手邊有 Claude Code，不用自己一步一步對照上面。**把下面整段複製貼進去**，
+它會先幫你查哪些已經做好了、只帶你做還沒做的，並且每一步都告訴你點哪裡。
+
+> 貼之前先確認：Claude Code 開在 Scout 這個專案的資料夾底下（這樣它讀得到 repo）。
+> 沒有也沒關係，它會問你。
+
+```text
+我是 Chia，Scout 這個專案的共同開發者。Stanley 那邊列了幾件只有我能做的事，
+請你先幫我確認哪些已經做完了，再一件一件帶我做還沒做的。全程用繁體中文。
+
+重要前提：
+- 這些事大多要在網頁後台點（Supabase、Netlify、GitHub），你不能替我點。
+  你的角色是「查現況 + 告訴我點哪裡 + 確認我做完了」，不是幫我操作。
+- 每次只帶我做一件，做完驗證過再進下一件。不要一次把五件全倒給我。
+- 如果某一件你查得出來已經做好了，直接說「這件已完成」並跳過，不要叫我重做。
+
+請按這個順序：
+
+【第 0 步：先查現況】
+用命令列查這三件，不要用猜的，把結果告訴我：
+1. 正式站是不是已經是最新版：
+   curl -s https://shoppingtool.netlify.app/ | grep -c "export-formats.js"
+   （回 1 = 自動部署已接好；回 0 = 還沒）
+2. AI 功能在線上是不是壞的：
+   curl -s -X POST https://shoppingtool.netlify.app/.netlify/functions/ai-suggest -H "Content-Type: application/json" -d "{}"
+   （出現 GEMINI_API_KEY 字樣 = 金鑰還沒設）
+3. repo 根目錄有沒有 for-chia-access.md，有的話讀它，那是這件事的完整說明。
+
+【第 1 件：設 Netlify 環境變數】← 通常這件最急
+正式站有兩個 AI 功能現在是壞的（AI 生成行程、AI 匯入行程），因為缺金鑰。
+要加的變數：GEMINI_API_KEY、SCOUT_BUYLIST_URL、SCOUT_BUYLIST_KEY。
+值要跟 Stanley 拿，不要從網路上找、也不要自己編。
+帶我到：Netlify → 這個站 → Site configuration → Environment variables。
+設完要重新 deploy 才會生效，提醒我這件事。
+最後用第 0 步的第 2 個指令再驗一次，確認不再回 GEMINI_API_KEY 的錯誤。
+
+【第 2 件：打開 function 失敗通知】
+有一支排程程式在保護兩個資料庫不被自動暫停，但它失敗時不會通知任何人。
+帶我到：Netlify → Site configuration → Notifications（或 Build & deploy →
+Deploy notifications），加一個 email 通知，收件人是我自己。
+
+【第 3 件：把 Stanley 加進我的 Supabase】
+行程資料庫在我的帳號底下。如果它被自動暫停，現在只有我能救；
+把他加成 Owner 之後誰在線誰救。
+帶我到：Supabase → 左側 Team → Invite members → 角色選 Owner
+→ 填 stanley.luke.de@gmail.com。
+注意：角色一定要 Owner 或 Administrator，選 Developer 沒有用（不能改專案設定）。
+
+【第 4 件：接受 Stanley 寄來的 Supabase 邀請】
+他已經把我加進他的 Supabase 帳號，權限跟他一樣。
+信寄到 a0987352802@gmail.com，找一下有沒有這封信，點接受就好。
+如果找不到，請他重寄。
+
+【第 5 件：確認 Stanley 在 GitHub 是 Admin】
+帶我到：GitHub → Scout repo → Settings → Collaborators，
+看 witsper-stanley 的權限是不是 Admin，不是的話改成 Admin。
+
+全部做完之後，幫我用一段話總結哪些完成了、哪些還卡著，
+我要把那段話傳給 Stanley。
+```
