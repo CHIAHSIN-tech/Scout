@@ -27,7 +27,7 @@
 
 ## ① 接受 Supabase 的 Owner 邀請（30 秒）
 
-邀請信已經寄到 `a0987352802@gmail.com`，角色是 **Owner**，跟 Stanley 完全同權。收信點接受即可。
+邀請信已經寄到你的 Gmail（Stanley 邀請你時用的那個信箱），角色是 **Owner**，跟 Stanley 完全同權。收信點接受即可。
 
 **為什麼**：購物清單的資料庫在 Stanley 帳號底下。它前陣子因為閒置**被 Supabase 自動暫停**，
 購物 Tab 就整個壞掉，而當時只有 Stanley 能重新啟動。你接受之後這種事你也能自己救。
@@ -76,15 +76,15 @@ Stanley 決定：**需要 AI token 的功能一律走 MCP**（在 Claude 裡用 
 網頁本身不再依賴 Gemini 金鑰。所以 `GEMINI_API_KEY` 不需要設。
 另外兩個 `SCOUT_BUYLIST_URL` / `SCOUT_BUYLIST_KEY` 在程式裡本來就有內建預設值，分享連結不設也能用。
 
-## ④-b 順手打開「function 失敗通知」
+## ④-b ~~打開「function 失敗通知」~~ —— 做不到，已改用程式解決（2026-09-11）
 
-**為什麼**：有一支排程程式每週會去戳兩個資料庫，避免它們因為閒置被自動暫停。
-但它失敗的時候**只會寫進 Netlify 的 log，不會通知任何人**——而那個 log 只有你進得去。
-2026-09-05 購物資料庫被暫停就是這樣拖了很久才被發現。
+原本以為 Netlify 能在排程程式失敗時寄信。珈欣的 Claude Code 實際進後台查過：
+- **Netlify 沒有「function 錯誤」這種通知事件**，Notifications 頁只有部署相關的事件
+- email 通知本身是 **Pro 付費方案**才有
 
-做法：Netlify 後台 → 這個站 → **Site configuration** → **Notifications**
-（有的版本在 **Build & deploy → Deploy notifications** 底下）→
-加一個 email 通知，事件選跟 **function 錯誤 / deploy 失敗**有關的那幾項，收件人填你自己。
+所以這條路不存在（這段原本是 Stanley 那邊憑印象寫的，沒有查證）。
+改用程式解決：**app 連不上資料庫時，畫面會直接說「可能被 Supabase 自動暫停」並附上後台連結**
+（`specs/spec-keepalive-visibility.md`，2026-09-11 已上線）。不需要任何人去看 log，打開 app 的人當下就知道。
 
 ## ⑤ 確認 Stanley 在 GitHub repo 是 Admin
 
@@ -96,6 +96,15 @@ repo 現在在你名下（ADR-014）。
 **為什麼**：不是 Admin 的話，改分支保護、加 webhook、調 repo 設定都要再找你一次。
 
 ---
+
+## ⑥（選配）在 Claude Desktop 裝好 Scout MCP
+
+**為什麼**：2026-09-11 起，網頁上需要 AI token 的功能（AI 匯入行程、AI 生成行程、貼連結帶入）
+都已經藏起來，AI 改由 Claude ＋ Scout MCP 提供（`context.md` ADR-017）。
+程式碼都還在，只是入口從網頁移到了 Claude。**想在 Claude 裡用 AI 排行程或加購物清單，就要裝這個**；
+只用網頁的話不用做。
+
+步驟見 `mcp-server/README.md` 的「非開發者設定步驟」，或直接用下面那段指令讓 Claude Code 帶你做。
 
 ## 做完之後長什麼樣
 
@@ -153,26 +162,40 @@ repo 現在在你名下（ADR-014）。
    （回 1 = 自動部署已接好；回 0 = 還沒）
 2. repo 根目錄有沒有 for-chia-access.md，有的話讀它，那是這件事的完整說明。
 
-【第 1 件：打開 function 失敗通知】
-有一支排程程式在保護兩個資料庫不被自動暫停，但它失敗時不會通知任何人。
-帶我到：Netlify → Site configuration → Notifications（或 Build & deploy →
-Deploy notifications），加一個 email 通知，收件人是我自己。
-
-【第 2 件：把 Stanley 加進我的 Supabase】
+【第 1 件：把 Stanley 加進我的 Supabase】
 行程資料庫在我的帳號底下。如果它被自動暫停，現在只有我能救；
 把他加成 Owner 之後誰在線誰救。
 帶我到：Supabase → 左側 Team → Invite members → 角色選 Owner
 → 填 stanley.luke.de@gmail.com。
 注意：角色一定要 Owner 或 Administrator，選 Developer 沒有用（不能改專案設定）。
 
-【第 3 件：接受 Stanley 寄來的 Supabase 邀請】
+【第 2 件：接受 Stanley 寄來的 Supabase 邀請】
 他已經把我加進他的 Supabase 帳號，權限跟他一樣。
-信寄到 a0987352802@gmail.com，找一下有沒有這封信，點接受就好。
+信寄到我的 Gmail（寄件者是 Supabase），找一下有沒有這封信，點接受就好。
 如果找不到，請他重寄。
 
-【第 4 件：確認 Stanley 在 GitHub 是 Admin】
+【第 3 件：確認 Stanley 在 GitHub 是 Admin】
 帶我到：GitHub → Scout repo → Settings → Collaborators，
 看 witsper-stanley 的權限是不是 Admin，不是的話改成 Admin。
+
+【第 4 件（選配）：在 Claude Desktop 裝好 Scout MCP】
+網頁上的 AI 功能已經關掉了（Stanley 決定：要用 AI 一律走 MCP）。
+想在 Claude 裡用 AI 排行程、加購物清單，就要做這件；不需要的話可以跳過。
+1. 先把我本機的 Scout 專案更新到最新（git pull）——mcp-server/ 這個資料夾
+   是 2026-08-16 才加的，舊的副本裡沒有。
+2. 確認有 uv，沒有就裝：curl -LsSf https://astral.sh/uv/install.sh | sh
+3. 在 mcp-server/ 裡跑 uv sync。如果出現 invalid peer certificate: UnknownIssuer，
+   改跑 uv sync --system-certs，而且下面設定檔的 args 最前面也要加 "--system-certs"。
+4. 幫我編輯 Claude Desktop 的設定檔
+   （Mac：~/Library/Application Support/Claude/claude_desktop_config.json）。
+   先備份原檔；如果裡面已經有 mcpServers，只把 "scout" 這一塊加進去，不要覆蓋其他的。
+   格式照 mcp-server/README.md 的「非開發者設定步驟」。四個連線值直接從 repo 讀，
+   不用跟 Stanley 要（它們是公開的 publishable key，不是密碼）：
+   - 行程：web/checklist.js 裡 SCOUT_CONFIG 的 SUPABASE_URL 與 SUPABASE_ANON_KEY
+   - 購物：web/buylist.js 開頭的 SUPABASE_URL 與 SUPABASE_KEY
+   SCOUT_USERNAME 填 "Chia"（大寫開頭，跟網頁上「我是」的名字一致）。
+5. 把 Claude Desktop 完全關掉再重開（你能做就直接做，不行就叫我）。
+6. 驗證：請我在 Claude Desktop 說「列出我的旅程」，應該要看到「沖繩 5 天（示範）」。
 
 全部做完之後，幫我用一段話總結哪些完成了、哪些還卡著，
 我要把那段話傳給 Stanley。
