@@ -69,17 +69,11 @@
 **怎麼確認成功**：接好後看到一次 build 跑完，用無痕視窗開站，行程 Tab 上應該會出現
 「⬇ 匯出 .ics」這顆按鈕 —— 那是舊版沒有的。
 
-## ④ 設兩個新功能需要的環境變數
+## ④ ~~設環境變數~~ —— 不用做了（2026-09-11 決定）
 
-AI 生成行程和分享連結需要金鑰才會動，沒設的話那兩個功能在線上會壞（其他功能不受影響）。
-
-同樣在 **Site configuration** → **Environment variables**，要加：
-
-- `GEMINI_API_KEY`
-- `SCOUT_BUYLIST_URL`
-- `SCOUT_BUYLIST_KEY`
-
-**金鑰另外私訊給你，不寫在這份文件裡**（這個 repo 的規矩：機密一律不進版控）。
+Stanley 決定：**需要 AI token 的功能一律走 MCP**（在 Claude 裡用 Scout MCP 工具操作），
+網頁本身不再依賴 Gemini 金鑰。所以 `GEMINI_API_KEY` 不需要設。
+另外兩個 `SCOUT_BUYLIST_URL` / `SCOUT_BUYLIST_KEY` 在程式裡本來就有內建預設值，分享連結不設也能用。
 
 ## ④-b 順手打開「function 失敗通知」
 
@@ -132,7 +126,7 @@ repo 現在在你名下（ADR-014）。
 # 🤖 最省事的做法：把下面這段貼進 Claude Code
 
 如果你手邊有 Claude Code，不用自己一步一步對照上面。**把下面整段複製貼進去**，
-它會先幫你查哪些已經做好了、只帶你做還沒做的，並且每一步都告訴你點哪裡。
+它會先幫你查哪些已經做好了、只帶你做還沒做的；能幫你點的它會先試著點，點不到再告訴你點哪裡。
 
 > 貼之前先確認：Claude Code 開在 Scout 這個專案的資料夾底下（這樣它讀得到 repo）。
 > 沒有也沒關係，它會問你。
@@ -142,8 +136,10 @@ repo 現在在你名下（ADR-014）。
 請你先幫我確認哪些已經做完了，再一件一件帶我做還沒做的。全程用繁體中文。
 
 重要前提：
-- 這些事大多要在網頁後台點（Supabase、Netlify、GitHub），你不能替我點。
-  你的角色是「查現況 + 告訴我點哪裡 + 確認我做完了」，不是幫我操作。
+- 這些事大多要在網頁後台點（Supabase、Netlify、GitHub）。
+  如果你有辦法操作瀏覽器（例如 Claude in Chrome），就先試著幫我點；
+  遇到要登入、點不到、或不確定的地方，停下來告訴我點哪裡，我自己點。
+- 會寄信給別人或改權限的動作（邀請成員、改角色），按下送出前先跟我確認一次。
 - 每次只帶我做一件，做完驗證過再進下一件。不要一次把五件全倒給我。
 - 如果某一件你查得出來已經做好了，直接說「這件已完成」並跳過，不要叫我重做。
 
@@ -154,37 +150,26 @@ repo 現在在你名下（ADR-014）。
 1. 正式站是不是已經是最新版：
    curl -s https://shoppingtool.netlify.app/ | grep -c "export-formats.js"
    （回 1 = 自動部署已接好；回 0 = 還沒）
-2. AI 功能在線上是不是壞的：
-   curl -s -X POST https://shoppingtool.netlify.app/.netlify/functions/ai-suggest -H "Content-Type: application/json" -d "{}"
-   （出現 GEMINI_API_KEY 字樣 = 金鑰還沒設）
-3. repo 根目錄有沒有 for-chia-access.md，有的話讀它，那是這件事的完整說明。
+2. repo 根目錄有沒有 for-chia-access.md，有的話讀它，那是這件事的完整說明。
 
-【第 1 件：設 Netlify 環境變數】← 通常這件最急
-正式站有兩個 AI 功能現在是壞的（AI 生成行程、AI 匯入行程），因為缺金鑰。
-要加的變數：GEMINI_API_KEY、SCOUT_BUYLIST_URL、SCOUT_BUYLIST_KEY。
-值要跟 Stanley 拿，不要從網路上找、也不要自己編。
-帶我到：Netlify → 這個站 → Site configuration → Environment variables。
-設完要重新 deploy 才會生效，提醒我這件事。
-最後用第 0 步的第 2 個指令再驗一次，確認不再回 GEMINI_API_KEY 的錯誤。
-
-【第 2 件：打開 function 失敗通知】
+【第 1 件：打開 function 失敗通知】
 有一支排程程式在保護兩個資料庫不被自動暫停，但它失敗時不會通知任何人。
 帶我到：Netlify → Site configuration → Notifications（或 Build & deploy →
 Deploy notifications），加一個 email 通知，收件人是我自己。
 
-【第 3 件：把 Stanley 加進我的 Supabase】
+【第 2 件：把 Stanley 加進我的 Supabase】
 行程資料庫在我的帳號底下。如果它被自動暫停，現在只有我能救；
 把他加成 Owner 之後誰在線誰救。
 帶我到：Supabase → 左側 Team → Invite members → 角色選 Owner
 → 填 stanley.luke.de@gmail.com。
 注意：角色一定要 Owner 或 Administrator，選 Developer 沒有用（不能改專案設定）。
 
-【第 4 件：接受 Stanley 寄來的 Supabase 邀請】
+【第 3 件：接受 Stanley 寄來的 Supabase 邀請】
 他已經把我加進他的 Supabase 帳號，權限跟他一樣。
 信寄到 a0987352802@gmail.com，找一下有沒有這封信，點接受就好。
 如果找不到，請他重寄。
 
-【第 5 件：確認 Stanley 在 GitHub 是 Admin】
+【第 4 件：確認 Stanley 在 GitHub 是 Admin】
 帶我到：GitHub → Scout repo → Settings → Collaborators，
 看 witsper-stanley 的權限是不是 Admin，不是的話改成 Admin。
 
