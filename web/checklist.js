@@ -32,7 +32,13 @@ const app = document.getElementById("app");
 window.SCOUT_CONFIG = Object.assign({
   SUPABASE_URL: "https://uarkccyqcqvgxukjcrey.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_CPg7D4iO0uBA0gnfd-rlFA_2Ia-9P4V", // gitleaks:allow — Supabase publishable key，設計上即公開，靠 RLS 保護
+  // AI 入口預設隱藏（ADR-017，2026-09-11）：需要 AI token 的功能一律走 Scout MCP，
+  // 網頁不再直接呼叫 Gemini。程式碼刻意保留——要重新啟用，在 Netlify 設 GEMINI_API_KEY，
+  // 並把這裡（或本機 config.js）的 AI_ENABLED 改成 true。
+  AI_ENABLED: false,
 }, window.SCOUT_CONFIG || {});
+// 只認明確的 true，避免 config.js 寫成字串 "false" 之類時被當成開啟
+const AI_ENABLED = window.SCOUT_CONFIG.AI_ENABLED === true;
 
 // ── 持久全域狀態（供三個 view 共用；load() 後填入）──
 let curTrip = null;
@@ -377,8 +383,8 @@ function renderApp() {
     ${renderTripBar()}
     <div class="toolbar">
       <button class="refresh-btn" id="refresh">↻ 重新整理</button>
-      <button class="ai-import-btn" id="ai-import-open">✨ AI 匯入行程</button>
-      <button class="ai-suggest-btn" id="ai-suggest-open">🪄 AI 生成行程</button>
+      ${AI_ENABLED ? `<button class="ai-import-btn" id="ai-import-open">✨ AI 匯入行程</button>
+      <button class="ai-suggest-btn" id="ai-suggest-open">🪄 AI 生成行程</button>` : ""}
       <span class="updated">更新於 ${updated}</span>
     </div>
     ${renderExportBar()}

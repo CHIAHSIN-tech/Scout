@@ -905,12 +905,64 @@ ADR-010 讓 Streamlit 退役、收斂成單一靜態 web app，等於把 Python 
 
 **關聯：** ADR-010、ADR-012、ADR-013、`specs/spec-scout-mcp-server.md`、`ACCEPTANCE-mcp-server.md`
 
+### ADR-017: 需要 AI token 的功能一律走 MCP，網頁不再直接呼叫 Gemini
+
+- **日期：** 2026-09-11
+- **狀態：** Accepted
+- **相關方：** Stanley（拍板）/ Claude Code（執行）
+- **取代範圍：** ADR-005「AI 後端＝Gemini」在**網頁端**的部分；ADR-011「AI 金鑰走 Netlify Function 代理」改為**預設不啟用**（程式保留）
+
+**情境（Context）:**
+正式站的 `GEMINI_API_KEY` 從未設定，行程 Tab 的「AI 匯入行程」「AI 生成行程」線上一按就回 HTTP 500，
+但按鈕照樣顯示——等於畫面上放著兩條死路。同時 ADR-016 的 Scout MCP server 已經能讀寫行程與購物資料。
+Stanley 的原話：「anything that needs ai token, we use MCP」「全部先藏起來……功能本身不要消失」。
+
+**考慮過的選項:**
+1. **設好 GEMINI_API_KEY，讓網頁 AI 復活**
+   - 優點：手機上只開網頁也能用 AI
+   - 缺點：要維護一把 token 與它的額度、帳單
+   - 為什麼沒選：Stanley 明確表示目前不使用 token
+2. **把三個 AI 功能整個刪掉**
+   - 優點：程式碼最乾淨
+   - 缺點：違反「功能本身不要消失」；且 AI 生成行程是 Chia 寫過規格（`spec-ai-suggest-web.md`）的功能
+   - 為什麼沒選：同上
+3. **網頁入口藏起來、程式碼保留，AI 能力改由 Claude ＋ Scout MCP 提供** — 最終採用
+
+**決策:**
+- 行程：`SCOUT_CONFIG.AI_ENABLED` 預設 `false`，兩顆 AI 按鈕條件渲染；綁事件處本來就有 null 防護
+- 購物：「🔗 貼連結帶入」沿用 2026-07-26 既有機制（沒金鑰就隱藏），公開站本來就看不到，不需改動
+- 三個能力在 MCP 裡的對應：貼一段文字排行程 → `add_itinerary_item`；生成整份行程 → `create_trip` ＋ `add_itinerary_item`；
+  貼商品連結 → Claude 自己讀網頁 ＋ `add_wishlist_item`
+
+**預期後果:**
+- 正面：畫面上不再有一按就 500 的按鈕；零 token 成本；AI 操作與資料寫入在同一個 Claude 對話裡完成
+- 負面：**只開網頁（例如手機瀏覽器）的人就用不到 AI**——MCP 必須在 Claude 用戶端裡才能用
+- 負面：Chia 要自己設好 Claude Desktop ＋ Scout MCP 才用得到 AI（步驟見 `mcp-server/README.md`）
+- 需要後續處理：跟 Chia 同步這個決定——她的 AI 生成行程規格仍是 done，只是入口從網頁移到了 Claude
+- 重新啟用網頁 AI：Netlify 設 `GEMINI_API_KEY` ＋ 把 `AI_ENABLED` 改成 `true`，不需要改其他程式
+
+---
+
 ## 5. 開發日誌
 
 > **只增不改（但會週期性壓縮舊內容）。**
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-09-11] 決定：需要 AI token 的一律走 MCP（ADR-017）
+
+**類型：** 決策
+**關聯 ADR：** ADR-017（新）、ADR-005／011（部分取代）、ADR-016
+
+Stanley 以為已經拿掉了「需要 Gemini 金鑰」這個設定。查證結果：git 歷史沒有這種 commit，
+他記得的是 2026-07-26 的 `5f49665`——那次只讓購物 Tab 的「貼連結帶入」在沒金鑰時自己藏起來，
+行程 Tab 的兩個 AI 功能不在範圍內，線上仍回 500。
+
+Stanley 當場定調：需要 AI token 的一律走 MCP；三個網頁 AI 入口全部先藏起來，但程式碼與功能不要消失。
+購物那顆早已會自己藏，所以實際只改行程的兩顆。`for-chia-access.md` 同步拿掉「設環境變數」那項
+（`SCOUT_BUYLIST_*` 在 share.js 裡本來就有內建預設值），並把給 Chia 的 Claude Code 指令從
+「你不能替我點」改成「先試著幫我點，不行我再自己點」。
 
 ### [2026-09-11] MCP server 啟動失敗的第二層憑證問題 ＋ 文件回到可信狀態
 
@@ -1076,16 +1128,14 @@ _(目前尚無壓縮紀錄)_
 
 - **Netlify 站台命名**：合併後沿用 `shoppingtool.netlify.app`（名字不再貼切但書籤不變）還是改名（舊網址失效、要重發連結給 Chia）？見 `spec-scout-app-merge.md` R1。
 - ~~**AI 生成行程要不要救**~~ — **已決定救，且已上線**（2026-08-17，`specs/spec-ai-suggest-web.md`）。web 版六題問答生成整份行程，金鑰走 Netlify Function（`ai-suggest.js`）。
-  ⚠️ 但**正式站的 `GEMINI_API_KEY` 至今未設**，線上呼叫回 500，功能等於沒上線。只有 Chia 能設（見 `for-chia-access.md` 第 ④ 項）。
+  2026-09-11 起依 ADR-017：網頁入口預設隱藏，能力改由 Claude ＋ Scout MCP 提供（`create_trip` ＋ `add_itinerary_item`）。
 - **測試框架**：`tests/test_itinerary.py` 只涵蓋待退役的 Streamlit 邏輯，靜態 app 完全無測試。要不要引入？
 
 ### 6.3 已知的 Bug
 
 - ~~**公開站版本落後**~~ — **已解決**（2026-09 上旬，Chia 把 Netlify 接上 GitHub 自動部署）。
   2026-09-11 實測線上已是完整新版：`checklist.js` 52 KB（含 `deleteItem` / `ed-save` / `exportbar`）、`export-formats.js` 與 PWA manifest 都在。
-- **🔴 正式站的兩個 AI 功能是壞的**：`GEMINI_API_KEY` 未設，`ai-suggest` 與 `ai-parse` 皆回 HTTP 500。
-  影響「AI 生成行程」與「AI 匯入行程」；分享連結（`share`）不吃這把金鑰，正常。
-  修法不在程式碼，在 Netlify 環境變數，只有 Chia 能做。
+- ~~**正式站的兩個 AI 功能是壞的**~~ — 以 ADR-017 結案（2026-09-11）：不設金鑰，AI 改走 MCP，網頁上的 AI 入口預設隱藏，不再有一按就 500 的按鈕。
 - **keepalive 失敗時沒有任何人會知道**：排程函式只能**防止**暫停，**無法喚醒**已暫停的專案
   （打過去直接失敗），而失敗只寫進 function log。2026-09-05 購物專案被暫停就是這樣沒被發現的。
   已另開規格處理：`specs/spec-keepalive-visibility.md`。
