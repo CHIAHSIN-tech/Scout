@@ -1,0 +1,12 @@
+# 舊的 Netlify Function 路徑 → 新的 Worker 路徑（ADR-018 遷移的相容轉址）。
+# Workers static assets 原生支援這個檔案，放在資產目錄裡即可，不需要任何設定。
+#
+# 為什麼留著：瀏覽器可能還快取著舊版的 checklist.js / share.html，
+# 那些檔案裡寫的是 /.netlify/functions/*。留一行轉址，換過去的當下不會有人看到 404。
+# 只轉這一個前綴，不做任意轉址——開放式規則會變成 open redirect。
+#
+# 用 308 不用 200：200 是「代理」，而 Workers static assets 的代理目標必須是靜態資產，
+# /api/* 是 Worker 程式碼，代理不過去（本機 wrangler dev 實測回 404）。
+# 308 會讓瀏覽器重打一次 /api/*，而且**保留 HTTP 方法與 body**——
+# ai-parse / ai-suggest 是 POST，用 301/302 會被降級成 GET，那兩支就壞了。
+/.netlify/functions/*  /api/:splat  308

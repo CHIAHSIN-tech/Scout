@@ -72,7 +72,7 @@
   document.getElementById('title').textContent=tag;
   document.title=tag+' — Scout';
 
-  fetch('/.netlify/functions/share?tag='+encodeURIComponent(tag))
+  fetch('/api/share?tag='+encodeURIComponent(tag))
     .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
     .then(function(res){
       if(!res.ok){subEl.textContent='';show(esc(res.d.error||'讀取失敗'),'err');return;}

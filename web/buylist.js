@@ -236,7 +236,7 @@
   // ── 唯讀分享連結 ──
   // 只分享「一個情境標籤」而不是整份清單：一來分享的情境本來就是「送禮-媽媽」這種，
   // 二來限定範圍才不會把兩人所有想買的東西一次攤給外人看。
-  // 唯讀是後端保證的（web/netlify/functions/share.js），不是靠這個連結的隱晦性。
+  // 唯讀是後端保證的（worker/index.js 的 /api/share），不是靠這個連結的隱晦性。
   async function shareList(){
     if(fTag==='all'){
       setStatus('先在上面選一個「情境」，分享連結是以情境為單位','err');

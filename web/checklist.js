@@ -943,12 +943,12 @@ async function aiParseItinerary(text) {
 }
 
 // 取得 Gemini 原始回傳。
-// 優先走部署版 proxy（/.netlify/functions/ai-parse；金鑰在後端環境變數，不外露到前端）；
+// 優先走部署版 proxy（/api/ai-parse；金鑰在後端環境變數，不外露到前端）；
 // 本機（無 functions，proxy 回 404）落回 config.js 的金鑰直接呼叫，方便開發。
 async function aiGeminiRaw(text, totalDays) {
-  // 1) proxy（Netlify Function）
+  // 1) proxy（Cloudflare Worker）
   try {
-    const res = await fetch("/.netlify/functions/ai-parse", {
+    const res = await fetch("/api/ai-parse", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, totalDays }),
     });
@@ -1263,20 +1263,20 @@ async function asGenerate() {
   }
 }
 
-// 只走 Netlify Function，不做前端金鑰 fallback——
+// 只走後端 proxy，不做前端金鑰 fallback——
 // 生成用的 prompt 比解析長得多，把金鑰留在前端的誘因更不該存在（spec A6）。
 async function asCallBackend(answers) {
   let res;
   try {
-    res = await fetch("/.netlify/functions/ai-suggest", {
+    res = await fetch("/api/ai-suggest", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers }),
     });
   } catch (e) {
-    throw new Error("連不到 AI 服務。這個功能需要部署在 Netlify 上才能用（本機開啟靜態檔沒有 functions）。");
+    throw new Error("連不到 AI 服務。這個功能需要部署後才能用（本機開啟靜態檔沒有後端）。");
   }
   if (res.status === 404) {
-    throw new Error("找不到 AI 服務（404）。這個功能需要部署在 Netlify 上；本機直接開檔案沒有 functions。");
+    throw new Error("找不到 AI 服務（404）。這個功能需要部署後才能用；本機直接開檔案沒有後端。");
   }
   let data = {};
   try { data = await res.json(); } catch (_) {}
