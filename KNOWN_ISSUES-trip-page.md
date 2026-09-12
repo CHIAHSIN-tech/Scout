@@ -123,12 +123,23 @@ K1 就解掉了——行程表跟著自動部署走，不必有人手動 deploy�
 
 ## 外部相依（不是 bug，是還沒做的人工步驟）
 
-| 項目 | 誰做 | 卡在哪 |
+2026-09-12 的 ADR-020 把基礎設施權限收回 Stanley，所以這張表比原本短很多——
+**大部分本來要等 Chia 的事，現在 Stanley 自己就能做。**
+
+### 只有 Chia 做得到（`for-chia-handover.md`）
+
+| 項目 | 為什麼只有她 | 擋住什麼 |
 |---|---|---|
-| Cloudflare 建專案、接 GitHub | Chia（或 Stanley） | `for-chia-cloudflare.md` 步驟 1 |
-| **Cloudflare Access（Google SSO）擋 `/trips/*`** | Chia（或 Stanley） | `for-chia-cloudflare.md` 步驟 4.5；在此之前行程表不該部署上去 |
-| **把 repo 轉成私有** | **只有 Chia**（Stanley 無 admin） | `for-chia-cloudflare.md` 步驟 0.5；**在此之前行程資料不進版控** |
-| `GEMINI_API_KEY` 設成 Worker secret | 人 | 可先跳過（ADR-017 已讓網頁 AI 預設隱藏） |
-| Netlify 站台停用 | Chia | 要等 Cloudflare 實際驗過，**不要先停** |
-| 重發家人的分享連結 | Stanley／Chia | 網址會變 |
-| `REVIEW.md` 第 26–30 條 | Stanley | 要在真手機上看過 |
+| 把 repo 轉回 `witsper-stanley` | GitHub 的轉移只有擁有者能發起 | **K1**——轉移＋轉私有之前，旅程資料不進版控 |
+| 把行程 Supabase `uarkccyqcqvgxukjcrey` 轉給 Stanley | 專案在她的 organization | Stanley 仍然改不了行程側的欄位（ADR-009 的老問題） |
+| 停用 Netlify 站台 | 站台在她的帳號 | 沒擋住什麼，但要等 Cloudflare 跑穩才做 |
+
+### Stanley 自己做（`runbook-cloudflare.md`）
+
+| 項目 | 卡在哪 |
+|---|---|
+| 建 Cloudflare Worker、部署 | 沒有，現在就能做 |
+| Cloudflare Access（Google SSO）擋 `/trips/*` | 要先部署完 |
+| `GEMINI_API_KEY` 設成 Worker secret | 可先跳過（ADR-017 已讓網頁 AI 預設隱藏）|
+| 重發家人的分享連結 | 要先部署完（網址才會確定）|
+| `REVIEW.md` 第 26–30 條 | 要在真手機上看過 |

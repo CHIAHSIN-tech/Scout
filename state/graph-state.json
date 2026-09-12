@@ -70,7 +70,8 @@
     "D9 夜間動線的「步行範圍」判準用車站相同，不用 location.walk_min（語意不同）",
     "D10 check-share.mjs 改指向 Worker（不改的話拆除後 A1 會 FAIL）",
     "D12 A24 的『拆除是最後一個 commit』改成驗本意（原寫法遷移後任何 commit 都會讓它永久變紅）",
-    "D13 選項 B：repo 轉私有、trips/ 進版控、網站公開部署、行程表以 Cloudflare Access（Google SSO）擋 /trips/*"
+    "D13 選項 B：repo 轉私有、trips/ 進版控、網站公開部署、行程表以 Cloudflare Access（Google SSO）擋 /trips/*",
+    "ADR-020 基礎設施權限收回 Stanley（supersedes ADR-014）：GitHub repo、Cloudflare、行程 Supabase 都歸他；Chia 專職出 spec、保留 repo 寫入權"
   ],
   "known_issues": [
     "K1 行程表尚未進版控／尚未部署——D13 選項 B 的前置（repo 轉私有）只有 Chia 做得到",
@@ -84,8 +85,8 @@
     {
       "from": "Claude Code",
       "to": "Chia",
-      "task": "把 CHIAHSIN-tech/Scout 轉成私有（Stanley 無 admin，只有她做得到）",
-      "inputs": "for-chia-cloudflare.md 步驟 0.5",
+      "task": "三件只有她做得到的事：repo 轉回 witsper-stanley、行程 Supabase 轉移、（之後）停用 Netlify",
+      "inputs": "for-chia-handover.md",
       "acceptance_items_covered": [
         "A6",
         "A15"
@@ -95,22 +96,21 @@
     },
     {
       "from": "Claude Code",
-      "to": "Chia",
-      "task": "Cloudflare 後台步驟 1–6，含 Access 擋 /trips/*",
-      "inputs": "for-chia-cloudflare.md",
+      "to": "Stanley",
+      "task": "Cloudflare 建置、部署、Access 擋 /trips/*、重發分享連結；repo 到手後轉私有並把 trips/ 進版控",
+      "inputs": "runbook-cloudflare.md",
       "acceptance_items_covered": [
         "A20",
         "A21",
-        "A22",
-        "A24"
+        "A22"
       ],
       "status": "sent"
     },
     {
       "from": "Claude Code",
       "to": "Stanley",
-      "task": "Chia 轉私有之後：刪 .gitignore 兩段、git add trips/ web/trips/；另外 REVIEW.md 26–30",
-      "inputs": "DECISIONS-trip-page.md D13、trips/2026-09-kr-seoul/REVIEW.md",
+      "task": "REVIEW.md 第 26–30 條（真手機上看過）",
+      "inputs": "trips/2026-09-kr-seoul/REVIEW.md",
       "acceptance_items_covered": [
         "A16"
       ],

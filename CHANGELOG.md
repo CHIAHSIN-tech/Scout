@@ -28,6 +28,13 @@ typo / 純機械調整不必寫。最新在上。詳細「為什麼」在 `conte
   **選 Workers 不選 Pages 是因為 Pages 不支援 Cron Trigger。**
   ⚠️ 本次**只寫設定檔，沒有部署**；Cloudflare 後台的步驟與網址變更的影響
   寫在 `for-chia-cloudflare.md`。
+- **🔑 基礎設施權限收回 Stanley**（ADR-020，取代 ADR-014）。當初把 repo 轉給 Chia 的理由
+  是「她的 Netlify 接著她的 GitHub」，託管搬到 Cloudflare 之後那個理由就沒了；
+  而實際分工一直是「Chia 出 spec、Stanley 執行」。
+  GitHub repo、Cloudflare、行程 Supabase 都歸 Stanley，Chia 保留 repo 寫入權。
+  ⚠️ **代價要講清楚：她失去部署自主權**，那正是 ADR-014 想給她的。
+  文件拆成兩份：`for-chia-handover.md`（只剩三件只有她做得到的事）
+  與 `runbook-cloudflare.md`（Stanley 自己做的部分）。
 - ⚠️ **`trips/` 與 `web/trips/` 暫時不進版控**：repo 是公開的，而 `trip.json` 含訂位編號、
   旅館地址、班機時刻。代價是行程表目前不會跟著網站部署。見 `DECISIONS-trip-page.md`。
 

@@ -806,7 +806,8 @@ ADR-006 當時就寫明「若日後公開部署，需重新評估」。實際公
 ### ADR-014: Scout repo 所有權轉移給 Chia，部署由她自主operate
 
 - **日期：** 2026-08-01
-- **狀態：** Accepted（等待 Chia 接受轉移請求）／**理由部分受 ADR-018 影響**——
+- **狀態：** **Superseded by ADR-020**（2026-09-12，權限收回 Stanley）／
+  在那之前，理由已部分受 ADR-018 影響——
   本 ADR 的前提是「Chia 的 **Netlify** 接著她的 GitHub」，ADR-018 把託管換成 Cloudflare，
   她需要自己的 Cloudflare 存取權，否則部署自主權會退回 Stanley 身上。見 ADR-018。
 - **相關方：** Stanley（拍板）/ Claude Code
@@ -1084,12 +1085,115 @@ Workers static assets 的 200 是代理，而代理目標必須是靜態資產�
 
 ---
 
+### ADR-020: 基礎設施權限收回 Stanley，Chia 專職出規格
+
+- **日期：** 2026-09-12
+- **狀態：** Accepted（**GitHub repo 轉移需 Chia 發起，尚未執行**）
+- **相關方：** Stanley（拍板）/ Claude Code / Chia（要執行轉移的人）
+- **Supersedes:** ADR-014
+
+**情境（Context）:**
+ADR-014 把 repo 轉給 Chia，唯一的理由是「她的 **Netlify** 接著她的 GitHub，
+轉過去她就不需要安裝任何 GitHub App，剩餘部署步驟都能自己完成」。
+
+**ADR-018 把託管搬到 Cloudflare，那個理由就整個消失了**——Cloudflare 專案還沒建，
+誰的帳號都可以，不存在「已經接好的帳號」這個既成事實。
+
+同時，分工實際上一直是另一個樣子：**Chia 寫 spec、Stanley 用 Claude Code 執行**
+（`specs/README.md` 開宗明義就是這句）。而權限散在她那邊的結果是，
+每一次基礎設施異動都要等她——2026-09-12 這一天就撞到兩次：
+repo 要轉私有（Stanley 只有 push，沒有 admin），以及 Cloudflare 要開在誰名下。
+ADR-014 當初擔心的「所有權與實際操作者不一致」現在反過來成立了。
+
+**考慮過的選項:**
+1. **維持現狀，請 Chia 逐次授權** — 每次要動基礎設施就找她
+   - 優點：不用做任何轉移
+   - 缺點：把她變成一個她自己不想當的守門員——她的角色是出題，不是按按鈕；
+     而且每次都要等，2026-09-12 一天就卡了兩次
+   - 為什麼沒選：這正是 ADR-014 想解決的問題，只是方向相反
+2. **Chia 把 Stanley 升為 admin，repo 仍在她名下** — 最小改動
+   - 優點：一個設定就好，不用轉移、不用改 remote
+   - 缺點：所有權與實際維護者仍然不一致；她哪天停用帳號或改設定，Stanley 又會被卡
+   - 為什麼沒選：Stanley 要的是「權限主要在我身上」，不是「借用權限」
+3. **repo 轉回 Stanley 的個人帳號 `witsper-stanley`，Chia 降為協作者** — 最終採用
+
+**決策:**
+**基礎設施的擁有權回到 Stanley**，Chia 保留寫入權限（協作者），角色專注在出 spec。
+
+| 資產 | 轉移後 | 誰能執行 |
+|---|---|---|
+| GitHub `Scout` | `witsper-stanley`（Stanley 個人帳號） | **只有 Chia 能發起轉移**，Stanley 接受 |
+| Cloudflare 專案 | Stanley 的個人 Cloudflare 帳號 | Stanley 自己建，**不需要任何人** |
+| Netlify 站台 | 退役，不轉移 | Chia 停用 |
+| Supabase 行程專案 `uarkccyqcqvgxukjcrey` | Stanley 的 Supabase organization | **只有 Chia 能發起** project transfer |
+
+**Supabase 行程專案也要拿回來**（Stanley 2026-09-12 追加決定）。
+ADR-009 就記著「Scout 那個專案是 Chia 的，**Stanley 沒有後台權限，無法自己建表改欄位**」——
+那正是當初另開購物專案的原因，而那個限制到今天還在。
+
+**一定要走「轉移」，不要走「重建 ＋ 搬資料」。** 兩者差別很大：
+
+| | 轉移（Supabase 的 Transfer project） | 重建 ＋ 搬資料 |
+|---|---|---|
+| project ref | **不變**，仍是 `uarkccyqcqvgxukjcrey` | 變成新的 |
+| 要改的程式 | **零** | `web/checklist.js:33`、`worker/index.js:29`（keepalive 目標）、本機 `.mcp.json`、`.streamlit/secrets.toml` |
+| anon key | 不變 | 全部要換 |
+| 停機 | 幾乎沒有 | 搬資料期間兩人都不能用 |
+| 風險 | 低 | 高——兩人每天在用那份資料 |
+
+**執行前要在後台確認的兩件事**（我沒有帳號，查不到）：
+1. Supabase 免費方案對「一個 organization 幾個 active project」有上限。
+   Stanley 名下已經有購物專案，再收一個會不會撞到上限，要先看後台。
+2. Transfer 通常要求發起者在**來源與目標 organization 都有足夠權限**，
+   所以可能要先把其中一方加進另一方的 org。順序以後台畫面為準。
+
+**預期後果:**
+- 正面：基礎設施異動不再需要等人；repo 轉私有、Cloudflare 建置、Access 設定都由 Stanley 一手完成
+- 正面：與實際分工一致（`specs/README.md`：Chia 出題、Stanley 執行）
+- 負面：**Chia 失去部署自主權**。這是 ADR-014 明確想給她的東西，現在收回去了，
+  必須跟她講清楚，不能默默搬走
+- 負面：轉移仍然要她按兩次（發起轉移、停用 Netlify），**收回權限這件事本身還是得經過她**
+- 需要後續處理：轉移生效後更新本機 git remote；`for-chia-cloudflare.md` 改寫成「Chia 要做的事」；
+  Supabase 轉移完成後，`.mcp.json` 與 `web/config.js` 不用改（ref 不變），但要重跑一次
+  `check-cf-migration.mjs --worker` 確認 keepalive 仍打得到
+
+**分歧與轉折紀錄:**
+Claude Code 兩度把 `witsper-stanley` 誤判為公司帳號（名字與 commit email 都是 `witsper`），
+ADR-014 的分歧紀錄裡有過一次，2026-09-12 又一次。Stanley 更正：**那是他的個人帳號。**
+已在第 6 章的帳號紀律條目直接寫明，避免第三次。
+
+---
+
 ## 5. 開發日誌
 
 > **只增不改（但會週期性壓縮舊內容）。**
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-09-12] 基礎設施權限收回 Stanley（ADR-020）
+
+**類型：** 決策
+**關聯 ADR：** ADR-020（新）、ADR-014（被取代）、ADR-018、ADR-009
+
+同一天之內撞到兩次「要等 Chia 才能動」：repo 要轉私有（Stanley 只有 push 沒有 admin）、
+Cloudflare 要開在誰名下。Stanley 的話是「Chia 是寫 Spec 的人，我是建程式的人，
+權限應該全部主要在我身上」，隨後追加「Supabase 也都拿回來」。
+
+ADR-014 把 repo 轉給她的唯一理由是「她的 Netlify 接著她的 GitHub」——
+ADR-018 把託管搬走之後那個理由就不存在了，所以這不是推翻，是前提消失。
+
+**盤點的結果比想像中不平均**：Cloudflare 還沒建，Stanley 自己建就好，不用等任何人；
+但 GitHub repo 與 Supabase 專案的轉移**都只有擁有者能發起**，還是要 Chia 按。
+行程 Supabase 一定要走 transfer 不能重建——ref 不變的話程式一行都不用改，
+重建的話前端、保活排程、本機設定全要跟著換，而且搬資料期間兩人都不能用。
+
+**誠實的代價：Chia 失去部署自主權**，那正是 ADR-014 想給她的東西。
+`for-chia-handover.md` 直接寫明這件事，並請她有意見就說，不要默默照做。
+
+順帶更正一個踩了兩次的誤判：`witsper-stanley` 是 Stanley 的**個人** GitHub 帳號，
+不是公司帳號。名字與 commit email 都是 `witsper` 所以很容易看錯，
+已經寫進第 6 章的帳號紀律條目。
 
 ### [2026-09-12] 旅程頁模組上線，託管設定改 Cloudflare Workers
 
@@ -1332,7 +1436,10 @@ _(目前尚無壓縮紀錄)_
 - **Google Gemini API**：Streamlit 端有 503 重試；靜態 app 端失敗只顯示紅字、無重試。
 - **CDN 相依**：buylist 從 jsdelivr 載 supabase-js，CDN 掛掉整個購物 tab 不能用。
 - **Netlify 免費方案**：Functions 有每月執行次數上限；兩人用不會碰到，但值得知道。
-- **⚠️ 帳號紀律**：Netlify 與 Supabase 一律用**個人帳號**，絕不用公司（witsper）帳號。
+- **⚠️ 帳號紀律**：Netlify、Cloudflare 與 Supabase 一律用**個人帳號**，絕不用公司（witsper）帳號。
+  **但 `witsper-stanley` 這個 GitHub 帳號是 Stanley 的個人帳號，不是公司帳號**——
+  名字和 commit email（`@witsper.com`）都容易讓人誤判成公司號，ADR-014 的分歧紀錄裡
+  已經誤判過一次，2026-09-12 又誤判一次。**不要再把它當成違反紀律的證據。**
 
 ---
 
