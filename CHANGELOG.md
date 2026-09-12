@@ -5,6 +5,32 @@ typo / 純機械調整不必寫。最新在上。詳細「為什麼」在 `conte
 
 ## [Unreleased]
 
+### 2026-09-12 — 旅程頁模組 ＋ 託管遷移至 Cloudflare Workers
+
+- **🗺️ 旅程頁模組**：每趟旅程一份本機 `trip.json`（`context.md` ADR-019），
+  MCP 新增十個工具（`create_trip_file` / `upsert_place` / `upsert_event` / `upsert_leg` /
+  `upsert_open_question` / `set_trip_section` / `read_trip` / `list_trip_files` /
+  `check_schedule` / `build_trip_page`）。**既有 8 個工具一字未改。**
+  - `build_trip_page` 產出**自含單檔 HTML**：沒有外部 script／樣式表／字體／圖片，
+    沒有 fetch，斷網打得開、可以存到手機。CSS 與示意地圖移植自
+    2026/9 首爾行程 artifact 的原始檔。
+  - **改一處，多處一起改**：時間軸、日標題摘要、快捷 nav、地圖文字轉乘表、正餐一覽表
+    五個區塊全部由 `events` 算出來。同樣輸入建兩次位元相同。
+  - `check_schedule` **只回報不修改**，五類衝突各附「要解掉它得犧牲什麼」的選項。
+  - 查不到的營業時間不會變成頁面上的數字；來源打架時兩個都印、不挑一個當正確答案，
+    兩種情況都自動變成一筆待確認。
+  - 行程 Tab 底部新增「歷次行程表」列表（`web/trip-pages.js`），不碰 Supabase、
+    不依賴 `config.js`。
+- **☁️ 託管改 Cloudflare Workers（Static Assets）**（ADR-018，取代 ADR-011）。
+  四支 Netlify Function 合併成一支 Worker，行為與錯誤訊息逐字等價；
+  前端路徑 `/.netlify/functions/*` → `/api/*`，舊網址留一行 308 相容轉址。
+  保活排程改用 `[triggers] crons`，cron 值不變。
+  **選 Workers 不選 Pages 是因為 Pages 不支援 Cron Trigger。**
+  ⚠️ 本次**只寫設定檔，沒有部署**；Cloudflare 後台的步驟與網址變更的影響
+  寫在 `for-chia-cloudflare.md`。
+- ⚠️ **`trips/` 與 `web/trips/` 暫時不進版控**：repo 是公開的，而 `trip.json` 含訂位編號、
+  旅館地址、班機時刻。代價是行程表目前不會跟著網站部署。見 `DECISIONS-trip-page.md`。
+
 ### 2026-08-01 — 架構收斂：Streamlit 退役、三個 app 併成一個
 
 - **決定把 buylist ＋ scout-checklist 合併成單一雙 Tab 靜態 app**，Streamlit 退役（`context.md` ADR-010）。
