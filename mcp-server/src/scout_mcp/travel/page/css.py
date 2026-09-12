@@ -318,6 +318,15 @@ ol.tl ul.mini b{color:var(--ink)}
 /* 排隊候補清單（這一版沒有地圖定位互動，見 KNOWN_ISSUES）。 */
 .qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.7rem}
 
+/* 太長的店家註記摺起來。rest.json 轉進來的 notes 是查證過程的研究筆記，
+   有價值但整段攤開會把候補清單變成文字牆。用 <details> 不用 JS。 */
+.longnote{font-size:.84rem;color:var(--ink);margin-top:.2rem;line-height:1.6}
+.longnote>summary{cursor:pointer;color:var(--muted);list-style:none}
+.longnote>summary::-webkit-details-marker{display:none}
+.longnote>summary::after{content:"　展開";color:var(--accent);font-size:.78rem;white-space:nowrap}
+.longnote[open]>summary{display:none}
+.longnote .fit{margin-top:0}
+
 /* 待確認清單的每一條。auto 的那幾筆標出來，人才知道哪些是程式推的。 */
 .autotag{font-size:.68rem;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:.05rem .4rem;margin-left:.4rem;white-space:nowrap}
 

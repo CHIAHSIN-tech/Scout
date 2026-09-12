@@ -98,6 +98,26 @@ def _links(items):
     return "".join(out)
 
 
+def _notes_html(notes, limit=140):
+    """店家註記。太長的收進 `<details>`，預設摺起來。
+
+    為什麼需要：從 `rest.json` 轉進來的 `notes` 是查證過程的研究筆記，
+    動輒好幾百字（公休日來源互相矛盾的推論、價位帶怎麼取捨…）。
+    那些內容有價值、不能丟，但整段攤在候補卡片上會把清單變成一面文字牆。
+    用 `<details>` 不用 JS——自含單檔不該為了摺疊多一段腳本。
+    """
+    if not notes:
+        return ""
+    text = str(notes)
+    if len(text) <= limit:
+        return f'<p class="fit">{E(text)}</p>'
+    head = text[:limit].rstrip()
+    return (
+        f'<details class="longnote"><summary>{E(head)}…</summary>'
+        f'<p class="fit">{E(text)}</p></details>'
+    )
+
+
 def _hours_html(place):
     """營業時間。三種狀態各有不同輸出，**留白不是其中之一**——
     留白會被讀成「沒有營業時間限制」，那正是我們要避免的誤導。"""
@@ -484,7 +504,7 @@ def _queue_list(trip):
             f'<span class="rs {E(diff)}">{E(_RESV_LABEL.get(diff, ""))}</span></span></div>'
             f'<p class="meta">{E(p.get("area") or "")}</p>'
             f"{_hours_html(p)}"
-            + (f'<p class="fit">{E(p["notes"])}</p>' if p.get("notes") else "")
+            + _notes_html(p.get("notes"))
             + (f'<div class="of"><span class="links">{links}</span></div>' if links else "")
             + "</div>"
         )
@@ -642,10 +662,15 @@ def _stations_block(trip):
             continue
         lines = "".join(_ln(x) for x in (s.get("lines") or []))
         days = "、".join(str(d) for d in (s.get("days") or []))
+        # 欄位順序**必須**是 English / 當地 / 中文 / 線 / 第幾天。
+        # 移植過來的 `.t-stn` 手機版規則是用 nth-child 寫的（參考產品就是這個順序）：
+        # 英文名獨佔第一行、線號靠右貼著它，當地名與中文名折到第二行、哪天用推到最右。
+        # 換順序不會報錯，只會讓手機上的排版錯開——第一次就是這樣才發現的。
         rows.append(
             f'<tr><th scope="row">{E(s.get("en") or "")}</th>'
+            f'<td>{E(s.get("local") or "")}</td>'
+            f'<td>{E(s.get("zh") or "")}</td>'
             f'<td class="lines">{lines}</td>'
-            f'<td>{E(s.get("zh") or "")}</td><td>{E(s.get("local") or "")}</td>'
             f"<td><small>{E(days)}</small></td></tr>"
         )
     if not rows:
@@ -654,7 +679,7 @@ def _stations_block(trip):
         '<section class="block" id="stations"><h2>車站對照</h2>'
         '<p class="lede2">站名以英文為主——現場招牌與地圖 App 的英文介面都是這個。</p>'
         '<div class="tbl stack t-stn"><table>'
-        "<thead><tr><th>English</th><th>線</th><th>中文</th><th>當地</th><th>第幾天</th></tr></thead>"
+        "<thead><tr><th>English</th><th>當地</th><th>中文</th><th>線</th><th>第幾天</th></tr></thead>"
         f'<tbody>{"".join(rows)}</tbody></table></div></section>'
     )
 

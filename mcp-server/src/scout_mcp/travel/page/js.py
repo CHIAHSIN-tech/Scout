@@ -115,9 +115,21 @@ JS = r"""
     svg.style.width=(1000*sc)+'px'; svg.style.height=(640*sc)+'px';
     if(!sized && MAPDATA.home){ sized=true; center(X(MAPDATA.home[1]),Y(MAPDATA.home[0])); }
   }
-  function center(x,y){
+  function center(x,y,smooth){
     var l=x*sc-box.clientWidth/2, tp=y*sc-box.clientHeight/2;
-    if(box.scrollTo) box.scrollTo({left:l,top:tp}); else {box.scrollLeft=l;box.scrollTop=tp;}
+    if(box.scrollTo) box.scrollTo({left:l,top:tp,behavior:smooth?'smooth':'auto'});
+    else {box.scrollLeft=l;box.scrollTop=tp;}
+  }
+  // 選了某一天之後，把畫面移到那天的路線中心。
+  // 沒有這一步的話，畫布固定 1000x640、手機只看得到一小塊，
+  // 點了日期還得自己左右滑去找那條線——那等於這個篩選沒有用。
+  function centerOnDay(d){
+    if(d==='all'){ if(MAPDATA.home) center(X(MAPDATA.home[1]),Y(MAPDATA.home[0]),true); return; }
+    var xs=[], ys=[];
+    DAYS[d].r.forEach(function(k){ if(P[k]){ xs.push(X(P[k].lon)); ys.push(Y(P[k].lat)); } });
+    if(!xs.length) return;
+    center((Math.min.apply(null,xs)+Math.max.apply(null,xs))/2,
+           (Math.min.apply(null,ys)+Math.max.apply(null,ys))/2, true);
   }
   var legsBox=document.getElementById('map-legs');
   function show(d){
@@ -142,7 +154,9 @@ JS = r"""
   }
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   document.querySelectorAll('.dayfilter button').forEach(function(b){
-    b.addEventListener('click',function(){show(b.dataset.day);});
+    // 只有「使用者自己點的」才移動畫面。初次載入不移動，
+    // 不然一進地圖分頁就自己捲一下，會像壞掉。
+    b.addEventListener('click',function(){show(b.dataset.day);centerOnDay(b.dataset.day);});
   });
   var rz; window.addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){sized=false;fit();},150);});
   window.mapFit=fit;
