@@ -173,3 +173,53 @@ schema 沒有「到旅館的步行分鐘數」這個欄位，而**憑既有欄�
 那次 session 的確沒查，寫成「查過」會是假的。
 建置時它們自動變成 17 筆待確認，其中 4 筆（開放街區與公園）是噪音，
 已記在 `REVIEW.md` 第 25 條當作下一趟的改進項目。
+
+
+---
+
+## D12. A24 的「拆除必須是最後一個 commit」改成驗本意
+
+**卡在什麼：** A24 的原文檢查是「`git log` 顯示刪除發生在最後一個 commit」。
+照字面實作之後發現：**遷移之後只要再 commit 任何東西，這條就永遠是紅的**——
+包括「看畫面之後修 UI」這種正常到不行的後續工作。那不是驗收條件，那是地雷。
+
+**採用：** 改驗三件真正代表本意（「Cloudflare 驗證通過前不得刪除」）的事：
+1. **拆除的那個 commit 裡，`ACCEPTANCE-trip-page.md` 已經存在** → 驗證先於拆除。
+   這條比原文更直接：它證明的是「驗完才拆」，而不是「拆完沒再做事」。
+2. 拆除之後沒有任何 commit 再動過 `netlify.toml` / `web/netlify/`。
+3. 現在的工作區裡確實沒有 Netlify 設定。
+加上原本就有的「從加入到拆除之間每個 commit 它都還在」。
+
+**怎麼回頭改：** 想要原本的字面語意，把 `head === sha` 那行加回去即可。
+
+---
+
+## D13. 🔵 行程表改走 Google SSO（Cloudflare Access），repo 維持公開
+
+**變更來源：** 2026-09-12 Stanley 在 review 介面時決定：「那我們公開，但是藏在 Google
+登入後面好了，做 SSO」。這**取代** D2 的「先擋住、之後再議」的暫定狀態。
+
+**查證過的前提（2026-09-12，Cloudflare 官方文件）：**
+Access 可以掛在 **`workers.dev` 的主機名 ＋ 單一路徑**上，**不需要自訂網域**。
+所以規格 NON-GOALS 的「不改網域、不設自訂網域、不動 DNS」仍然成立。
+
+**卡在什麼：** SSO 保護的是**部署出去的網站**，保護不到**公開的 GitHub repo**。
+repo 公開的話，`trip.json` 進了版控就等於直接攤在 github.com 上，
+而且進了 git 歷史拿不掉。所以「公開 repo ＋ SSO」只保護到一半。
+
+**兩個補完的方向，各問了一次：**
+
+- **A：`trips/` 與 `web/trips/` 繼續不進版控**，行程表由 Stanley 從本機
+  `npx wrangler deploy` 直接上傳，再用 Access 擋 `/trips/*`。
+  代價：行程表**不能走 Chia 的 GitHub 自動部署**，每次要手動 deploy。
+- **B：repo 轉私有**，`trips/` 進版控，一樣加 Access。
+  代價：Chia 的 Cloudflare 要有私有 repo 的存取權。
+
+**假設了什麼：** 語音問了一次，120 秒無回應，**採用 A**。
+理由與 D2 同一條：A 可逆（隨時可以改成 B），B 不可逆（資料一旦進公開 repo 的歷史就拿不掉）。
+
+**怎麼回頭改：** 要改成 B——repo 轉私有，刪掉 `.gitignore` 裡 `trips/` 與 `web/trips/`
+那兩段，`git add` 進去，自動部署就會把行程表一起帶上去。Access 的設定不用動。
+
+**本次做了什麼：** 只有文件。Access 的設定是 Cloudflare 後台的步驟，
+依規格 BOUNDS「不在 Cloudflare 後台操作」，寫進 `for-chia-cloudflare.md` 步驟 4.5。

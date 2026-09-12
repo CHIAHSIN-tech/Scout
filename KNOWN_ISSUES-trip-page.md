@@ -22,7 +22,16 @@
 **要用的話現在怎麼辦：** 直接開本機的 `trips/<slug>/index.html`，
 或把那個檔案用任何方式傳到手機（它是自含單檔，複製過去就能開）。
 
-**怎麼解：** repo 轉私有，刪掉 `.gitignore` 那兩段。決定權在 Stanley。
+**已決定的解法（2026-09-12，見 `DECISIONS-trip-page.md` D13）：**
+repo 維持公開，行程表**不走 GitHub**——由 Stanley 從本機 `npx wrangler deploy`
+直接上傳到 Cloudflare，再用 **Cloudflare Access（Google SSO）擋住 `/trips/*`**。
+購物的分享連結維持公開，不受影響。
+
+**還沒做的：** Access 的設定在 Cloudflare 後台（`for-chia-cloudflare.md` 步驟 4.5），
+以及第一次手動 deploy。**在那之前 K1 仍然成立。**
+
+**殘留的代價：** 行程表不能走 Chia 的自動部署，每次改完要有人手動 deploy 一次。
+要拿掉這個代價只能把 repo 轉私有（D13 的選項 B）。
 
 ### K2. 手機可讀性沒有實測過，只驗了溢位規則
 
@@ -116,6 +125,8 @@
 | 項目 | 誰做 | 卡在哪 |
 |---|---|---|
 | Cloudflare 建專案、接 GitHub | Chia（或 Stanley） | `for-chia-cloudflare.md` 步驟 1 |
+| **Cloudflare Access（Google SSO）擋 `/trips/*`** | Chia（或 Stanley） | `for-chia-cloudflare.md` 步驟 4.5；在此之前行程表不該部署上去 |
+| **行程表第一次手動 `npx wrangler deploy`** | Stanley | 要等 Access 設好（D13 選項 A）|
 | `GEMINI_API_KEY` 設成 Worker secret | 人 | 可先跳過（ADR-017 已讓網頁 AI 預設隱藏） |
 | Netlify 站台停用 | Chia | 要等 Cloudflare 實際驗過，**不要先停** |
 | 重發家人的分享連結 | Stanley／Chia | 網址會變 |

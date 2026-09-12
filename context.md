@@ -1005,6 +1005,14 @@ Stanley 決定把託管收斂到既有的 Cloudflare 帳號。這不是設定調
   `wrangler secret put` 設（可先跳過，ADR-017 已讓網頁 AI 預設隱藏）；
   **Netlify 後台的站台要人自己停用**，刪 repo 裡的設定檔不會讓它消失
 
+**補充決策（2026-09-12，同日）：行程表以 Cloudflare Access（Google SSO）保護。**
+Stanley 在 review 介面時決定，行程表要登入才看得到，**購物的分享連結維持公開**——
+後者是刻意要給家人隨手打開的，加登入等於把它廢掉。
+查證結果：Access 可掛在 `workers.dev` 的主機名 ＋ 單一路徑（`/trips/*`）上，
+**不需要自訂網域**，所以 NON-GOALS 的「不動 DNS」仍然成立。
+但 SSO 保護不到公開的 GitHub repo，因此 `trips/` 與 `web/trips/` 仍不進版控，
+行程表由本機 `wrangler deploy` 直接上傳（詳見 `DECISIONS-trip-page.md` D13）。
+
 **分歧與轉折紀錄:**
 規格草案原本寫 `web/_redirects` 用 `200`（代理）。本機 `wrangler dev` 實測**不行**：
 Workers static assets 的 200 是代理，而代理目標必須是靜態資產，`/api/*` 是 Worker 程式碼，

@@ -23,12 +23,17 @@
 `scout.<你的帳號>.workers.dev` 之類的東西。
 
 - 你和 Stanley 自己用的：把手機主畫面上的捷徑重新加一次就好。
-- **家人在看的購物分享連結（`/share.html?tag=...`）會死。** 切換之後要重發一次。
+- **家人在看的購物分享連結（`/share.html?list=<情境標籤>`）會死。** 切換之後要重發一次。
   這次**不處理自訂網域**，所以沒有「網址不變」這個選項。
 
 **3. 現在還沒有搬。** 這個 commit 只把設定檔寫好，**沒有建任何 Cloudflare 專案、
 沒有部署、沒有動 DNS**。Netlify 站台照常運作。你按照下面做完，兩邊才會並存；
 確認 Cloudflare 那邊真的好了，才輪到關掉 Netlify。
+
+**4. 行程表要登入才看得到，購物分享連結不用。** 見步驟 4.5。
+而且**行程表不會出現在 GitHub 上、也不會走你的自動部署**——它含訂位編號和旅館地址，
+而 repo 是公開的。那些檔案由 Stanley 從自己電腦 `npx wrangler deploy` 上去。
+你負責的靜態網站與 API 一切照常。
 
 ---
 
@@ -78,8 +83,9 @@ Scout 有一支叫 `keepalive` 的排程，每週一、四各跑一次，去戳�
 
 - [ ] 打開 `https://scout.<你的帳號>.workers.dev`，看得到「🛒 購物 / 🗺️ 行程」兩個 Tab。
 - [ ] 兩個 Tab 都點一次，購物清單和行程都讀得到資料。
-- [ ] 打開 `https://scout.<你的帳號>.workers.dev/share.html?tag=送禮-媽媽`
-      （tag 換成你們實際在用的），確認清單顯示得出來——**這條就是家人會看到的頁面**。
+- [ ] 打開 `https://scout.<你的帳號>.workers.dev/share.html?list=送禮-媽媽`
+      （`list=` 後面換成你們實際在用的情境標籤），確認清單顯示得出來——
+      **這條就是家人會看到的頁面**。
 
 三條都過了，才算「Cloudflare 上真的是新版」。
 
@@ -109,9 +115,33 @@ npx wrangler secret put GEMINI_API_KEY
 沒設的話，那兩個功能會回一則明確的 500 錯誤訊息（「伺服器未設定 GEMINI_API_KEY」），
 不會靜默壞掉。
 
+### 步驟 4.5：把行程表擋在 Google 登入後面（Cloudflare Access）
+
+2026-09-12 Stanley 決定：**行程表要登入才看得到，購物的分享連結維持公開。**
+
+行程表的內容比購物清單敏感得多——訂位編號、旅館地址、班機時刻。
+購物分享連結是刻意要給家人隨手打開的，加登入等於把它廢掉。所以只擋一個路徑。
+
+1. Cloudflare 後台 → **Zero Trust** → **Access** → **Applications** → **Add an application**
+   → 選 **Self-hosted**。
+2. **Application domain** 填：`scout.<你的帳號>.workers.dev`，**Path** 填 `trips/*`。
+   ⚠️ 只填這個路徑。整個網域都擋的話，家人的購物分享連結會一起被擋住。
+3. **Add a policy** → Action 選 **Allow** → Include 選 **Emails**，
+   把你和 Stanley 的 Google 帳號加進去。
+4. **Login methods** 至少留 Google（Zero Trust 預設就有 One-time PIN，可以一起留當備援）。
+
+**怎麼知道成功了：**
+- 開無痕視窗打 `https://scout.<帳號>.workers.dev/trips/`，會被導到 Google 登入。
+- 同一個無痕視窗打 `https://scout.<帳號>.workers.dev/share.html?list=<某個標籤>`，
+  **不需要登入就看得到**。兩個都成立才算對。
+
+> 免費方案含 50 個使用者，兩個人綽綽有餘。**不需要自訂網域**——
+> Access 可以直接掛在 `workers.dev` 的主機名加路徑上。
+
 ### 步驟 5：重發分享連結
 
-- [ ] 把新的 `/share.html?tag=...` 連結重新發給在看清單的家人。
+- [ ] 把新的 `/share.html?list=...` 連結重新發給在看清單的家人。
+      產生方式：購物 Tab 選一個「情境」→ 按分享，連結會自動複製。
 - [ ] 舊的 Netlify 連結先**不要**急著讓它死（見下一步）。
 
 ### 步驟 6：確認一切正常「之後」，才關掉 Netlify

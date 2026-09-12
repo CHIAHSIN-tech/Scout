@@ -130,8 +130,24 @@ function a24() {
   const [sha, subject] = removals[0].split("|");
   ck("A24", subject.includes("chore: 移除 Netlify 設定"),
     `拆除 commit 的訊息含「chore: 移除 Netlify 設定」（實際：${subject}）`);
-  const head = git("rev-parse", "HEAD").trim();
-  ck("A24", head === sha, "拆除發生在最後一個 commit");
+  // 「拆除是最後一個 commit」的**本意**是「驗證通過之前不准拆」，不是「這個 repo
+  // 從此不准再有任何 commit」。照字面驗的話，遷移之後任何一次提交都會讓這條永久變紅，
+  // 那不是驗收條件，那是地雷。所以改驗三件真正代表本意的事：
+  //   (1) 拆除的那個 commit 裡，驗收表已經在了 → 驗證先於拆除
+  //   (2) 拆除是最後一個動到 Netlify 設定的 commit → 沒有人又偷偷加回來
+  //   (3) 拆除之後沒有任何 commit 重新引入 Netlify 相依
+  try {
+    git("cat-file", "-e", `${sha}:ACCEPTANCE-trip-page.md`);
+    ck("A24", true, "拆除的那個 commit 裡驗收表已經存在（驗證先於拆除）");
+  } catch (_) {
+    ck("A24", false, "拆除時驗收表還不存在——那代表先拆了才驗");
+  }
+  const touchedAfter = git("log", "--format=%h %s", `${sha}..HEAD`, "--",
+    "netlify.toml", "web/netlify/").trim();
+  ck("A24", touchedAfter === "",
+    `拆除之後沒有 commit 再動過 Netlify 設定（實際：${touchedAfter || "無"}）`);
+  ck("A24", !exists("netlify.toml") && !exists("web/netlify"),
+    "現在的工作區裡確實沒有 Netlify 設定了");
   // 從「netlify.toml 被加進來」那一刻起，到拆除為止，每個 commit 它都必須還在。
   // 起點取 --diff-filter=A 的那個 commit，不是 repo 的第一個 commit——
   // netlify.toml 是 2026-09-05 才加的，在那之前沒有它是正常的，不是可回退性被破壞。
