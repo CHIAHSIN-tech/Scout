@@ -132,13 +132,20 @@ function a24() {
     `拆除 commit 的訊息含「chore: 移除 Netlify 設定」（實際：${subject}）`);
   const head = git("rev-parse", "HEAD").trim();
   ck("A24", head === sha, "拆除發生在最後一個 commit");
-  // 在那之前的每個 commit，netlify.toml 都必須存在
-  const before = git("rev-list", `${sha}^`, "--max-count=200").trim().split("\n").filter(Boolean);
+  // 從「netlify.toml 被加進來」那一刻起，到拆除為止，每個 commit 它都必須還在。
+  // 起點取 --diff-filter=A 的那個 commit，不是 repo 的第一個 commit——
+  // netlify.toml 是 2026-09-05 才加的，在那之前沒有它是正常的，不是可回退性被破壞。
+  const adds = git("log", "--diff-filter=A", "--format=%H", "--", "netlify.toml")
+    .trim().split("\n").filter(Boolean);
+  const addSha = adds[adds.length - 1];
+  if (!ck("A24", !!addSha, "找得到 netlify.toml 被加進來的那個 commit")) return;
+  const between = git("rev-list", `${addSha}..${sha}^`).trim().split("\n").filter(Boolean);
   let missing = 0;
-  for (const c of before) {
+  for (const c of between) {
     try { git("cat-file", "-e", `${c}:netlify.toml`); } catch (_) { missing++; }
   }
-  ck("A24", missing === 0, `拆除之前的 ${before.length} 個 commit 裡，netlify.toml 都還在（缺少 ${missing} 個）`);
+  ck("A24", missing === 0,
+    `從加入到拆除之間的 ${between.length} 個 commit 裡，netlify.toml 都還在（缺少 ${missing} 個）`);
 }
 
 // ── A22 的「假 fetch 斷言打了兩個 Supabase URL」＋ 路由行為 ──
