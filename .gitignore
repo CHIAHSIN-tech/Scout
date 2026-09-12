@@ -35,3 +35,9 @@ Thumbs.db
 # MCP 設定含 Supabase key，只留 .example 進版控
 .mcp.json
 mcp-server/.env
+
+# 旅程資料（暫時性，待 repo 可見性決定後再議）
+# 規格 specs/spec-scout-trip-page.md 的 Q2 假設「repo 不公開」，但實測 private=false。
+# trip.json 含 booking_ref / 旅館地址 / 班機時刻，先不進版控。
+# 若 repo 轉回私有，把這兩行刪掉即可。
+trips/
