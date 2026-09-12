@@ -32,6 +32,9 @@ Thumbs.db
 .cursor/
 .vscode/
 
+# wrangler dev 的本機狀態（快取、模擬的儲存空間），純暫存
+.wrangler/
+
 # MCP 設定含 Supabase key，只留 .example 進版控
 .mcp.json
 mcp-server/.env
@@ -39,5 +42,9 @@ mcp-server/.env
 # 旅程資料（暫時性，待 repo 可見性決定後再議）
 # 規格 specs/spec-scout-trip-page.md 的 Q2 假設「repo 不公開」，但實測 private=false。
 # trip.json 含 booking_ref / 旅館地址 / 班機時刻，先不進版控。
-# 若 repo 轉回私有，把這兩行刪掉即可。
+# 若 repo 轉回私有，把這幾行刪掉即可。
 trips/
+# web/trips/ 是 build_trip_page 的產出，內容與 trip.json 相同（只是變成 HTML）。
+# trips/ 擋著而這裡不擋，等於從後門把同一份資料推上公開 repo，所以一起擋。
+# 代價寫在 DECISIONS-trip-page.md：這表示行程表目前**不會跟著網站部署**。
+web/trips/

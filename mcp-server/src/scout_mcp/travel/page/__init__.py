@@ -532,14 +532,26 @@ def _map_data(trip):
         "lat1": m.get("lat1", round(max(lats) + pad_lat, 4)),
     }
 
-    P = {}
-    for pid, (lat, lon, name, station) in sorted(coords.items()):
-        # 標籤方向：靠右邊的往左寫，不然會被畫布邊緣切掉
+    def _xy(lat, lon):
         x = (lon - proj["lon0"]) / (proj["lon1"] - proj["lon0"]) * 1000
+        y = (proj["lat1"] - lat) / (proj["lat1"] - proj["lat0"]) * 640
+        return x, y
+
+    # 標籤避讓：同一區的地點座標常常只差幾十公尺，投影到示意圖上就疊在一起。
+    # 這裡把「離已放好的標籤太近」的往下推一格。**不改座標，只改標籤位置**——
+    # 點還是畫在原地，只有文字挪開。走 sorted 順序，所以結果是決定性的。
+    P = {}
+    placed: list[tuple[float, float]] = []
+    for pid, (lat, lon, name, station) in sorted(coords.items()):
+        x, y = _xy(lat, lon)
         right = x > 700
+        dy = -8
+        while any(abs(px - x) < 150 and abs(py - (y + dy)) < 26 for px, py in placed):
+            dy += 26
+        placed.append((x, y + dy))
         P[pid] = {
             "n": name or pid, "s": station or "", "lat": lat, "lon": lon,
-            "dx": -12 if right else 12, "dy": -8,
+            "dx": -12 if right else 12, "dy": dy,
             "a": "end" if right else "start",
             "home": 1 if pid == "hotel" else 0,
         }
