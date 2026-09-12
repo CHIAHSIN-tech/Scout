@@ -34,6 +34,8 @@ RESERVED_PLACE_IDS = frozenset({"hotel", "airport", "station", "home"})
 EVENT_TYPES = frozenset({"shopping", "meal", "move", "sight", "service"})
 PLACE_KINDS = frozenset({"meal", "shopping", "sight", "service", "cafe", "queue"})
 LEG_MODES = frozenset({"subway", "bus", "taxi", "walk", "train", "air", "other"})
+# 訂位難度：沿用參考資料 rest.json 既有的四個值，不自創第五種。
+RESERVATION_DIFFICULTIES = frozenset({"walkin", "advance", "hard", "unknown"})
 
 # ── 欄位表 ────────────────────────────────────────────────────────────
 # 每個項目是 (欄位名, 型別 tuple, 是否必填)。None 值一律視為「沒給」。
@@ -53,6 +55,7 @@ TOP_LEVEL_FIELDS = [
     ("places", _LIST, False),
     ("events", _LIST, False),
     ("legs", _LIST, False),
+    ("days", _LIST, False),
     ("open_questions", _LIST, False),
     ("stations", _LIST, False),
     ("sections", _DICT, False),
@@ -116,7 +119,9 @@ PLACE_FIELDS = [
     ("reservation", _DICT, False),
     ("location", _DICT, False),
     ("queue_only", _BOOL, False),
-    ("alert", _STR, False),
+    # alert 允許純字串或 {text, source}——參考資料的 39 家裡有 4 家是後者，
+    # 把來源拆掉等於丟資訊，所以 schema 直接吃兩種形狀。
+    ("alert", (str, dict), False),
     ("sources", _LIST, False),
     ("notes", _STR, False),
     ("extra", _DICT, False),
@@ -149,6 +154,18 @@ LEG_FIELDS = [
     ("label_t", _NUM, False),
     ("label_dx", _NUM, False),
     ("label_dy", _NUM, False),
+]
+
+# 每天的標題與註記。渲染器要靠它做日標題、chips 與警示框；
+# check_schedule 要靠 sunset 驗「日落前 60 分抵達」那一類衝突。
+# 沒有這一層的話，日落時間只能靠呼叫端每次臨時傳，頁面上也印不出來。
+DAY_FIELDS = [
+    ("day", (int,), True),
+    ("title", _STR, False),
+    ("subtitle", _STR, False),
+    ("sunset", _STR, False),      # "HH:MM"，當地時間
+    ("chips", _LIST, False),      # 日標題下方的小標籤，純文字
+    ("warn", _STR, False),        # 警示框；有值才渲染
 ]
 
 OPEN_QUESTION_FIELDS = [
@@ -185,6 +202,7 @@ FIELD_TABLES = {
     "place": PLACE_FIELDS,
     "event": EVENT_FIELDS,
     "leg": LEG_FIELDS,
+    "day": DAY_FIELDS,
     "open_question": OPEN_QUESTION_FIELDS,
     "station": STATION_FIELDS,
     "map": MAP_FIELDS,
@@ -274,6 +292,16 @@ def validate_place(place: dict, label: str = "place") -> list[str]:
     kind = place.get("kind")
     if kind is not None and kind not in PLACE_KINDS:
         errs.append(f"{label}.kind 必須是 {sorted(PLACE_KINDS)} 之一，收到 {kind!r}")
+    alert = place.get("alert")
+    if isinstance(alert, dict) and "text" not in alert:
+        errs.append(f"{label}.alert 是物件時必須有 text 欄位")
+    resv = place.get("reservation")
+    if isinstance(resv, dict):
+        diff = resv.get("difficulty")
+        if diff is not None and diff not in RESERVATION_DIFFICULTIES:
+            errs.append(
+                f"{label}.reservation.difficulty 必須是 {sorted(RESERVATION_DIFFICULTIES)} 之一，收到 {diff!r}"
+            )
     hours = place.get("hours")
     if isinstance(hours, dict):
         sources = hours.get("sources")
@@ -394,6 +422,22 @@ def validate_trip(trip) -> list[str]:
             if not 1 <= day <= n_days:
                 errs.append(f"legs[{i}].day={day} 超出 1..{n_days}")
 
+    seen_days: set[int] = set()
+    for i, d in enumerate(trip.get("days") or []):
+        _check_fields(d, DAY_FIELDS, f"days[{i}]", errs)
+        if not isinstance(d, dict):
+            continue
+        n = d.get("day")
+        if isinstance(n, int) and not isinstance(n, bool):
+            if n in seen_days:
+                errs.append(f"days[{i}].day 重複：{n}")
+            seen_days.add(n)
+            if n_days > 0 and not 1 <= n <= n_days:
+                errs.append(f"days[{i}].day={n} 超出 1..{n_days}")
+        sunset = d.get("sunset")
+        if isinstance(sunset, str) and not TIME_RE.match(sunset):
+            errs.append(f"days[{i}].sunset 必須是 HH:MM，收到 {sunset!r}")
+
     q_ids: set[str] = set()
     for i, q in enumerate(trip.get("open_questions") or []):
         _check_fields(q, OPEN_QUESTION_FIELDS, f"open_questions[{i}]", errs)
@@ -443,6 +487,7 @@ def empty_trip(
         "places": [],
         "events": [],
         "legs": [],
+        "days": [],
         "open_questions": [],
         "stations": [],
         "sections": {},
