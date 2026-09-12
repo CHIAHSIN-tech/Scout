@@ -2,11 +2,26 @@
   "task": "spec-scout-trip-page",
   "branch": "feat/trip-page-and-cloudflare",
   "nodes": {
-    "N1": { "status": "done", "note": "contract：schema.py、目錄命名、render 簽章、tool-surface 快照" },
-    "N2": { "status": "pending", "note": "mcp travel 服務層" },
-    "N3": { "status": "pending", "note": "renderer" },
-    "N4": { "status": "pending", "note": "Cloudflare 遷移" },
-    "N5": { "status": "pending", "note": "唯讀對抗性驗證" }
+    "N1": {
+      "status": "done",
+      "note": "contract：schema.py、目錄命名、render 簽章、tool-surface 快照"
+    },
+    "N2": {
+      "status": "done",
+      "note": "mcp travel 服務層 ＋ 十個新工具 ＋ instructions"
+    },
+    "N3": {
+      "status": "done",
+      "note": "renderer ＋ 三支驗收腳本 ＋ web 列表"
+    },
+    "N4": {
+      "status": "done",
+      "note": "Cloudflare 遷移（拆除 Netlify 是最後一個 commit）"
+    },
+    "N5": {
+      "status": "done",
+      "note": "唯讀對抗性驗證：A1–A25 全 PASS"
+    }
   },
   "contract": {
     "render_signature": "scout_mcp.travel.page.render(trip: dict) -> str",
@@ -17,18 +32,84 @@
   },
   "baseline": {
     "commands": [
-      { "cmd": "node scripts/check-style.mjs", "exit": 0 },
-      { "cmd": "node scripts/check-exports.mjs", "exit": 0 },
-      { "cmd": "node scripts/check-pwa.mjs", "exit": 0 },
-      { "cmd": "node scripts/check-share.mjs", "exit": 0 },
-      { "cmd": "node scripts/check-ai-suggest.mjs", "exit": 0 },
-      { "cmd": "cd mcp-server && uv run pytest", "exit": 0, "detail": "79 passed" }
+      {
+        "cmd": "node scripts/check-style.mjs",
+        "exit": 0
+      },
+      {
+        "cmd": "node scripts/check-exports.mjs",
+        "exit": 0
+      },
+      {
+        "cmd": "node scripts/check-pwa.mjs",
+        "exit": 0
+      },
+      {
+        "cmd": "node scripts/check-share.mjs",
+        "exit": 0
+      },
+      {
+        "cmd": "node scripts/check-ai-suggest.mjs",
+        "exit": 0
+      },
+      {
+        "cmd": "cd mcp-server && uv run pytest",
+        "exit": 0,
+        "detail": "79 passed"
+      }
     ],
     "taken_at": "2026-09-12",
     "source": "ACCEPTANCE-trip-page.md（前一個 session 取得並已進版控）"
   },
-  "decisions": [],
-  "known_issues": [],
-  "handoffs": [],
-  "verdicts": []
+  "decisions": [
+    "D2 repo 是公開的 → trips/ 與 web/trips/ 都不進版控（與規格 Q2／Q3 不符）",
+    "D3 _redirects 用 308 不是規格寫的 200（wrangler dev 實測）",
+    "D4 compatibility_date 用 2026-07-15（本機 wrangler 支援的最新日期）",
+    "D5 A21 的 curl 要跟隨轉址（static assets 會把 /index.html 307 到 /）",
+    "D6 實跑改用 port 8790／8791（8788 被啟動失敗的 workerd 佔住，無法結束行程）",
+    "D7 N5 不外派 subagent（與 dev-habits 的規則衝突，改以原始輸出取代印象判斷）",
+    "D9 夜間動線的「步行範圍」判準用車站相同，不用 location.walk_min（語意不同）",
+    "D10 check-share.mjs 改指向 Worker（不改的話拆除後 A1 會 FAIL）"
+  ],
+  "known_issues": [
+    "K1 行程表目前不會跟著網站部署（D2 的代價）",
+    "K2 手機可讀性只驗溢位規則，沒驗可讀性（等 REVIEW.md 26–30）",
+    "K3 地圖標籤在地點密集處仍會擠",
+    "K4 自動待確認有噪音（開放街區／公園不該問營業時間）",
+    "K5 時間軸沒有「回旅館」收尾段（資料問題）",
+    "K8 沒有 CI，所有檢查都要人記得跑"
+  ],
+  "handoffs": [
+    {
+      "from": "Claude Code",
+      "to": "Chia",
+      "task": "Cloudflare 後台六步驟",
+      "inputs": "for-chia-cloudflare.md",
+      "acceptance_items_covered": [
+        "A20",
+        "A21",
+        "A22",
+        "A24"
+      ],
+      "status": "sent"
+    },
+    {
+      "from": "Claude Code",
+      "to": "Stanley",
+      "task": "repo 可見性拍板 ＋ REVIEW.md 26–30",
+      "inputs": "DECISIONS-trip-page.md D2、trips/2026-09-kr-seoul/REVIEW.md",
+      "acceptance_items_covered": [
+        "A16"
+      ],
+      "status": "sent"
+    }
+  ],
+  "verdicts": [
+    {
+      "items": "A1–A25",
+      "verdict": "PASS",
+      "evidence": "ACCEPTANCE-trip-page.md（含原始命令輸出）",
+      "note": "A16 是交付物非 gate：REVIEW.md 30 條，其中 26–30 留白等 Stanley"
+    }
+  ]
 }

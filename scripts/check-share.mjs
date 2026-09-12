@@ -1,15 +1,19 @@
-// check-share.mjs — 唯讀分享 function 的驗收（web/netlify/functions/share.js）。
+// check-share.mjs — 唯讀分享端點的驗收（`/api/share`，實作在 worker/index.js）。
 //
 //   node scripts/check-share.mjs
 //
-// 只用 Node 內建模組（本 repo 無 build step）。直接呼叫 handler，
-// 不需要 Netlify、不需要真的 Supabase——fetch 被替換成假的 PostgREST。
+// 只用 Node 內建模組。直接呼叫 Worker 的 fetch handler，
+// 不需要 Cloudflare、不需要真的 Supabase——fetch 被替換成假的 PostgREST。
 //
 // 驗的核心是「唯讀出口不能漏東西」：欄位白名單、只回未購、
 // 以及呼叫端無法透過 tag 參數插入額外的查詢條件。
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-const mod = require(new URL('../web/netlify/functions/share.js', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'));
+//
+// 2026-09-12（ADR-018）：原本測的是 web/netlify/functions/share.js，
+// 那支已隨遷移拆除。**斷言一條都沒改**，只換了被測的那層外殼——
+// 從 `exports.handler({httpMethod, queryStringParameters})`
+// 換成 `export default.fetch(new Request(url))`。
+
+const mod = (await import(new URL("../worker/index.js", import.meta.url).href)).default;
 
 const ROWS = [
   {id:1,name:'保溫瓶',price:1200,quantity:1,category:'生活',tag:'送禮-媽媽',note:'她說想要',link:'https://x',urgency:'need',
@@ -31,8 +35,14 @@ globalThis.fetch = async (url) => {
   return { ok:true, status:200, json: async () => rows, text: async () => JSON.stringify(rows) };
 };
 
-const call = (params, method='GET') =>
-  mod.handler({ httpMethod: method, queryStringParameters: params });
+// 把「查詢字串 + 方法」包成 Request 丟進 Worker，再把 Response 攤回原本的形狀，
+// 這樣下面每一條斷言都不用動。
+const call = async (params, method='GET') => {
+  const qs = new URLSearchParams(params).toString();
+  const res = await mod.fetch(new Request('https://scout.test/api/share' + (qs ? '?' + qs : ''),
+    { method }), {});
+  return { statusCode: res.status, body: await res.text() };
+};
 
 const checks = [];
 const ck = (name, cond, extra='') => checks.push({name, ok: !!cond, extra});
