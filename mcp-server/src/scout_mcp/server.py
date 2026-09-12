@@ -13,6 +13,7 @@ from mcp.server.mcpserver import MCPServer
 from .config import ConfigError, load_config
 from .instructions import SERVER_INSTRUCTIONS
 from .tools import register_tools
+from .travel.tools import register_travel_tools
 
 
 def _use_system_certificates() -> None:
@@ -50,6 +51,9 @@ def build_server() -> MCPServer:
         version="0.1.0",
     )
     register_tools(server, config)
+    # 旅程頁模組分開註冊：它寫本機檔案，不需要 Supabase 設定，
+    # 也不該讓既有那 8 個工具的名單被動到（見 travel/tools.py 的檔頭）。
+    register_travel_tools(server)
     return server
 
 
