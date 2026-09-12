@@ -1,0 +1,34 @@
+{
+  "task": "spec-scout-trip-page",
+  "branch": "feat/trip-page-and-cloudflare",
+  "nodes": {
+    "N1": { "status": "done", "note": "contract：schema.py、目錄命名、render 簽章、tool-surface 快照" },
+    "N2": { "status": "pending", "note": "mcp travel 服務層" },
+    "N3": { "status": "pending", "note": "renderer" },
+    "N4": { "status": "pending", "note": "Cloudflare 遷移" },
+    "N5": { "status": "pending", "note": "唯讀對抗性驗證" }
+  },
+  "contract": {
+    "render_signature": "scout_mcp.travel.page.render(trip: dict) -> str",
+    "schema_path": "mcp-server/src/scout_mcp/travel/schema.py",
+    "tool_surface_snapshot": "mcp-server/tests/fixtures/tool-surface-v1.json",
+    "dir_name_rule": "<YYYY>-<MM>-<ISO3166-1 alpha-2 lower>-<city slug>",
+    "page_slug_rule": "<dir_name>-<secrets.token_hex(3) 以上>"
+  },
+  "baseline": {
+    "commands": [
+      { "cmd": "node scripts/check-style.mjs", "exit": 0 },
+      { "cmd": "node scripts/check-exports.mjs", "exit": 0 },
+      { "cmd": "node scripts/check-pwa.mjs", "exit": 0 },
+      { "cmd": "node scripts/check-share.mjs", "exit": 0 },
+      { "cmd": "node scripts/check-ai-suggest.mjs", "exit": 0 },
+      { "cmd": "cd mcp-server && uv run pytest", "exit": 0, "detail": "79 passed" }
+    ],
+    "taken_at": "2026-09-12",
+    "source": "ACCEPTANCE-trip-page.md（前一個 session 取得並已進版控）"
+  },
+  "decisions": [],
+  "known_issues": [],
+  "handoffs": [],
+  "verdicts": []
+}
