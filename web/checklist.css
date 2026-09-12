@@ -426,3 +426,46 @@
 #panel-trip .as-name{ font-size: 14.5px; font-weight: 600; word-break: break-word; }
 #panel-trip .as-meta{ font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 #panel-trip .as-note{ font-size: 12px; color: var(--faint); margin-top: 3px; word-break: break-word; }
+
+/* ── 歷次行程表列表（web/trip-pages.js）──
+   行程 Tab 底部的入口，連到 build_trip_page 產出的單檔行程表。
+   顏色一律走上面的 token，不出現裸 hex（check-style.mjs 的 A2）。 */
+#panel-trip .tp-h{
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 .6rem;
+}
+#panel-trip .tp-empty{
+    margin-top: 1.5rem;
+    padding: .9rem 1rem;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--card-flex);
+    color: var(--muted);
+    font-size: .88rem;
+    line-height: 1.6;
+}
+#panel-trip .tp-list{ display: grid; gap: .5rem; }
+#panel-trip .tp-item{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .1rem .8rem;
+    padding: .7rem .9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+}
+#panel-trip .tp-item:hover{ border-color: var(--brand); }
+#panel-trip .tp-title{ font-weight: 700; font-size: .95rem; }
+#panel-trip .tp-meta{ grid-column: 1; font-size: .8rem; color: var(--muted); }
+#panel-trip .tp-date{
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    font-size: .8rem;
+    color: var(--faint);
+    white-space: nowrap;
+}

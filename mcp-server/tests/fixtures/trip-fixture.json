@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "trip": {
+    "title": "驗收用假旅程",
+    "country": "kr",
+    "country_name": "韓國",
+    "city": "Seoul",
+    "city_name": "首爾",
+    "start_date": "2026-09-21",
+    "end_date": "2026-09-23",
+    "party_size": 2,
+    "currency": "KRW",
+    "budget": { "per_person_per_meal": { "value": 2000, "currency": "TWD" } },
+    "notes": "這是驗收腳本與測試共用的假資料。店名與座標是真的，行程是編的。",
+    "page_slug": "2026-09-kr-seoul-abc123"
+  },
+  "flights": [
+    { "dir": "out", "date": "2026-09-21", "from": "TPE", "to": "ICN",
+      "dep": "10:30", "arr": "14:40", "locked": true },
+    { "dir": "back", "date": "2026-09-23", "from": "ICN", "to": "TPE",
+      "dep": "23:30", "arr": "01:00", "arr_next_day": true, "locked": true,
+      "note": "回程先確認是第 1 還是第 2 航廈。" }
+  ],
+  "lodging": [
+    { "name": "Oriens Hotel & Residences", "station": "Chungmuro",
+      "check_in": "2026-09-21", "check_out": "2026-09-23",
+      "address": "中區 삼일대로2길 50", "lat": 37.5612, "lon": 126.99,
+      "locked": true, "notes": "24 小時櫃台，可寄放行李。" }
+  ],
+  "days": [
+    { "day": 1, "title": "落地入住 → 明洞先逛", "subtitle": "明洞", "chips": ["輕鬆排"] },
+    { "day": 2, "title": "聖水 → 汝矣島", "subtitle": "聖水・汝矣島",
+      "sunset": "18:31", "chips": ["城東一日"], "warn": "百貨中秋前後會休，先查。" },
+    { "day": 3, "title": "光化門 → 回國", "subtitle": "光化門" }
+  ],
+  "places": [
+    {
+      "id": "central-reducer",
+      "name": "Central Reducer",
+      "name_local": "중앙감속기",
+      "kind": "meal",
+      "cuisine": ["中式義式融合"],
+      "area": "城東區・聖水",
+      "price_band": { "band": "₩₩", "note": "每人 ₩10,000–40,000" },
+      "hours": {
+        "sources": [
+          { "value": "12:00–15:00 / 17:30–21:00", "closed_days": [],
+            "url": "https://app.catchtable.co.kr/ct/shop/tyioop77", "fetched_at": "2026-09-11" }
+        ]
+      },
+      "reservation": { "required": true, "done": true, "difficulty": "advance",
+                       "url": "https://www.catchtable.net/shop/tyioop77" },
+      "location": { "address": "성동구 성수일로6길 7-1", "station": "Seongsu", "walk_min": 5,
+                    "lat": 37.5447, "lon": 127.0557,
+                    "map_url": "https://www.google.com/maps/search/?api=1&query=central+reducer" }
+    },
+    {
+      "id": "the-hyundai",
+      "name": "The Hyundai Seoul",
+      "kind": "shopping",
+      "area": "永登浦區・汝矣島",
+      "hours": { "sources": [] },
+      "location": { "station": "Yeouido", "walk_min": 0, "lat": 37.5255, "lon": 126.927 },
+      "notes": "5F 室內花園、各樓層快閃店。"
+    },
+    {
+      "id": "gwanghwamun-doughroom",
+      "name": "Doughroom 光化門",
+      "kind": "meal",
+      "cuisine": ["義式生麵"],
+      "area": "鍾路區・光化門",
+      "price_band": { "band": "₩₩", "note": "單點 ₩29,000–36,000" },
+      "hours": {
+        "sources": [
+          { "value": "11:30–21:00", "url": "https://example.invalid/a", "fetched_at": "2026-08-01" },
+          { "value": "12:00–20:00", "url": "https://example.invalid/b", "fetched_at": "2026-09-11" }
+        ]
+      },
+      "reservation": { "required": true, "done": false, "difficulty": "hard" },
+      "location": { "station": "Gwanghwamun", "walk_min": 3, "lat": 37.5755, "lon": 126.977 }
+    },
+    {
+      "id": "gisdeun",
+      "name": "Gisdeun 깃든",
+      "kind": "queue",
+      "queue_only": true,
+      "area": "江北區・彌阿",
+      "price_band": { "band": "₩" },
+      "hours": {
+        "sources": [
+          { "value": "11:00–22:30", "closed_days": ["sun"],
+            "url": "https://example.invalid/gisdeun" }
+        ]
+      },
+      "reservation": { "required": false, "done": false, "difficulty": "walkin" },
+      "location": { "station": "Miasageori", "walk_min": 3, "lat": 37.615, "lon": 127.032 },
+      "notes": "當天抽候位，不收訂位。"
+    },
+    {
+      "id": "myeongdong",
+      "name": "明洞商圈",
+      "kind": "shopping",
+      "area": "中區・明洞",
+      "hours": {
+        "sources": [ { "value": "10:00–22:00", "url": "https://example.invalid/md" } ]
+      },
+      "location": { "station": "Myeongdong", "walk_min": 5, "lat": 37.5636, "lon": 126.9827 }
+    }
+  ],
+  "events": [
+    { "id": "e1", "day": 1, "time": "17:20", "dur_min": 60, "type": "shopping",
+      "title": "明洞先逛一輪", "place_id": "myeongdong", "note": "從旅館走 5 分。" },
+    { "id": "e2", "day": 2, "time": "15:30", "dur_min": 90, "min_dur_min": 90, "type": "meal",
+      "title": "Central Reducer 下午茶時段", "place_id": "central-reducer", "locked": false },
+    { "id": "e3", "day": 2, "time": "18:00", "dur_min": 120, "type": "shopping",
+      "title": "The Hyundai Seoul", "place_id": "the-hyundai", "sunset_locked": true },
+    { "id": "e4", "day": 3, "time": "12:30", "dur_min": 65, "type": "meal",
+      "title": "Doughroom 午餐", "place_id": "gwanghwamun-doughroom", "locked": true }
+  ],
+  "legs": [
+    { "from": "central-reducer", "to": "the-hyundai", "day": 2, "mode": "subway",
+      "lines": ["2", "5"], "transfer_at": ["Wangsimni"], "min": 40 },
+    { "from": "the-hyundai", "to": "central-reducer", "day": 2, "mode": "subway",
+      "lines": ["5", "2"], "transfer_at": ["Wangsimni"], "min": 45 }
+  ],
+  "open_questions": [
+    { "id": "h1", "date": "2026-09-22", "what": "百貨中秋前後有沒有休館",
+      "why": "第 2 天下午整段排在那裡", "check_by": "2026-09-18",
+      "source_hint": "現代百貨官網公告" }
+  ],
+  "stations": [
+    { "en": "Chungmuro", "zh": "忠武路", "local": "충무로", "lines": ["3", "4"], "days": [1, 2, 3] },
+    { "en": "Seongsu", "zh": "聖水", "local": "성수", "lines": ["2"], "days": [2] }
+  ],
+  "sections": {
+    "predeparture": {
+      "title": "出發前",
+      "todos": ["換韓元", "開通網卡"],
+      "packing": ["雨傘", "轉接頭"]
+    }
+  },
+  "map": {}
+}

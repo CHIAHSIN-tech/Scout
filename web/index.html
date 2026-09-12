@@ -176,6 +176,11 @@
         <div id="ai-suggest-body"></div>
       </div>
     </div>
+
+    <!-- ── 歷次行程表（build_trip_page 的產出）──
+         讀靜態的 trips/index.json，不碰 Supabase、不依賴 config.js：
+         沒有設定檔的機器上，這份列表仍然顯示得出來。 -->
+    <div id="trip-pages"></div>
   </div><!-- /panel-trip -->
 
 </div><!-- /app-shell -->
@@ -190,6 +195,8 @@
 <!-- AI 生成行程的共用邏輯（問題清單 / prompt / 正規化），同樣排在 checklist.js 前面。 -->
 <script src="ai-suggest-core.js"></script>
 <script src="checklist.js"></script>
+<!-- 歷次行程表列表。純靜態，與 checklist.js 無相依，順序不重要。 -->
+<script src="trip-pages.js"></script>
 <!-- shell 最後載入：兩個 panel 的內容都就緒後再決定顯示哪一個 -->
 <script src="shell.js"></script>
 <!-- service worker 只為了「可安裝」，不做快取（見 sw.js）。
