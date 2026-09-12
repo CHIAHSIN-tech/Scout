@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import re
 
-from .schema import TIME_RE, day_count, day_date
+from .schema import HOURS_IRRELEVANT_KINDS, TIME_RE, day_count, day_date
 
 # 日落前多久必須抵達（分鐘）。參考產品的規則。
 SUNSET_LEAD_MIN = 60
@@ -161,6 +161,9 @@ def check_schedule(
         pid = e.get("place_id")
         place = places.get(pid)
         if place is None:
+            continue
+        # 開放街區、公園沒有營業時間——既不該報衝突，也不該進 unverified
+        if place.get("kind") in HOURS_IRRELEVANT_KINDS:
             continue
         start = to_min(e.get("time"))
         if start is None:

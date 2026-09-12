@@ -68,6 +68,44 @@ def test_auto_question_appears_on_the_page(trip):
     assert "還沒查證" in html
 
 
+def test_open_air_areas_are_not_asked_about_hours(trip):
+    """`kind: "area"`（開放街區、公園）沒有營業時間可查，問了也沒有答案。
+
+    首爾首跑產生 17 筆自動待確認，其中 4 筆是「明洞商圈」「弘大、合井一帶」這種
+    開放街區——規則本身沒錯，但比例不對會把真正重要的那兩筆稀釋掉
+    （REVIEW.md 第 25 條）。
+    """
+    t = copy.deepcopy(trip)
+    for p in t["places"]:
+        if p["id"] == "the-hyundai":
+            p["kind"] = "area"          # 假裝它是開放街區
+    ids = {q["id"] for q in derive_open_questions(t)}
+    assert "auto-hours-the-hyundai" not in ids
+
+
+def test_open_air_areas_print_no_hours_line_at_all(trip):
+    """area 連「尚未查證」都不該印——那會變成一個永遠查不完的假待辦。"""
+    t = copy.deepcopy(trip)
+    for p in t["places"]:
+        if p["id"] == "the-hyundai":
+            p["kind"] = "area"
+    html = render(t)
+    assert "營業時間尚未查證" not in html
+    # 但它仍然要出現在頁面上，只是沒有營業時間那一行
+    assert "The Hyundai Seoul" in html
+
+
+def test_area_hours_are_not_checked_by_the_scheduler(trip):
+    """排程檢查也不該把 area 列進 unverified。"""
+    from scout_mcp.travel.schedule import check_schedule
+    t = copy.deepcopy(trip)
+    for p in t["places"]:
+        if p["id"] == "the-hyundai":
+            p["kind"] = "area"
+    r = check_schedule(t)
+    assert not any(u.get("place_id") == "the-hyundai" for u in r["unverified"])
+
+
 def test_only_places_actually_scheduled_are_asked_about(trip):
     """候補清單上的店不會每一家都變成待確認——那會把清單淹掉。"""
     ids = {q["id"] for q in derive_open_questions(trip)}

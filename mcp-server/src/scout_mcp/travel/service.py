@@ -22,6 +22,7 @@ from . import paths
 from .schema import (
     DAY_FIELDS,
     EVENT_FIELDS,
+    HOURS_IRRELEVANT_KINDS,
     LEG_FIELDS,
     OPEN_QUESTION_FIELDS,
     PLACE_FIELDS,
@@ -285,6 +286,9 @@ def derive_open_questions(trip: dict) -> list[dict]:
         sources = ((p.get("hours") or {}).get("sources")) or []
         # 只有真的排進行程的店才問——候補清單上一堆店，全部問會把清單淹掉
         if p["id"] not in used_place_ids:
+            continue
+        # 開放街區、公園沒有營業時間可查，問了也沒有答案，只會稀釋清單
+        if p.get("kind") in HOURS_IRRELEVANT_KINDS:
             continue
         if not sources:
             out.append({

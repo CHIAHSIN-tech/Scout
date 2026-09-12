@@ -22,7 +22,7 @@ from __future__ import annotations
 import html
 import json
 
-from ..schema import day_count, day_date
+from ..schema import HOURS_IRRELEVANT_KINDS, day_count, day_date
 from .css import CSS
 from .js import JS
 
@@ -120,7 +120,13 @@ def _notes_html(notes, limit=140):
 
 def _hours_html(place):
     """營業時間。三種狀態各有不同輸出，**留白不是其中之一**——
-    留白會被讀成「沒有營業時間限制」，那正是我們要避免的誤導。"""
+    留白會被讀成「沒有營業時間限制」，那正是我們要避免的誤導。
+
+    唯一的例外是 `kind: "area"`（開放街區、公園）：它本來就沒有營業時間，
+    印「尚未查證」會變成一個永遠查不完的假待辦。
+    """
+    if place.get("kind") in HOURS_IRRELEVANT_KINDS:
+        return ""
     sources = ((place.get("hours") or {}).get("sources")) or []
     values, urls = [], []
     for s in sources:

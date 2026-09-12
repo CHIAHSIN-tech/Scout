@@ -6,6 +6,24 @@
 
 ---
 
+## 2026-09-13 複驗（換 session 之後）
+
+全部重跑一次，**這次用規格原本指定的 port 8788**（K9 的佔埠問題換 session 就沒了），
+所以 `DECISIONS-trip-page.md` 的 D6 那條偏離**已經不存在**。
+
+```
+九支腳本（含四支新的）      全部 exit 0
+check-cf-migration --live   6 項通過（port 8788，非 8790）
+check-cf-migration --worker 14 項通過
+check-cf-migration --history 7 項通過
+pytest                      142 passed（上一版 139，新增 3 條 area 的測試）
+```
+
+同時修掉 `KNOWN_ISSUES` 的 K4、K5、K9，以及 `REVIEW.md` 的第 12、14、25 條——
+那三條原本是標成 `WRONG` 的首跑發現，現在是 `OK`。
+
+---
+
 ## A1–A25 驗收表
 
 **結果：25 項全部 PASS。**

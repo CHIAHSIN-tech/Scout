@@ -32,7 +32,13 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 RESERVED_PLACE_IDS = frozenset({"hotel", "airport", "station", "home"})
 
 EVENT_TYPES = frozenset({"shopping", "meal", "move", "sight", "service"})
-PLACE_KINDS = frozenset({"meal", "shopping", "sight", "service", "cafe", "queue"})
+PLACE_KINDS = frozenset({"meal", "shopping", "sight", "service", "cafe", "queue", "area"})
+# `area` = 開放街區、公園、河濱這種**沒有門、沒有營業時間**的地點。
+# 為什麼需要它：沒有這個分類的話，「明洞商圈」「弘大、合井一帶」「石村湖」
+# 都會被當成「營業時間還沒查證」，自動產生一堆問不出答案的待確認，
+# 把真正重要的那幾筆稀釋掉（首爾首跑 17 筆裡有 4 筆是這樣，REVIEW.md 第 25 條）。
+# 標成 area 之後：不自動發問、頁面不印「尚未查證」、排程檢查也不檢查它的營業時間。
+HOURS_IRRELEVANT_KINDS = frozenset({"area"})
 LEG_MODES = frozenset({"subway", "bus", "taxi", "walk", "train", "air", "other"})
 # 訂位難度：沿用參考資料 rest.json 既有的四個值，不自創第五種。
 RESERVATION_DIFFICULTIES = frozenset({"walkin", "advance", "hard", "unknown"})
