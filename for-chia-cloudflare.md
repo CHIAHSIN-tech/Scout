@@ -30,10 +30,11 @@
 沒有部署、沒有動 DNS**。Netlify 站台照常運作。你按照下面做完，兩邊才會並存；
 確認 Cloudflare 那邊真的好了，才輪到關掉 Netlify。
 
-**4. 行程表要登入才看得到，購物分享連結不用。** 見步驟 4.5。
-而且**行程表不會出現在 GitHub 上、也不會走你的自動部署**——它含訂位編號和旅館地址，
-而 repo 是公開的。那些檔案由 Stanley 從自己電腦 `npx wrangler deploy` 上去。
-你負責的靜態網站與 API 一切照常。
+**4. 有一件事只有你做得到：把 repo 轉成私有。** 見步驟 0.5。
+網站照樣公開部署，行程表另外用 Google 登入擋（步驟 4.5）；
+但 repo 公開的話，行程資料在 GitHub 上等於直接攤開，登入擋不到那裡。
+**Stanley 沒有這個 repo 的 admin 權限，改不了可見性。**
+在你改之前，行程資料不會進版控。
 
 ---
 
@@ -58,6 +59,28 @@ Scout 有一支叫 `keepalive` 的排程，每週一、四各跑一次，去戳�
 - [ ] 你有一個 **Cloudflare 帳號**（免費方案就夠）。用**個人帳號，不要用公司帳號**
       （這是 Scout 一直以來的紀律，Netlify 和 Supabase 也是）。
 - [ ] 你電腦上的 Scout repo 已經 `git pull` 到最新，根目錄看得到 `wrangler.toml` 和 `worker/` 資料夾。
+
+### 步驟 0.5：把 Scout repo 轉成私有 ⚠️ **只有你能做**
+
+2026-09-12 Stanley 決定：**網站照樣公開部署，但 repo 不要公開。**
+
+為什麼：行程表的資料（`trips/*/trip.json`）含訂位編號、旅館地址、班機時刻。
+網站那邊有 Google 登入擋著（步驟 4.5），但**那擋不到 GitHub**——
+repo 公開的話，那些檔案在 github.com 上任何人都讀得到，而且一旦進了 git 歷史就拿不掉。
+
+**這件事只有你做得到。** Stanley 在這個 repo 只有 push 權限，沒有 admin，改不了可見性。
+在你改之前，Stanley 那邊不會把旅程資料加進版控。
+
+1. GitHub → `CHIAHSIN-tech/Scout` → **Settings** → 最下面 **Danger Zone**
+   → **Change repository visibility** → **Make private**。
+2. 改完跟 Stanley 說一聲，他會把旅程資料加進版控（兩行指令的事）。
+
+**怎麼知道成功了：** repo 頁面標題旁邊從 `Public` 變成 `Private`。
+
+**可能的副作用：** 你的 Netlify（以及之後的 Cloudflare）是透過 GitHub App 讀這個 repo 的。
+轉私有之後如果部署開始出現 "repository not found"，就到
+GitHub → Settings → Applications → 那個 App → 把 `Scout` 重新授權一次。
+通常不會發生，但發生了就是這個原因。
 
 ### 步驟 1：在 Cloudflare 建一個 Worker，接上 GitHub
 

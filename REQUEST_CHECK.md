@@ -29,8 +29,8 @@
 
 | 原始要求 | 為什麼沒有 | 影響 |
 |---|---|---|
-| **B1. 「建置產物要不要放上網？**要。寫進 `web/trips/`，跟著 Scout 一起部署」（INTERVIEW Q3） | repo 是**公開的**（規格 Q2 的前提「不公開」經查證為誤）。`trip.json` 含訂位編號、旅館地址、班機時刻，所以 `trips/` 與 `web/trips/` 都擋在版控外 | **行程表目前不會跟著網站部署。** 機制（6 碼亂碼路徑）做好了，但沒有東西可部署。解法見 `DECISIONS-trip-page.md` D2 |
-| **B2. 「`trips/` 要不要進版控？**要」（INTERVIEW Q2） | 同上 | 旅程資料只在執行者的機器上，換機器要自己搬 |
+| **B1. 「建置產物要不要放上網？**要。寫進 `web/trips/`，跟著 Scout 一起部署」（INTERVIEW Q3） | repo 是**公開的**（規格 Q2 的前提「不公開」經查證為誤）。Stanley 已決定 **repo 轉私有**（D13 選項 B），但**他沒有 admin 權限，要 Chia 執行** | **目前**行程表不會跟著部署。Chia 轉私有之後刪掉 `.gitignore` 那段就恢復規格原設計 |
+| **B2. 「`trips/` 要不要進版控？**要」（INTERVIEW Q2） | 同上——決定要進，卡在 repo 還沒轉私有。**順序不能反**：公開時進版控，推上去就進 git 歷史拿不回來 | 旅程資料暫時只在執行者的機器上 |
 | **B3. Cloudflare 帳號連上 repo、設 secret、停用 Netlify 站台** | 規格 BOUNDS 明列為外部相依，本次「只寫設定檔，不進任何供應商後台」 | 線上仍然是 Netlify。步驟寫在 `for-chia-cloudflare.md` |
 | **B4. A16 的人工複核** | 需要 Stanley 本人在真手機上看過 | `REVIEW.md` 前 25 條已完成（比對參考產品），第 26–30 條留白 |
 | **B5. 規格 A21 的 `curl -sf .../index.html`** | Workers static assets 預設把 `/index.html` 307 轉到 `/`，`curl -sf` 不跟隨轉址 | 改用會跟隨的 `fetch` 並額外斷言 `GET /` 回 200（更強）。理由 `DECISIONS-trip-page.md` D5 |
@@ -67,7 +67,13 @@
 
 ## 四、一句話結論
 
-**兩件事都做完了，25 個 A-item 全 PASS，但有一件事與原始請求不同且必須由 Stanley 拍板：
-repo 是公開的，所以旅程資料與行程表暫時都不進版控、不部署。**
+**兩件事都做完了，25 個 A-item 全 PASS。**
+
+唯一與原始請求不同的地方已經有決議了：**repo 轉私有、旅程資料進版控、
+網站照樣公開部署、行程表另外用 Google SSO 擋**（D13 選項 B）。
+**但它卡在一個 Stanley 做不到的動作**——改 repo 可見性需要 admin，
+他在 `CHIAHSIN-tech/Scout` 只有 push。**要 Chia 按一下**
+（`for-chia-cloudflare.md` 步驟 0.5），之後刪掉 `.gitignore` 兩段就回到規格原設計。
+
 其餘差異都是「規格與現實不符、以實測為準」的小修正，理由逐條寫在
 `DECISIONS-trip-page.md`。

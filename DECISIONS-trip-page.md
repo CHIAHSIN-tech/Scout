@@ -194,32 +194,59 @@ schema 沒有「到旅館的步行分鐘數」這個欄位，而**憑既有欄�
 
 ---
 
-## D13. 🔵 行程表改走 Google SSO（Cloudflare Access），repo 維持公開
+## D13. 🔵 行程表走 Google SSO ＋ **repo 轉私有**（選項 B）——卡在 Chia
 
-**變更來源：** 2026-09-12 Stanley 在 review 介面時決定：「那我們公開，但是藏在 Google
-登入後面好了，做 SSO」。這**取代** D2 的「先擋住、之後再議」的暫定狀態。
+**變更來源（兩次，同一天）：**
+1. 2026-09-12 Stanley 在 review 介面時先說「那我們公開，但是藏在 Google 登入後面好了，做 SSO」。
+2. 我指出 SSO 保護不到公開的 GitHub repo，給了 A／B 兩條路。Stanley 回：
+   **「那就部署公開，repo 不要公開，這樣 OK 的，做 B」。**
+
+所以最終決定是 **B**：**網站公開部署、行程表以 SSO 擋、repo 轉私有、`trips/` 進版控。**
+這**取代** D2 的暫定狀態，也取代本條稍早採用的 A。
 
 **查證過的前提（2026-09-12，Cloudflare 官方文件）：**
-Access 可以掛在 **`workers.dev` 的主機名 ＋ 單一路徑**上，**不需要自訂網域**。
-所以規格 NON-GOALS 的「不改網域、不設自訂網域、不動 DNS」仍然成立。
+Access 可以掛在 **`workers.dev` 的主機名 ＋ 單一路徑**（`/trips/*`）上，
+**不需要自訂網域**，所以 NON-GOALS 的「不改網域、不動 DNS」仍然成立。
 
-**卡在什麼：** SSO 保護的是**部署出去的網站**，保護不到**公開的 GitHub repo**。
-repo 公開的話，`trip.json` 進了版控就等於直接攤在 github.com 上，
-而且進了 git 歷史拿不掉。所以「公開 repo ＋ SSO」只保護到一半。
+### 🚧 為什麼還沒做：Stanley 沒有權限
 
-**兩個補完的方向，各問了一次：**
+```
+$ gh api repos/CHIAHSIN-tech/Scout --jq '{private, permissions}'
+{"private": false,
+ "permissions": {"admin": false, "maintain": false, "pull": true, "push": true, "triage": true}}
+```
 
-- **A：`trips/` 與 `web/trips/` 繼續不進版控**，行程表由 Stanley 從本機
-  `npx wrangler deploy` 直接上傳，再用 Access 擋 `/trips/*`。
-  代價：行程表**不能走 Chia 的 GitHub 自動部署**，每次要手動 deploy。
-- **B：repo 轉私有**，`trips/` 進版控，一樣加 Access。
-  代價：Chia 的 Cloudflare 要有私有 repo 的存取權。
+repo 在 **Chia 名下**（ADR-014 把所有權轉給她）。改可見性需要 **admin**，
+Stanley 只有 push。**只有 Chia 能把它轉成私有。**
 
-**假設了什麼：** 語音問了一次，120 秒無回應，**採用 A**。
-理由與 D2 同一條：A 可逆（隨時可以改成 B），B 不可逆（資料一旦進公開 repo 的歷史就拿不掉）。
+**因此本次執行到此為止，`trips/` 與 `web/trips/` 仍然擋在版控外。**
+這不是選了 A，是 B 的前置還沒完成——**順序不能反**：
+repo 還公開的時候把 `trip.json` 進版控，一旦被推上去就進了 git 歷史，拿不回來
+（2026-09-11 已有個人 email 誤入公開 repo 的前例）。
 
-**怎麼回頭改：** 要改成 B——repo 轉私有，刪掉 `.gitignore` 裡 `trips/` 與 `web/trips/`
-那兩段，`git add` 進去，自動部署就會把行程表一起帶上去。Access 的設定不用動。
+### Chia 做完之後，翻過去只有兩步
 
-**本次做了什麼：** 只有文件。Access 的設定是 Cloudflare 後台的步驟，
-依規格 BOUNDS「不在 Cloudflare 後台操作」，寫進 `for-chia-cloudflare.md` 步驟 4.5。
+```bash
+# 1. 確認真的私有了（回 true 才能往下）
+gh api repos/CHIAHSIN-tech/Scout --jq .private
+
+# 2. 刪掉 .gitignore 最後那兩段（trips/ 與 web/trips/），然後
+git add .gitignore trips/ web/trips/
+git commit -m "feat(travel): repo 轉私有後，旅程資料與行程表進版控（ADR-019 / D13 選項 B）"
+```
+
+翻過去之後：
+- 行程表**可以走 Chia 的 GitHub 自動部署**，不必有人手動 `wrangler deploy`。
+- 多機同步正常（換電腦 `git pull` 就有旅程資料）。
+- `KNOWN_ISSUES-trip-page.md` 的 K1 就解掉了。
+
+### 轉私有的連帶影響（要先讓 Chia 知道）
+
+- **她的 Netlify 與之後的 Cloudflare Workers Builds 都要能存取私有 repo。**
+  GitHub App 通常已經有權限，但若部署開始出現 "repository not found"，
+  就是要回 GitHub 的 Applications 設定把該 repo 重新授權。
+- repo 一私有，**沒有被加為協作者的人就完全看不到**——目前只有她和 Stanley，不受影響。
+
+**怎麼回頭改：** 要退回 A（repo 維持公開、行程表手動 deploy），
+就是不要動 `.gitignore`，並在 `for-chia-cloudflare.md` 拿掉步驟 0.5。
+Access 的設定兩種都要，不用改。

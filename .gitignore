@@ -39,12 +39,19 @@ Thumbs.db
 .mcp.json
 mcp-server/.env
 
-# 旅程資料（暫時性，待 repo 可見性決定後再議）
-# 規格 specs/spec-scout-trip-page.md 的 Q2 假設「repo 不公開」，但實測 private=false。
-# trip.json 含 booking_ref / 旅館地址 / 班機時刻，先不進版控。
-# 若 repo 轉回私有，把這幾行刪掉即可。
+# ── 旅程資料：等 repo 轉私有就把這一整段刪掉 ──
+#
+# 已決定要進版控（DECISIONS-trip-page.md 的 D13 選項 B），**但前置還沒完成**：
+# repo 目前是公開的（gh api repos/CHIAHSIN-tech/Scout --jq .private → false），
+# 而 trip.json 含 booking_ref／旅館地址／班機時刻。
+# 順序不能反——公開時進版控，一旦推上去就進 git 歷史，拿不回來。
+#
+# 改可見性需要 admin，Stanley 只有 push，**只有 Chia 做得到**
+# （for-chia-cloudflare.md 步驟 0.5）。
+#
+# 她改完之後：確認 `gh api repos/CHIAHSIN-tech/Scout --jq .private` 回 true，
+# 然後刪掉這一整段、`git add trips/ web/trips/`，就完成了。
 trips/
-# web/trips/ 是 build_trip_page 的產出，內容與 trip.json 相同（只是變成 HTML）。
-# trips/ 擋著而這裡不擋，等於從後門把同一份資料推上公開 repo，所以一起擋。
-# 代價寫在 DECISIONS-trip-page.md：這表示行程表目前**不會跟著網站部署**。
+# build_trip_page 的產出，內容與 trip.json 相同（只是變成 HTML）。
+# 只擋 trips/ 而不擋這裡，等於從後門把同一份資料推上去，所以一起擋、一起放。
 web/trips/

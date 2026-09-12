@@ -62,17 +62,18 @@
     "source": "ACCEPTANCE-trip-page.md（前一個 session 取得並已進版控）"
   },
   "decisions": [
-    "D2 repo 是公開的 → trips/ 與 web/trips/ 都不進版控（與規格 Q2／Q3 不符）",
     "D3 _redirects 用 308 不是規格寫的 200（wrangler dev 實測）",
     "D4 compatibility_date 用 2026-07-15（本機 wrangler 支援的最新日期）",
     "D5 A21 的 curl 要跟隨轉址（static assets 會把 /index.html 307 到 /）",
     "D6 實跑改用 port 8790／8791（8788 被啟動失敗的 workerd 佔住，無法結束行程）",
     "D7 N5 不外派 subagent（與 dev-habits 的規則衝突，改以原始輸出取代印象判斷）",
     "D9 夜間動線的「步行範圍」判準用車站相同，不用 location.walk_min（語意不同）",
-    "D10 check-share.mjs 改指向 Worker（不改的話拆除後 A1 會 FAIL）"
+    "D10 check-share.mjs 改指向 Worker（不改的話拆除後 A1 會 FAIL）",
+    "D12 A24 的『拆除是最後一個 commit』改成驗本意（原寫法遷移後任何 commit 都會讓它永久變紅）",
+    "D13 選項 B：repo 轉私有、trips/ 進版控、網站公開部署、行程表以 Cloudflare Access（Google SSO）擋 /trips/*"
   ],
   "known_issues": [
-    "K1 行程表目前不會跟著網站部署（D2 的代價）",
+    "K1 行程表尚未進版控／尚未部署——D13 選項 B 的前置（repo 轉私有）只有 Chia 做得到",
     "K2 手機可讀性只驗溢位規則，沒驗可讀性（等 REVIEW.md 26–30）",
     "K3 地圖標籤在地點密集處仍會擠",
     "K4 自動待確認有噪音（開放街區／公園不該問營業時間）",
@@ -83,7 +84,19 @@
     {
       "from": "Claude Code",
       "to": "Chia",
-      "task": "Cloudflare 後台六步驟",
+      "task": "把 CHIAHSIN-tech/Scout 轉成私有（Stanley 無 admin，只有她做得到）",
+      "inputs": "for-chia-cloudflare.md 步驟 0.5",
+      "acceptance_items_covered": [
+        "A6",
+        "A15"
+      ],
+      "status": "sent",
+      "blocking": true
+    },
+    {
+      "from": "Claude Code",
+      "to": "Chia",
+      "task": "Cloudflare 後台步驟 1–6，含 Access 擋 /trips/*",
       "inputs": "for-chia-cloudflare.md",
       "acceptance_items_covered": [
         "A20",
@@ -96,8 +109,8 @@
     {
       "from": "Claude Code",
       "to": "Stanley",
-      "task": "repo 可見性拍板 ＋ REVIEW.md 26–30",
-      "inputs": "DECISIONS-trip-page.md D2、trips/2026-09-kr-seoul/REVIEW.md",
+      "task": "Chia 轉私有之後：刪 .gitignore 兩段、git add trips/ web/trips/；另外 REVIEW.md 26–30",
+      "inputs": "DECISIONS-trip-page.md D13、trips/2026-09-kr-seoul/REVIEW.md",
       "acceptance_items_covered": [
         "A16"
       ],

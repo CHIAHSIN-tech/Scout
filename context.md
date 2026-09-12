@@ -1010,8 +1010,10 @@ Stanley 在 review 介面時決定，行程表要登入才看得到，**購物�
 後者是刻意要給家人隨手打開的，加登入等於把它廢掉。
 查證結果：Access 可掛在 `workers.dev` 的主機名 ＋ 單一路徑（`/trips/*`）上，
 **不需要自訂網域**，所以 NON-GOALS 的「不動 DNS」仍然成立。
-但 SSO 保護不到公開的 GitHub repo，因此 `trips/` 與 `web/trips/` 仍不進版控，
-行程表由本機 `wrangler deploy` 直接上傳（詳見 `DECISIONS-trip-page.md` D13）。
+SSO 保護不到公開的 GitHub repo，Stanley 因此進一步決定 **repo 轉私有**——
+網站照樣公開部署，只有原始碼與旅程資料不公開（`DECISIONS-trip-page.md` D13 選項 B）。
+⚠️ **尚未執行：改可見性需要 admin，Stanley 在這個 repo 只有 push，只有 Chia 做得到。**
+在她改完之前，`trips/` 與 `web/trips/` 仍擋在版控外。
 
 **分歧與轉折紀錄:**
 規格草案原本寫 `web/_redirects` 用 `200`（代理）。本機 `wrangler dev` 實測**不行**：
@@ -1064,13 +1066,14 @@ Workers static assets 的 200 是代理，而代理目標必須是靜態資產�
 - 正面：改一處多處一起改；每趟一份、格式一致、可比對；離線單檔可以存到手機
 - 正面：不動既有 Supabase 的任何欄位，兩人每天在用的東西零風險
 - 負面：**行程頁的資料只在本機**，網頁那邊看不到（只看得到建置好的 HTML）
-- 負面：`trip.json` 含 `booking_ref`、旅館地址、班機時刻。repo 是**公開的**
+- 負面：`trip.json` 含 `booking_ref`、旅館地址、班機時刻。repo 目前是**公開的**
   （2026-09-11、09-12 兩次以未登入 API 查證 `private=false`），
-  所以 `trips/` 與 `web/trips/` 目前都在 `.gitignore` 裡——
-  這表示**行程表暫時不會跟著網站部署**，與規格 Q3 的原始設計不同。
-  詳見 `DECISIONS-trip-page.md`
-- 需要後續處理：repo 可見性由 Stanley 決定。轉私有就把那兩行 ignore 刪掉；
-  維持公開就得另找部署位置（或接受行程表只在本機）
+  所以 `trips/` 與 `web/trips/` 暫時都在 `.gitignore` 裡——
+  這表示**行程表暫時不會跟著網站部署**，與規格 Q3 的原始設計不同
+- 需要後續處理：**Stanley 已決定 repo 轉私有（D13 選項 B），但他沒有 admin 權限，
+  要 Chia 執行**（`for-chia-cloudflare.md` 步驟 0.5）。她改完之後刪掉那兩段 ignore、
+  `git add trips/ web/trips/`，就回到規格 Q2／Q3 的原始設計；
+  行程表也就能跟著自動部署走。**順序不能反**——公開時進版控，推上去就進歷史了
 
 **分歧與轉折紀錄:**
 規格 INTERVIEW 的 Q2 假設「repo 僅 Stanley 與 Chia 使用、不公開，`trip.json` 可安全進版控」。
