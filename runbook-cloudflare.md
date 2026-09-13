@@ -9,6 +9,26 @@
 
 ---
 
+## 進度（2026-09-13 更新）
+
+| 步驟 | 狀態 |
+|---|---|
+| 1. 本機驗證 | ✅ 六項全過（port 8788） |
+| 2. 部署 | ✅ **https://scout.nailbook.workers.dev** |
+| 3. 確認線上是新版 | ✅ 兩個 Tab 都讀得到資料、舊網址轉址通、`/api/*` 正常 |
+| 4. 排程 | ✅ deploy 輸出含 `schedule: 17 3 * * 1,4` |
+| **5. Google 登入（Access）** | ⬜ **只剩這個要你做**，見下面 |
+| 6. AI 金鑰 | ⬜ 可跳過 |
+| 7. 重發分享連結 | ⬜ 等你決定什麼時候切 |
+| 8. 叫 Chia 關 Netlify | ⬜ 要先跨過一次排程日 |
+
+> **⚠️ 第一次部署刻意排除了行程表。** `web/.assetsignore` 裡有一行 `trips/`。
+> 理由：deploy 會上傳整個 `web/`，而 Access 必須綁主機名、**要先有網站才設得起來**。
+> 不排除的話，行程表會在登入保護生效前先公開一段時間。
+> **你設完步驟 5 之後**：刪掉 `web/.assetsignore` 的 `trips/` 那一行，再 `npx wrangler deploy` 一次。
+
+---
+
 ## 開始前
 
 - [ ] 用**個人** Cloudflare 帳號登入。不要用公司帳號（`context.md` §6.6 的紀律）。
@@ -44,13 +64,13 @@ npx wrangler deploy
 
 第一次會叫你在瀏覽器授權，跟著走就好。
 
-**怎麼知道成功了：** 最後印出 `https://scout.<你的帳號>.workers.dev`。
+**怎麼知道成功了：** 最後印出網址。實際是 **https://scout.nailbook.workers.dev**。
 
 ## 3. 確認線上是新版 ⚠️ 這步不能跳
 
 ```bash
-curl -s https://scout.<你的帳號>.workers.dev/ | grep -c 'panel-trip'
-curl -s 'https://scout.<你的帳號>.workers.dev/api/share?tag=__nonexistent__'
+curl -s https://scout.nailbook.workers.dev/ | grep -c 'panel-trip'
+curl -s 'https://scout.nailbook.workers.dev/api/share?tag=__nonexistent__'
 ```
 
 - 第一條要回 `1`。
@@ -73,7 +93,7 @@ Cloudflare 後台 → 你的 Worker → **Settings** → **Trigger Events**，
 **只擋 `/trips/*`。** 整個網域都擋的話，家人的購物分享連結會一起死。
 
 1. **Zero Trust** → **Access** → **Applications** → **Add an application** → **Self-hosted**
-2. Application domain：`scout.<你的帳號>.workers.dev`，Path：`trips/*`
+2. Application domain：`scout.nailbook.workers.dev`，Path：`trips/*`
 3. **Add a policy** → Allow → Include **Emails** → 你和 Chia 的 Google 帳號
 4. Login methods 留 Google（One-time PIN 可以一起留當備援）
 
@@ -99,7 +119,7 @@ npx wrangler secret put GEMINI_API_KEY
 
 ## 7. 重發家人的分享連結
 
-網址從 `shoppingtool.netlify.app` 變成 `scout.<帳號>.workers.dev`，舊連結會死。
+網址從 `shoppingtool.netlify.app` 變成 `scout.nailbook.workers.dev`，舊連結會死。
 
 產生方式：購物 Tab 選一個「情境」→ 按分享，連結自動複製
 （格式是 `/share.html?list=<情境標籤>`）。

@@ -28,6 +28,9 @@
 
 ---
 
+> **2026-09-13 更新：Cloudflare 那邊 Stanley 已經部署好了**，
+> 網址是 **https://scout.nailbook.workers.dev**。下面三件事仍然只有你做得到。
+
 ## 三件事
 
 ### 1. 把 Scout repo 轉回 Stanley

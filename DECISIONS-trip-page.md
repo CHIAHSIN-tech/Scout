@@ -252,3 +252,40 @@ git commit -m "feat(travel): repo 轉私有後，旅程資料與行程表進版�
 **怎麼回頭改：** 要退回 A（repo 維持公開、行程表手動 deploy），
 就是不要動 `.gitignore`，並在 `for-chia-cloudflare.md` 拿掉步驟 0.5。
 Access 的設定兩種都要，不用改。
+
+
+---
+
+## D14. 第一次部署用 `.assetsignore` 排除行程表
+
+**卡在什麼：** Stanley 說「我能做的先全部幫我做吧」，部署是他清單上的一項，
+而 wrangler 的 OAuth 本來就登著（`stanley.luke.tw@gmail.com`），所以技術上做得到。
+但 `wrangler deploy` 上傳的是整個 `[assets] directory`（`web/`），
+其中 `web/trips/<page_slug>/index.html` 含訂位編號、旅館地址、班機時刻。
+
+而 **Cloudflare Access 要綁主機名，必須先有網站才設得起來**——
+這是一個無法迴避的順序問題：直接部署的話，行程表會在登入保護生效前先公開一段時間，
+只靠 6 碼路徑擋。
+
+**假設了什麼：** 語音問了一次（先只上 app 還是全部一次上），120 秒無回應，
+**採用先只上 app**。理由與 D2／D13 同一條：這個方向可逆（刪一行再 deploy 一次就補上），
+反過來不可逆（資料一旦被抓走就收不回）。
+
+**做法：** `web/.assetsignore` 一行 `trips/`，檔頭寫明它是暫時的、什麼時候該刪。
+
+**線上實測（2026-09-13）：**
+```
+/                                    200，且含 id="panel-trip"（是新版）
+/api/share?tag=__nonexistent__       {"tag":"…","count":0,"items":[]}
+GET /api/ai-parse                    405
+/.netlify/functions/share?tag=…      跟隨轉址後拿到同樣的 JSON
+/trips/2026-09-kr-seoul-cf758e/      404  ← 行程資料確實沒上去
+/trips/index.json                    404
+share.html?list=test                 307 → /share?list=test → 200
+```
+瀏覽器實開：購物 Tab 讀得到真實預算資料、行程 Tab 讀得到旅程下拉，
+「歷次行程表」正確顯示空狀態（不是紅字錯誤）——A14 的失敗路徑線上也成立。
+
+**怎麼回頭改：** 不想要這個中間狀態的話，刪掉 `web/.assetsignore` 再 deploy，
+行程表立刻上線（但在 Access 設好之前它是公開的）。
+要整個收回就 `npx wrangler delete`。

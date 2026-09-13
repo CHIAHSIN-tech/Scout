@@ -31,7 +31,7 @@
 |---|---|---|
 | **B1. 「建置產物要不要放上網？**要。寫進 `web/trips/`，跟著 Scout 一起部署」（INTERVIEW Q3） | repo 是**公開的**（規格 Q2 的前提「不公開」經查證為誤）。Stanley 已決定 **repo 轉私有**（D13 選項 B），但**他沒有 admin 權限，要 Chia 執行** | **目前**行程表不會跟著部署。Chia 轉私有之後刪掉 `.gitignore` 那段就恢復規格原設計 |
 | **B2. 「`trips/` 要不要進版控？**要」（INTERVIEW Q2） | 同上——決定要進，卡在 repo 還沒轉私有。**順序不能反**：公開時進版控，推上去就進 git 歷史拿不回來 | 旅程資料暫時只在執行者的機器上 |
-| **B3. Cloudflare 帳號連上 repo、設 secret、停用 Netlify 站台** | 規格 BOUNDS 明列為外部相依，本次「只寫設定檔，不進任何供應商後台」 | 線上仍然是 Netlify。步驟寫在 `for-chia-cloudflare.md` |
+| **B3. Cloudflare 帳號連上 repo、設 secret、停用 Netlify 站台** | 規格 BOUNDS 原列為外部相依。ADR-020 權限收回後，2026-09-13 由 Stanley 的帳號部署 | **Worker 已上線：https://scout.nailbook.workers.dev**（行程表刻意排除，見 D14）。剩 Access 設定與停用 Netlify，步驟在 `runbook-cloudflare.md` |
 | **B4. A16 的人工複核** | 需要 Stanley 本人在真手機上看過 | `REVIEW.md` 前 25 條已完成（比對參考產品），第 26–30 條留白 |
 | **B5. 規格 A21 的 `curl -sf .../index.html`** | Workers static assets 預設把 `/index.html` 307 轉到 `/`，`curl -sf` 不跟隨轉址 | 改用會跟隨的 `fetch` 並額外斷言 `GET /` 回 200（更強）。理由 `DECISIONS-trip-page.md` D5 |
 | **B6. 規格寫 `_redirects` 用 `200`** | 實測不行：Workers 的 200 是代理，代理目標必須是靜態資產，`/api/*` 是 Worker 程式碼 | 改用 308（保留方法與 body）。D3 |

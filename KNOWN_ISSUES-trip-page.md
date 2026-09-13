@@ -12,6 +12,13 @@
 
 ### K1. 行程表目前不會跟著網站部署
 
+> **2026-09-13 進度：網站本身已經上線（https://scout.nailbook.workers.dev），但行程表刻意還沒上去。**
+> `web/.assetsignore` 擋著 `trips/`，因為 Cloudflare Access 要綁主機名、
+> 得先有網站才設得起來——不擋的話行程表會在登入保護生效前先公開一段時間。
+> 線上實測 `/trips/2026-09-kr-seoul-cf758e/` 回 **404**，行程資料確實沒有外流。
+> 設完 Access 之後刪掉那一行、重 deploy 一次就上去了。
+
+
 `trips/` 與 `web/trips/` 都在 `.gitignore` 裡（repo 是公開的，`trip.json` 含訂位編號、
 旅館地址、班機時刻）。所以：
 
@@ -137,8 +144,8 @@ A21／A22 六項全過，不再需要 `--live=<port>`。
 
 | 項目 | 卡在哪 |
 |---|---|
-| 建 Cloudflare Worker、部署 | 沒有，現在就能做 |
-| Cloudflare Access（Google SSO）擋 `/trips/*` | 要先部署完 |
+| ~~建 Cloudflare Worker、部署~~ | ✅ 2026-09-13 已上線 https://scout.nailbook.workers.dev（行程表排除中） |
+| Cloudflare Access（Google SSO）擋 `/trips/*` | **現在就能做**；做完刪 `web/.assetsignore` 的 `trips/` 再 deploy |
 | `GEMINI_API_KEY` 設成 Worker secret | 可先跳過（ADR-017 已讓網頁 AI 預設隱藏）|
-| 重發家人的分享連結 | 要先部署完（網址才會確定）|
+| 重發家人的分享連結 | 網址已確定，等你決定切換時機 |
 | `REVIEW.md` 第 26–30 條 | 要在真手機上看過 |
