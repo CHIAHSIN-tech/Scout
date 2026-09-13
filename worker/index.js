@@ -270,6 +270,32 @@ async function keepalive(env) {
   return { ok: allOk, results };
 }
 
+// 找不到頁面。刻意不回顯路徑——路徑是使用者可控的字串，放進 HTML 就得處理跳脫，
+// 而回顯它對看的人沒有幫助。
+function notFoundPage() {
+  const html = `<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>找不到這一頁 — Scout</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F0EA;color:#3C3830;
+       font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+  main{text-align:center;padding:2rem}
+  h1{font-size:1.4rem;margin:0 0 .6rem}
+  p{color:#6B6558;margin:0 0 1.4rem;line-height:1.7}
+  a{display:inline-block;padding:.6rem 1.4rem;border-radius:999px;background:#3D6B54;color:#fff;text-decoration:none}
+</style></head>
+<body><main>
+  <h1>找不到這一頁</h1>
+  <p>連結可能打錯了，或是後面多黏了標點符號。</p>
+  <a href="/">回 Scout 首頁</a>
+</main></body></html>`;
+  return new Response(html, {
+    status: 404,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
@@ -277,7 +303,12 @@ export default {
     if (path === "/api/ai-suggest") return aiSuggest(request, env);
     if (path === "/api/share") return share(request, env);
     // 靜態資產由平台先處理；走到這裡代表既不是資產也不是已知端點。
-    return json(404, { error: `沒有這個端點：${path}` });
+    // /api/* 給程式呼叫，維持 JSON；其他路徑是人點錯連結，給看得懂的頁面。
+    // （2026-09-13 實際發生過：連結後面黏了標點，打開只看到一串 {"error":...}。）
+    if (path.startsWith("/api/")) {
+      return json(404, { error: `沒有這個端點：${path}` });
+    }
+    return notFoundPage();
   },
 
   async scheduled(event, env, ctx) {

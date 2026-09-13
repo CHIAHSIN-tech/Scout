@@ -94,10 +94,30 @@ Cloudflare 後台 → 你的 Worker → **Settings** → **Trigger Events**，
 
 **只擋 `/trips/*`。** 整個網域都擋的話，家人的購物分享連結會一起死。
 
-1. **Zero Trust** → **Access** → **Applications** → **Add an application** → **Self-hosted**
-2. Application domain：`scout.nailbook.workers.dev`，Path：`trips/*`
-3. **Add a policy** → Allow → Include **Emails** → 你和 Chia 的 Google 帳號
-4. Login methods 留 Google（One-time PIN 可以一起留當備援）
+> **更正（2026-09-13）：** 原本寫「Login methods 留 Google」太簡化了。
+> Zero Trust 裡的 Google 登入**不是預設就有**，要先在 Google Cloud Console 建一個 OAuth client。
+> **Email 驗證碼（One-time PIN）不用任何設定**，可以先用它讓門立刻生效，Google 之後再補。
+
+**A. 先開門（5 分鐘，用 Email 驗證碼）**
+
+1. **Zero Trust** → 第一次進去會要你取一個 team name（例如 `scout-stanley`），選免費方案
+2. **Access** → **Applications** → **Add an application** → **Self-hosted**
+3. Application domain：`scout.nailbook.workers.dev`，Path：`trips/*`
+4. **Add a policy** → Action **Allow** → Include **Emails** → 你和 Chia 的信箱
+5. Login methods 勾 **One-time PIN**
+
+**B. 再補 Google 登入（15 分鐘，可以晚點做）**
+
+1. Google Cloud Console → **APIs & Services** → **OAuth consent screen** → Audience 選 **External**
+2. **Credentials** → **Create OAuth client** → Web application
+   - Authorized JavaScript origins：`https://<team name>.cloudflareaccess.com`
+   - Authorized redirect URIs：`https://<team name>.cloudflareaccess.com/cdn-cgi/access/callback`
+3. 複製 Client ID 與 Client Secret
+4. Zero Trust → **Integrations** → **Identity providers** → Add → **Google** → 貼上
+5. 回到 A 建的 Application，Login methods 勾 **Google**
+
+> 首頁「歷次行程表」讀的 `trips/index.json` 也在這個路徑下：沒登入的人會看到空狀態（不是錯誤），
+> 登入過的人（同一個瀏覽器）照常看到列表。
 
 **怎麼知道成功了**（開無痕視窗）：
 

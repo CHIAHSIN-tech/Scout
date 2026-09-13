@@ -207,8 +207,16 @@ async function worker() {
     r = await call("/api/share?tag=" + encodeURIComponent("送禮-媽媽&bought=eq.true"), { method: "GET" });
     ck("A20", calls[0] && (calls[0].match(/bought=eq\.false/g) || []).length === 1 && !calls[0].includes("bought=eq.true"),
       "tag 有跳脫，呼叫端插不進額外的 filter（唯讀出口的核心保證）");
-    r = await call("/nope", { method: "GET" });
+    r = await call("/nope/<script>x", { method: "GET" });
+    const body404 = await r.text();
     ck("A20", r.status === 404, "未知路徑 → 404（靜態資產由平台先處理，走不到這裡）");
+    ck("A20", (r.headers.get("Content-Type") || "").startsWith("text/html"),
+      "非 /api/ 的未知路徑回人看得懂的 HTML 頁，不是一串 JSON");
+    ck("A20", body404.includes('href="/"') && !body404.includes("<script>x"),
+      "404 頁有回首頁連結，且不回顯使用者輸入的路徑");
+    r = await call("/api/nope", { method: "GET" });
+    ck("A20", r.status === 404 && (r.headers.get("Content-Type") || "").includes("json"),
+      "/api/ 底下的未知端點仍回 JSON 404（給程式看的）");
 
     // ai-suggest 的共用核心真的載進來了
     ck("A23", typeof globalThis.ScoutAiSuggest?.buildPrompt === "function",
