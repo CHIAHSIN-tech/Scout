@@ -22,7 +22,7 @@ from __future__ import annotations
 import html
 import json
 
-from ..schema import HOURS_IRRELEVANT_KINDS, day_count, day_date
+from ..schema import HOURS_IRRELEVANT_KINDS, RESERVED_PLACE_IDS, day_count, day_date, find_leg
 from .css import CSS
 from .js import JS
 
@@ -287,14 +287,25 @@ def _booked_table(trip):
     places = _places(trip)
     for e in sorted((trip.get("events") or []),
                     key=lambda x: (x.get("day") or 0, str(x.get("time") or ""))):
-        if not isinstance(e, dict) or not e.get("locked"):
+        if not isinstance(e, dict):
+            continue
+        # 機場、旅館這類保留地點不算「訂位」——班機與旅館上面已經列過
+        if e.get("place_id") in RESERVED_PLACE_IDS:
             continue
         p = places.get(e.get("place_id"))
+        rv = (p or {}).get("reservation") or {}
+        if e.get("locked"):
+            status = "已訂，鎖定"
+        elif rv.get("required") and not rv.get("done"):
+            # 「必須訂但還沒訂」是最需要被看見的狀態
+            status = '<b class="need">待預約</b>'
+        else:
+            continue
         rows.append(
             f'<tr><th scope="row">{E(_TYPE_LABEL.get(e.get("type") or "", "行程"))}</th>'
             f'<td>{E(_md(trip, e.get("day")))} {E(e.get("time") or "")} '
             f'{pn(p, e.get("title") or "")}</td>'
-            "<td><small>已訂，鎖定</small></td></tr>"
+            f"<td><small>{status}</small></td></tr>"
         )
     if not rows:
         return ""
@@ -350,14 +361,12 @@ def _meal_table(trip):
 def _timeline(trip, day):
     """一天的時間軸。行程項目、交通、餐點都在這裡，順序由時間決定。"""
     places = _places(trip)
-    legs = {}
-    for g in trip.get("legs") or []:
-        if isinstance(g, dict):
-            legs.setdefault((g.get("from"), g.get("to")), g)
-
     evs = _events_of(trip, day)
     out = []
+    last_pid = None
     for i, e in enumerate(evs):
+        if e.get("place_id"):
+            last_pid = e["place_id"]
         p = places.get(e.get("place_id"))
         cls = []
         if e.get("type") == "meal" or (p or {}).get("kind") == "meal":
@@ -378,10 +387,11 @@ def _timeline(trip, day):
         if p:
             loc = p.get("location") or {}
             where = "・".join(
-                x for x in [p.get("area"), loc.get("station") and f"{loc['station']} 站",
-                            loc.get("walk_min") and f"走 {loc['walk_min']} 分"] if x)
-            if where:
-                body.append(f'<p class="meta">{E(where)}</p>')
+                E(x) for x in [p.get("area"), loc.get("station") and f"{loc['station']} 站",
+                               loc.get("walk_min") and f"走 {loc['walk_min']} 分"] if x)
+            # 地點名一定印在這一行：標題是人寫的（「午餐：Mamalee」「晚餐（機動）」），
+            # 店名得另外出現，驗收才找得到它來自 places（A8）
+            body.append(f'<p class="meta">{pn(p)}{"・" + where if where else ""}</p>')
             body.append(_hours_html(p))
             pb = p.get("price_band") or {}
             if pb.get("band") or pb.get("note"):
@@ -407,7 +417,9 @@ def _timeline(trip, day):
         links = _links(link_items)
         links_html = f'<div class="links">{links}</div>' if links else ""
 
-        title = pn(p, e.get("title") or "") if p else E(e.get("title") or "")
+        # 標題用事件自己的標題，不換成店名——「晚餐（機動）」「The Hyundai 第 2 段」
+        # 這種標題本身就是資訊，換成店名會把它吃掉
+        title = E(e.get("title") or "")
         out.append(
             f'    <li class="{" ".join(cls)}"><time>{E(e.get("time") or "")}</time><div class="b">\n'
             f"      <h3>{title} {tag}</h3>\n"
@@ -415,8 +427,10 @@ def _timeline(trip, day):
         )
 
         # 兩站之間的交通（有 leg 資料才畫）
+        # 沒有地點的事件（例如「晚餐（機動）」）不打斷交通段：
+        # 用「最近一個有地點的事件」接下一站
         if i + 1 < len(evs):
-            g = legs.get((e.get("place_id"), evs[i + 1].get("place_id")))
+            g = find_leg(trip, last_pid, evs[i + 1].get("place_id"), day)
             if g:
                 lines = "".join(_ln(x) for x in (g.get("lines") or []))
                 txt = g.get("label") or ""
@@ -490,7 +504,7 @@ def _queue_list(trip):
     """排隊候補：queue_only 的店只在這裡出現，不進時間軸。"""
     qs = [p for p in (trip.get("places") or [])
           if isinstance(p, dict) and p.get("queue_only")]
-    qs.sort(key=lambda p: str(p.get("id")))
+    # 照 places 陣列的順序——那是人排的優先順序；陣列順序本身就是決定性的
     if not qs:
         return ""
     cards = []
@@ -582,11 +596,6 @@ def _map_data(trip):
             "home": 1 if pid == "hotel" else 0,
         }
 
-    legs_by_pair = {}
-    for g in trip.get("legs") or []:
-        if isinstance(g, dict):
-            legs_by_pair.setdefault((g.get("from"), g.get("to")), g)
-
     DAYS, order = {}, []
     for d in range(1, n + 1):
         evs = [e for e in _events_of(trip, d) if e.get("place_id") in P]
@@ -599,9 +608,14 @@ def _map_data(trip):
             route.append(e["place_id"])
             text.append(f"{e.get('time')} {e.get('title')}")
             if i + 1 < len(evs):
-                g = legs_by_pair.get((e.get("place_id"), evs[i + 1].get("place_id")))
+                g = find_leg(trip, e.get("place_id"), evs[i + 1].get("place_id"), d)
                 if g:
-                    label = g.get("label") or (f"約 {g['min']} 分" if g.get("min") else "")
+                    # 地圖上的膠囊放不下整句說明，只放分鐘數；完整文字在時間軸
+                    if g.get("min"):
+                        label = f"{g['min']}分"
+                    else:
+                        label = "計程車" if g.get("mode") == "taxi" else ""
+
                     seg.append({
                         "l": [str(x) for x in (g.get("lines") or [])],
                         "m": label,
@@ -703,12 +717,24 @@ def _section_block(key, sec):
         parts.append(f'<div class="qa">{h}{body}{f"<ul>{items}</ul>" if items else ""}</div>')
     for name in ("todos", "packing"):
         if sec.get(name):
-            lis = "".join(
-                f'<li><label for="{E(key)}-{name}-{i}">'
-                f'<input type="checkbox" id="{E(key)}-{name}-{i}">'
-                f"<span>{E(str(x))}</span></label></li>"
-                for i, x in enumerate(sec[name])
-            )
+            # 每一項可以是字串、{text, done}（已做完的預先打勾），
+            # 或 {group, items}（分組標題＋底下的項目，沿用參考產品的 .check li.cg 樣式）
+            parts_li, n = [], 0
+            for x in sec[name]:
+                if isinstance(x, dict) and "group" in x:
+                    parts_li.append(f'<li class="cg">{E(str(x["group"]))}</li>')
+                    entries = x.get("items") or []
+                else:
+                    entries = [x]
+                for it in entries:
+                    text = it.get("text") if isinstance(it, dict) else it
+                    done = " checked" if isinstance(it, dict) and it.get("done") else ""
+                    parts_li.append(
+                        f'<li><label for="{E(key)}-{name}-{n}">'
+                        f'<input type="checkbox" id="{E(key)}-{name}-{n}"{done}>'
+                        f"<span>{E(str(text))}</span></label></li>")
+                    n += 1
+            lis = "".join(parts_li)
             label = "待辦" if name == "todos" else "打包"
             parts.append(f'<h3 class="h2sub">{label}</h3><ul class="check">{lis}</ul>')
     if not parts:

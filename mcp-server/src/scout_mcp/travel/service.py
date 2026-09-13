@@ -280,6 +280,10 @@ def derive_open_questions(trip: dict) -> list[dict]:
     used_place_ids = {
         e.get("place_id") for e in (trip.get("events") or []) if isinstance(e, dict)
     }
+    locked_place_ids = {
+        e.get("place_id") for e in (trip.get("events") or [])
+        if isinstance(e, dict) and e.get("locked")
+    }
     for p in trip.get("places") or []:
         if not isinstance(p, dict) or not p.get("id"):
             continue
@@ -291,6 +295,11 @@ def derive_open_questions(trip: dict) -> list[dict]:
         if p.get("kind") in HOURS_IRRELEVANT_KINDS:
             continue
         if not sources:
+            # 已經訂到位（或事件鎖定）的地方，訂位本身就證明那個時段有開，不必再問「有沒有查證」。
+            # 但只省略「未查證」這一種——來源互相矛盾（下面）照樣要問，那是 A13 的硬要求。
+            # 特定日期要不要再確認（例如中秋當天）是另一回事，由人寫成手動待確認。
+            if p["id"] in locked_place_ids or (p.get("reservation") or {}).get("done"):
+                continue
             out.append({
                 "id": f"auto-hours-{p['id']}",
                 "what": f"「{p.get('name')}」的營業時間還沒查證",

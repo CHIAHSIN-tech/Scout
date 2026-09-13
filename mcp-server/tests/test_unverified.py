@@ -106,6 +106,25 @@ def test_area_hours_are_not_checked_by_the_scheduler(trip):
     assert not any(u.get("place_id") == "the-hyundai" for u in r["unverified"])
 
 
+def test_booked_places_are_not_asked_whether_hours_were_verified(trip):
+    """已訂位（事件 locked）的地方，訂位本身就證明那個時段有開，不自動問「有沒有查證」。"""
+    t = copy.deepcopy(trip)
+    for p in t["places"]:
+        if p["id"] == "the-hyundai":
+            p["hours"] = {"sources": []}
+    for e in t["events"]:
+        if e.get("place_id") == "the-hyundai":
+            e["locked"] = True
+    ids = {q["id"] for q in derive_open_questions(t)}
+    assert "auto-hours-the-hyundai" not in ids
+
+
+def test_booked_places_with_conflicting_sources_are_still_asked(trip):
+    """但來源互相矛盾照樣要問——A13 不因為訂了位就豁免。fixture 的 Doughroom 就是已訂＋衝突。"""
+    ids = {q["id"] for q in derive_open_questions(trip)}
+    assert "auto-hours-conflict-gwanghwamun-doughroom" in ids
+
+
 def test_only_places_actually_scheduled_are_asked_about(trip):
     """候補清單上的店不會每一家都變成待確認——那會把清單淹掉。"""
     ids = {q["id"] for q in derive_open_questions(trip)}

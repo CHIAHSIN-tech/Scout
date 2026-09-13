@@ -252,6 +252,26 @@ def day_count(trip: dict) -> int:
     return (e - s).days + 1 if e >= s else 0
 
 
+def find_leg(trip: dict, a, b, day=None) -> dict | None:
+    """找 a→b 的交通段，**同一天的優先**，找不到才用沒標 day 的。
+
+    為什麼要看 day：同一對地點在不同天可能有不同走法（例如明洞→旅館，
+    9/22 走 5 分、9/23 走 10 分）。只用 (from, to) 當 key 的話，
+    第一筆會蓋掉後面所有天，頁面會印錯。渲染器、地圖、排程檢查都走這一支。
+    """
+    if not a or not b:
+        return None
+    fallback = None
+    for g in (trip or {}).get("legs") or []:
+        if not isinstance(g, dict) or g.get("from") != a or g.get("to") != b:
+            continue
+        if day is not None and g.get("day") == day:
+            return g
+        if g.get("day") is None and fallback is None:
+            fallback = g
+    return fallback
+
+
 def day_date(trip: dict, day: int) -> date | None:
     """第 n 天是哪一天。超出範圍回 None。"""
     meta = (trip or {}).get("trip") or {}

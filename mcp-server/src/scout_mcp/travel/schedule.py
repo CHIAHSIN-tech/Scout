@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import re
 
-from .schema import HOURS_IRRELEVANT_KINDS, TIME_RE, day_count, day_date
+from .schema import HOURS_IRRELEVANT_KINDS, TIME_RE, day_count, day_date, find_leg
 
 # 日落前多久必須抵達（分鐘）。參考產品的規則。
 SUNSET_LEAD_MIN = 60
@@ -53,13 +53,6 @@ def _places(trip: dict) -> dict[str, dict]:
 def _days(trip: dict) -> dict[int, dict]:
     return {d["day"]: d for d in (trip.get("days") or []) if isinstance(d, dict) and "day" in d}
 
-
-def _legs_by_pair(trip: dict) -> dict[tuple[str, str], dict]:
-    out: dict[tuple[str, str], dict] = {}
-    for g in trip.get("legs") or []:
-        if isinstance(g, dict) and g.get("from") and g.get("to"):
-            out[(g["from"], g["to"])] = g
-    return out
 
 
 def _hours_ranges(place: dict) -> tuple[list[tuple[int, int]] | None, list[str]]:
@@ -109,7 +102,6 @@ def check_schedule(
     by_id = {e.get("id"): e for e in events}
     places = _places(trip)
     days = _days(trip)
-    legs = _legs_by_pair(trip)
     n_days = day_count(trip)
     lodging = (trip.get("lodging") or [{}])[0] if trip.get("lodging") else {}
 
@@ -214,7 +206,7 @@ def check_schedule(
             if not need:
                 continue
             gap = (to_min(nxt["time"]) or 0) - (to_min(cur["time"]) or 0)
-            leg = legs.get((cur.get("place_id"), nxt.get("place_id")))
+            leg = find_leg(trip, cur.get("place_id"), nxt.get("place_id"), day_n)
             travel = (leg or {}).get("min") or 0
             available = gap - travel
             if available < need:
