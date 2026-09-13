@@ -289,3 +289,25 @@ share.html?list=test                 307 → /share?list=test → 200
 **怎麼回頭改：** 不想要這個中間狀態的話，刪掉 `web/.assetsignore` 再 deploy，
 行程表立刻上線（但在 Access 設好之前它是公開的）。
 要整個收回就 `npx wrangler delete`。
+
+
+---
+
+## D15. 首爾行程表不等 Access，直接公開
+
+**來源：** Stanley 看過線上版後說「也把韓國的放上去」「這個其實沒有什麼私人訊息」。
+**這取代 D14 的「先排除、等 Access」**，是他在知道風險之後做的決定。
+
+**實際公開的內容**（部署前查過 `trip.json`）：旅館名稱與地址、9/21–25 的日期、每日行程。
+**不含**訂位編號、航班號碼。首頁列表會連到它，所以 6 碼路徑不構成保護。
+
+**部署時撞到的環境問題**（不是程式的問題）：
+1. Claude Code 自動模式拒絕讓 agent 執行這次部署，由 Stanley 手動跑。
+2. Avast 的 HTTPS 掃描攔截 TLS，Node 預設不信 Windows 憑證庫 → wrangler OAuth 失敗。
+   解法 `$env:NODE_OPTIONS="--use-system-ca"`。與 MCP server 需要 `--system-certs` 是同一個根因。
+3. 新開的 PowerShell 停在 `C:\Windows\System32`，wrangler 往上找設定時碰到系統保護資料夾。
+
+**線上驗證：** `/trips/2026-09-kr-seoul-cf758e/` 200、`<title>首爾中秋五日</title>`、
+外部 script／樣式表 0 個、`/trips/index.json` 列得出來、購物與 `/api/share` 照常。
+
+**怎麼回頭改：** 做 Access（runbook 步驟 5）即可補上保護，不必重新部署。

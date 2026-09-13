@@ -22,10 +22,12 @@
 | 7. 重發分享連結 | ⬜ 等你決定什麼時候切 |
 | 8. 叫 Chia 關 Netlify | ⬜ 要先跨過一次排程日 |
 
-> **⚠️ 第一次部署刻意排除了行程表。** `web/.assetsignore` 裡有一行 `trips/`。
-> 理由：deploy 會上傳整個 `web/`，而 Access 必須綁主機名、**要先有網站才設得起來**。
-> 不排除的話，行程表會在登入保護生效前先公開一段時間。
-> **你設完步驟 5 之後**：刪掉 `web/.assetsignore` 的 `trips/` 那一行，再 `npx wrangler deploy` 一次。
+> **2026-09-13：首爾行程表已上線**（https://scout.nailbook.workers.dev/trips/2026-09-kr-seoul-cf758e/），**目前沒有登入保護**。
+> Stanley 判斷內容沒有私人訊息（無訂位編號、無航班號），決定先公開；`web/.assetsignore` 已刪除。
+> 之後設步驟 5 的 Access 就會補上保護，**不需要重新部署**。
+>
+> **⚠️ 這台機器部署前要先設**：`$env:NODE_OPTIONS="--use-system-ca"`（Avast 的 HTTPS 掃描會攔 TLS，
+> Node 預設不信 Windows 憑證庫），而且要在專案資料夾裡跑，不能在 `C:\Windows\System32`。
 
 ---
 
