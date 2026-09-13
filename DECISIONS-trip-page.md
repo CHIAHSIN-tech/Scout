@@ -259,7 +259,7 @@ Access 的設定兩種都要，不用改。
 ## D14. 第一次部署用 `.assetsignore` 排除行程表
 
 **卡在什麼：** Stanley 說「我能做的先全部幫我做吧」，部署是他清單上的一項，
-而 wrangler 的 OAuth 本來就登著（`stanley.luke.tw@gmail.com`），所以技術上做得到。
+而 wrangler 的 OAuth 本來就登著（Stanley 的個人 Cloudflare 帳號），所以技術上做得到。
 但 `wrangler deploy` 上傳的是整個 `[assets] directory`（`web/`），
 其中 `web/trips/<page_slug>/index.html` 含訂位編號、旅館地址、班機時刻。
 
