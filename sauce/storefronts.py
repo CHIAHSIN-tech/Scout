@@ -32,11 +32,20 @@ from .sources import filters, shopify, woo
 STOREFRONTS = FIXTURES / "storefronts.csv"
 COLUMNS = ("domain", "platform", "discovered_via", "verified_on", "sauce_products")
 
-#: 推導的起點：本身就是「別人的貨架」的專賣零售，vendor 欄位等於一份品牌名單。
+#: **聚合站**：一間店就是別人的貨架，一頁就有四五十個品牌、而且每一筆都有價格。
+#:
+#: Stanley 2026-09-19 的判斷：「不需要排山倒海的搜，找到有限的 aggregator 就可以
+#: 完整的找到來源，因為產品一定要推廣，總會在某些地方一起出現」。實測證明這是對的——
+#: 用品牌名猜網域的命中率大約一成，而 `heathotsauce.com` 與 `crafthotsauce.com`
+#: 這兩個各自帶四五十個品牌的聚合站，猜是猜不到的，是搜出來的。
+#:
+#: 名單刻意短。每一個都驗過：`/meta.json` 回 country=US，而且第一頁就有 ≥15 款辣醬。
 SEED_RETAILERS: tuple[str, ...] = (
-    "heatonist.com", "hotsaucedepot.com", "fuegobox.com", "pepperpalace.com",
-    "hotsauce.com", "thehotsaucefactory.com", "sauceshop.co", "chilliwizards.com",
-    "hotsaucewilly.com", "hotsauceemporium.com", "sauceathome.com", "hotsauceworld.com",
+    "heatonist.com",        # Hot Ones 的選醬商，47 個品牌／頁
+    "heathotsauce.com",     # 55 個品牌／頁
+    "crafthotsauce.com",    # 42 個品牌／頁
+    "hotsaucedepot.com",    # WooCommerce，不是 Shopify
+    "pepperpalace.com",     # 自有品牌為主，但品項多
 )
 
 #: 已知的品牌直營店（推導漏掉的、或名字折不出網域的，手動補在這裡）

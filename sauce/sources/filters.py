@@ -90,6 +90,19 @@ EXCLUDE = (
     "black pepper",
 )
 
+#: 有價格、但不是「一瓶辣醬多少錢」的那些：整箱、批發、組合包、自選包。
+#: 這些留在庫裡沒問題，但不該出現在「去哪裡買、多少錢」那張表上——
+#: 一個 $37.99 的三瓶組合混在單瓶中位數 $11.99 裡，會讓整欄的統計說謊。
+NOT_A_SINGLE_BOTTLE = re.compile(
+    r"case of|wholesale|bulk|b2b|gallon|holster|pallet"
+    r"|trio|duo|build your own|mix,? match|combo|set of"
+    r"|\d+\s*[- ]?(?:pack|bottle|pk)|sampler|collection|gift", re.I)
+
+
+def is_single_bottle(title: str) -> bool:
+    return not NOT_A_SINGLE_BOTTLE.search(str(title or ""))
+
+
 _WORD = re.compile(r"[^a-z0-9]+")
 
 

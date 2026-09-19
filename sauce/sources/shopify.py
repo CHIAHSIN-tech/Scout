@@ -25,10 +25,44 @@ PAGE_SIZE = 250
 MAX_PAGES = 12                      # 3,000 筆／店；辣醬店沒有比這更大的
 _TAG = re.compile(r"<[^>]+>")
 
+#: **一定要帶 `currency=USD`。**
+#:
+#: Shopify Markets 會依「請求來源的國家」在地化價格。從台灣打過去，Heatonist 的
+#: JANG 回的是 `452.00`（TWD）；帶了 `currency=USD` 才是 `14.00`。
+#: 兩個數字都「是價格」，差別在事後從欄位上完全看不出來——一份宣稱美國售價的表格，
+#: 裡面混著新台幣，而且只有懂得換算的人會發現。
+CURRENCY = "USD"
+
+#: B2B／整箱／周邊：有價格，但不是「一瓶辣醬多少錢」
+_NOT_A_BOTTLE = re.compile(
+    r"\bcase of\b|\bwholesale\b|\bbulk\b|\bb2b\b|\bgallon\b|\bholster\b|\bpallet\b", re.I)
+
 
 def products_url(domain: str, page: int) -> str:
     base = domain if domain.startswith("http") else f"https://{domain}"
-    return f"{base.rstrip('/')}/products.json?limit={PAGE_SIZE}&page={page}"
+    return (f"{base.rstrip('/')}/products.json?limit={PAGE_SIZE}&page={page}"
+            f"&currency={CURRENCY}")
+
+
+def meta_url(domain: str) -> str:
+    base = domain if domain.startswith("http") else f"https://{domain}"
+    return f"{base.rstrip('/')}/meta.json"
+
+
+def shop_meta(fetcher: Fetcher, domain: str) -> dict[str, Any]:
+    """店家自己公開的 `/meta.json`：國家、幣別、店名。
+
+    這是「這間店在美國賣東西」最便宜也最直接的證據——比用網域字尾猜準得多。
+    拿不到就回空 dict，呼叫端把可購性標成 unknown，不要猜。
+    """
+    got = fetcher.get(meta_url(domain), accept="application/json")
+    if not got.ok:
+        return {}
+    try:
+        data = json.loads(got.body.decode("utf-8", "replace"))
+    except ValueError:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def looks_like_shopify(payload: Any) -> bool:
@@ -51,14 +85,43 @@ def _available(product: dict[str, Any]) -> bool:
     return any((v or {}).get("available") for v in product.get("variants") or [])
 
 
-def to_events(domain: str, payload: dict[str, Any], observed_at: str) -> list[Event]:
+def _cheapest(product: dict[str, Any]) -> tuple[str, str]:
+    """(價格, 那個規格的名稱)。取**最便宜的有貨規格**——那最接近「一瓶多少錢」。
+
+    沒有價格就回空字串。**不要用 0 當「沒有價格」**：0 是一個價格
+    （贈品、樣品），跟「這個欄位沒有值」是兩件事。
+    """
+    best: tuple[float, str, str] | None = None
+    for v in product.get("variants") or []:
+        raw = str((v or {}).get("price") or "").strip()
+        if not raw:
+            continue
+        try:
+            value = float(raw)
+        except ValueError:
+            continue
+        name = str((v or {}).get("title") or "")
+        if _NOT_A_BOTTLE.search(name):
+            continue
+        if best is None or value < best[0]:
+            best = (value, raw, name)
+    return (best[1], best[2]) if best else ("", "")
+
+
+def to_events(domain: str, payload: dict[str, Any], observed_at: str,
+              meta: dict[str, Any] | None = None) -> list[Event]:
     """一頁 products.json → 事件。只留通過辣醬規則的那些（理由記在 payload 裡）。"""
     base = domain if domain.startswith("http") else f"https://{domain}"
+    meta = meta or {}
+    currency = str(meta.get("currency") or CURRENCY)
+    shop_country = str(meta.get("country") or "")
     out: list[Event] = []
     for p in payload.get("products") or []:
         title = str(p.get("title") or "").strip()
         if not title:
             continue
+        if _NOT_A_BOTTLE.search(title):
+            continue          # 整箱、批發、周邊：有價格但不是一瓶辣醬的價格
         verdict = filters.classify(title, p.get("product_type"), p.get("tags"),
                                    _text(p.get("body_html")))
         if not verdict["keep"]:
@@ -69,6 +132,7 @@ def to_events(domain: str, payload: dict[str, Any], observed_at: str) -> list[Ev
         variants = [{"sku": (v or {}).get("sku"), "price": (v or {}).get("price"),
                      "title": (v or {}).get("title"), "available": (v or {}).get("available")}
                     for v in (p.get("variants") or [])[:10]]
+        price, price_variant = _cheapest(p)
         out.append(harvest.product_event(
             source=SOURCE, key=key, title=title,
             brand=str(p.get("vendor") or "").strip(), url=url,
@@ -77,6 +141,10 @@ def to_events(domain: str, payload: dict[str, Any], observed_at: str) -> list[Ev
             payload={"store_domain": _host(domain), "handle": handle,
                      "product_type": p.get("product_type"), "tags": p.get("tags"),
                      "published_at": p.get("published_at"), "variants": variants,
+                     "price": price, "price_currency": currency if price else "",
+                     "price_variant": price_variant, "price_requested_currency": CURRENCY,
+                     "buy_url": url, "in_stock": _available(p),
+                     "shop_country": shop_country,
                      "filter_reason": verdict["reason"], "filter_matched": verdict["matched"],
                      "filter_version": verdict["filter_version"]}))
     return out
@@ -92,6 +160,7 @@ def harvest_store(fetcher: Fetcher, domain: str, snapshot: harvest.Snapshot,
     events: list[Event] = []
     pages = 0
     reason = ""
+    meta = shop_meta(fetcher, domain)
     for page in range(1, MAX_PAGES + 1):
         got = fetcher.get(products_url(domain, page), accept="application/json")
         if not got.ok:
@@ -109,12 +178,13 @@ def harvest_store(fetcher: Fetcher, domain: str, snapshot: harvest.Snapshot,
         if not items:
             break
         snapshot.write(SOURCE, f"{_host(domain).replace('/', '_')}-p{page}.json", payload)
-        events.extend(to_events(domain, payload, observed_at))
+        events.extend(to_events(domain, payload, observed_at, meta))
         pages += 1
         if len(items) < PAGE_SIZE:
             break
     return {"domain": _host(domain), "pages": pages, "events": events,
-            "kept": len(events), "reason": reason}
+            "kept": len(events), "reason": reason,
+            "shop_country": meta.get("country", ""), "shop_currency": meta.get("currency", "")}
 
 
 def harvest_all(fetcher: Fetcher, domains: Iterable[str], snapshot: harvest.Snapshot,

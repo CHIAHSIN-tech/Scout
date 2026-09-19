@@ -139,6 +139,11 @@ def link_events(events: Iterable[Event]) -> list[Event]:
                      "heat_shu": parsed.payload.get("heat_shu", ""),
                      "heat_basis": parsed.payload.get("heat_basis", ""),
                      "variant": parsed.payload.get("variant", ""),
+                     "price": parsed.payload.get("price", ""),
+                     "price_currency": parsed.payload.get("price_currency", ""),
+                     "buy_url": parsed.payload.get("buy_url", ""),
+                     "in_stock": parsed.payload.get("in_stock", False),
+                     "store_domain": parsed.payload.get("store_domain", ""),
                      "prompt_version": parsed.payload.get("prompt_version", "")}))
     return out
 

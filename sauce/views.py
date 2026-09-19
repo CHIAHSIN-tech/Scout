@@ -125,6 +125,8 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
             "heat_shu": ev.payload.get("heat_shu", ""),
             "heat_basis": ev.payload.get("heat_basis", ""),
             "us_availability": "unknown", "evidence_url": "",
+            "price": "", "price_currency": "", "buy_url": "", "in_stock": False,
+            "store_domain": "",
             "_sources": set(), "_tiers": set(), "_seasons": set(),
             "first_observed_at": ev.observed_at, "last_observed_at": ev.observed_at,
             "names_version": NAMES_VERSION,
@@ -145,6 +147,20 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
             row["evidence_url"] = str(ev.payload.get("evidence_url") or "")
         elif not row["evidence_url"] and ev.payload.get("evidence_url"):
             row["evidence_url"] = str(ev.payload["evidence_url"])
+        # 價格：取**最低的有效報價**，並記下是哪一間店報的。
+        # 同一款醬在三個貨架上有三個價錢是常態，視圖只留一個，但留的是哪一個要說得出來。
+        offer = str(ev.payload.get("price") or "").strip()
+        if offer:
+            try:
+                better = (not row["price"]) or float(offer) < float(row["price"])
+            except ValueError:
+                better = not row["price"]
+            if better:
+                row["price"] = offer
+                row["price_currency"] = str(ev.payload.get("price_currency") or "")
+                row["buy_url"] = str(ev.payload.get("buy_url") or "")
+                row["store_domain"] = str(ev.payload.get("store_domain") or "")
+            row["in_stock"] = bool(row["in_stock"] or ev.payload.get("in_stock"))
         if ev.source == "hotones":
             row["_seasons"].add(str(ev.payload.get("season") or ""))
 
@@ -187,6 +203,36 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
         out.append(row)
     out.sort(key=lambda r: r["entity_id"])
     return out
+
+
+def buyable(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
+    """`sauce_buyable`：**真的有地方在賣、而且有價錢**的那一份。
+
+    Stanley 2026-09-19 的硬條件：「必須要是有地方在賣，有價錢的 Hot Sauce」。
+    這跟 spec 的 NON_GOALS（「不追價格」）直接衝突，所以兩張表都留著、各自回答一個問題：
+
+    - `sauce_catalog`（`build`）是**母體**：這個世界上有哪些辣醬。
+      FDC 與 OFF 只有條碼、沒有貨架，但「這款存在過」對語料庫仍然有意義。
+    - `sauce_buyable`（這一張）是**貨架**：現在去哪裡買、多少錢。
+      沒有價格或沒有購買連結的列一律不在這裡。
+
+    分成兩張而不是把母體砍掉，是因為砍掉之後就**再也回答不了「這款存不存在」**——
+    而那正是漏收最難察覺的那一面。
+    """
+    def sellable(row: dict[str, Any]) -> bool:
+        price = str(row.get("price") or "").strip()
+        if not price or not str(row.get("buy_url") or "").strip():
+            return False
+        # 幣別必須是 USD。CAD／GBP／INR 的報價代表那是別的國家的貨架，
+        # 而這份表回答的是「在美國多少錢」。
+        if str(row.get("price_currency") or "") != "USD":
+            return False
+        try:
+            return float(price) > 0     # 0 是贈品或樣品，不是「有在賣」
+        except ValueError:
+            return False
+
+    return [r for r in build(events, rules_version) if sellable(r)]
 
 
 def reviews(events: list[Event], rules_version: str) -> list[dict[str, Any]]:

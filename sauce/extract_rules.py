@@ -27,7 +27,10 @@ from evdb.schema import Event, IngestPath
 from . import contract
 from .names import contains_key, fold, normalize_whitespace
 
-VERSION = "rule:sauce-structured-1"
+#: 版本 2：多帶價格、幣別、購買連結、是否有貨（Stanley 2026-09-19 的硬條件）。
+#: 版本一改，同一筆觀察就會被重新抽一次——舊的 parsed 事件留著（append-only），
+#: 新的帶著新版本號，視圖看得出哪一筆是誰產生的。
+VERSION = "rule:sauce-structured-2"
 
 #: 有結構化品牌欄位的來源。其餘走模型。
 STRUCTURED_SOURCES = ("fdc", "off", "shopify", "woo")
@@ -105,6 +108,13 @@ def parsed_event(obs: Event, parsed: dict[str, str], observed_at: str) -> Event:
                  "heat_basis": "source_claim" if obs.payload.get("claimed_shu") else "",
                  "us_availability": str(obs.payload.get("us_availability") or "unknown"),
                  "evidence_url": obs.source_url or "",
+                 # 「有地方在賣、而且有價錢」是 Stanley 2026-09-19 加的硬條件，
+                 # 所以價格要一路帶到視圖，不能停在觀察層
+                 "price": str(obs.payload.get("price") or ""),
+                 "price_currency": str(obs.payload.get("price_currency") or ""),
+                 "buy_url": str(obs.payload.get("buy_url") or obs.source_url or ""),
+                 "in_stock": bool(obs.payload.get("in_stock")),
+                 "store_domain": str(obs.payload.get("store_domain") or ""),
                  "extractor": VERSION, "confidence": "rule",
                  "model_id": VERSION, "prompt_version": VERSION})
 
@@ -114,14 +124,16 @@ def run(events: Iterable[Event], sources: tuple[str, ...] = STRUCTURED_SOURCES,
     """對結構化來源的觀察跑一次規則抽取。已經有 parsed 的不重跑（冪等）。"""
     events = list(events)
     observed_at = observed_at or now_iso()
-    done = {str(ev.payload.get("observation_event_id") or "")
+    # 「抽過了」要連版本一起看：規則升版之後同一筆觀察要重抽，否則新欄位永遠補不上。
+    done = {(str(ev.payload.get("observation_event_id") or ""),
+             str(ev.payload.get("extractor") or ""))
             for ev in events if ev.event_type == contract.EV_PARSED}
     out: list[Event] = []
     skipped_no_key = 0
     for ev in events:
         if ev.event_type not in (contract.EV_PRODUCT, contract.EV_MENTION):
             continue
-        if ev.source not in sources or ev.event_id in done:
+        if ev.source not in sources or (ev.event_id, VERSION) in done:
             continue
         title = str(ev.payload.get("title") or ev.payload.get("name") or "")
         brand = str(ev.payload.get("brand") or "")

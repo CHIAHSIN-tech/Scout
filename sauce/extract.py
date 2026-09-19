@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -47,6 +48,46 @@ TASK_VERDICT = "sauce-review-verdict"
 #: 一篇評論送進模型的正文上限。太長的文章切到這裡為止，並把這件事記在事件裡——
 #: 「我們只看了前面這一段」跟「這篇只有這麼多」不是同一件事。
 BODY_CHARS = 12000
+
+#: 食譜不是評測。白名單上的站有一大半是食譜站，而網址比對只看得出「這一頁講辣醬」，
+#: 看不出「這一頁在評辣醬」。第一次冷啟動的 20 筆裡有 12 筆是食譜，
+#: 而食譜頁上的 4.5 顆星是**讀者評分**——那是 user rating，照規格根本不該進庫（A20 的精神）。
+_RECIPE = re.compile(
+    r"/recipes?/|/recipe-|\brecipes?\b|how to make|\bfor two\b|\bmake[- ]ahead\b"
+    r"|\bskillet\b|\bslow[- ]cooker\b|\bgrilled\b|\bbraised\b|\bkebabs?\b"
+    r"|\bsalad\b|\bsoup\b|\btacos?\b|\bnoodles?\b|\bpopcorn\b|\bguacamole\b"
+    r"|\bmarinade\b|\bpoached\b|\broasted\b|\bglaze\b|\bdrumsticks?\b", re.I)
+
+#: 反過來，標題長這樣的幾乎一定是評測。**這一張先看**：
+#: 「The Best Hot Sauce for Wings」是評測，不是雞翅食譜。
+_REVIEWISH = re.compile(
+    r"\bbest\b|\branked?\b|\breview\b|taste test|we tried|we tested|\btasting\b"
+    r"|\bvs\.?\b|\btop \d+\b|\bworst\b|tried every|\bbrands?\b", re.I)
+
+
+def looks_like_review(title: str, url: str) -> bool:
+    """這一篇是評測還是食譜。評測型的標題優先，其餘看網址與標題有沒有食譜的痕跡。"""
+    blob = f"{title} {url}"
+    if _REVIEWISH.search(title or ""):
+        return True
+    return not _RECIPE.search(blob)
+
+
+def _stratify(items: list[dict[str, Any]], key: str = "outlet") -> list[dict[str, Any]]:
+    """跨 outlet 輪流取。取前 N 筆會拿到同一家的前 N 篇——
+    第一次冷啟動的 20 筆全部來自 America's Test Kitchen，就是這樣來的。"""
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        buckets.setdefault(str(item.get(key) or ""), []).append(item)
+    order = sorted(buckets)
+    out: list[dict[str, Any]] = []
+    i = 0
+    while any(buckets[k] for k in order):
+        for k in order:
+            if buckets[k]:
+                out.append(buckets[k].pop(0))
+        i += 1
+    return out
 
 
 def _bridge() -> Any:
@@ -143,6 +184,7 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
     done = {ev.payload.get("review_id")
             for ev in store.all_events() if ev.event_type == contract.EV_VERDICT}
     items: list[dict[str, Any]] = []
+    skipped_recipe = 0
     for ev in store.all_events():
         if ev.event_type != contract.EV_REVIEW:
             continue
@@ -155,6 +197,9 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
         body = normalize_whitespace(path.read_text(encoding="utf-8", errors="replace"))
         if len(body) < 400:
             continue
+        if not looks_like_review(str(ev.payload.get("title") or ""), ev.source_url or ""):
+            skipped_recipe += 1
+            continue
         items.append({
             "event_id": ev.event_id, "review_id": review_id,
             "review_entity_id": ev.entity_id,
@@ -164,8 +209,9 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
             "input": json.dumps({"title": str(ev.payload.get("title") or ""),
                                  "body": body[:BODY_CHARS]}, ensure_ascii=False),
         })
-        if limit and len(items) >= limit:
-            break
+    items = _stratify(items)
+    if limit:
+        items = items[:limit]
     return items
 
 
