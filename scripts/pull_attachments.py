@@ -19,7 +19,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DIR_RE = re.compile(r"^\d{4}-\d{2}-[a-z]{2}-[a-z0-9-]+$")
 PDF_DPI = 110          # 手機上看得清楚，又不會讓單檔爆掉
 MAX_W = 1000           # 內嵌用的最大寬度：手機螢幕撐死 430pt，再大只是浪費頻寬
-JPEG_Q = 78            # 訂位截圖與行程單在這個品質下都還讀得清楚
+WEBP_Q = 72            # 訂位截圖與行程單在這個品質下都還讀得清楚
+# 為什麼是 WebP 不是 JPEG：同樣一份圖、同樣看得清楚，WebP 只要 JPEG 的一半
+# （實測 1718 KB → 874 KB）。iOS 14／Android 都支援，這趟要用的手機都沒問題。
 
 
 def wrangler(*args):
@@ -95,14 +97,14 @@ def shrink(src, out):
     """
     from PIL import Image
 
-    dst = out / f"{src.stem}-w.jpg"
+    dst = out / f"{src.stem}-w.webp"
     if dst.exists():
         return dst.name
     with Image.open(src) as im:
         im = im.convert("RGB")
         if im.width > MAX_W:
             im = im.resize((MAX_W, round(im.height * MAX_W / im.width)), Image.LANCZOS)
-        im.save(dst, "JPEG", quality=JPEG_Q, optimize=True, progressive=True)
+        im.save(dst, "WEBP", quality=WEBP_Q, method=6)
     return dst.name
 
 

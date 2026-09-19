@@ -369,7 +369,8 @@ def load_attachments(slug: str) -> list:
             # 只收這個資料夾底下的檔案；index.json 若被動過手腳也跑不出去
             if f.parent != root or not f.is_file():
                 continue
-            mime = "image/jpeg" if f.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+            mime = {".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                    ".webp": "image/webp"}.get(f.suffix.lower(), "image/png")
             pages.append({"mime": mime, "b64": base64.b64encode(f.read_bytes()).decode("ascii")})
         if pages:
             out.append({"label": row.get("label") or "", "name": row.get("name") or "",
