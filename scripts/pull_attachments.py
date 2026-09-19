@@ -18,6 +18,8 @@ NS = "492ce5e92c12460a9923ccf2610061af"   # ATTACHMENTS，見 wrangler.toml
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DIR_RE = re.compile(r"^\d{4}-\d{2}-[a-z]{2}-[a-z0-9-]+$")
 PDF_DPI = 110          # 手機上看得清楚，又不會讓單檔爆掉
+MAX_W = 1000           # 內嵌用的最大寬度：手機螢幕撐死 430pt，再大只是浪費頻寬
+JPEG_Q = 78            # 訂位截圖與行程單在這個品質下都還讀得清楚
 
 
 def wrangler(*args):
@@ -54,6 +56,7 @@ def main(slug):
         pages = [blob.name]
         if (meta.get("type") == "application/pdf") or blob.suffix.lower() == ".pdf":
             pages = rasterize(blob, out)
+        pages = [shrink(out / n, out) for n in pages]
         index.append({
             "id": k["name"], "label": meta.get("label") or "",
             "name": meta.get("name") or kid, "type": meta.get("type") or "",
@@ -79,6 +82,28 @@ def rasterize(pdf, out):
                 page.get_pixmap(dpi=PDF_DPI).save(png)
             names.append(png.name)
     return names
+
+
+def shrink(src, out):
+    """縮到手機看得清楚就好的大小，轉成 JPEG。
+
+    為什麼要這一步：iPhone 截圖是 1179 px 寬的 PNG，一張就 450 KB；十一份附件
+    原樣內嵌會讓單檔變成 6 MB，在飯店 wifi 上等於打不開。縮到 1000 px、
+    JPEG 78 之後總量降到五分之一，訂位編號與時間仍然讀得清楚。
+
+    原檔留著不動（它們在 .gitignore 裡），要重新調參數隨時可以再產一次。
+    """
+    from PIL import Image
+
+    dst = out / f"{src.stem}-w.jpg"
+    if dst.exists():
+        return dst.name
+    with Image.open(src) as im:
+        im = im.convert("RGB")
+        if im.width > MAX_W:
+            im = im.resize((MAX_W, round(im.height * MAX_W / im.width)), Image.LANCZOS)
+        im.save(dst, "JPEG", quality=JPEG_Q, optimize=True, progressive=True)
+    return dst.name
 
 
 if __name__ == "__main__":
