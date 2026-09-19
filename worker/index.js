@@ -401,6 +401,14 @@ export default {
     if (path === "/api/attachments" || path.startsWith("/api/attachments/")) {
       return attachments(request, env);
     }
+    // config.js 是選用的（Supabase 連線寫死在各自的 js 裡，那是 publishable key）。
+    // 但 index.html 一定會去載它，沒有檔案就每次載入噴一個 404 紅字。
+    // 靜態資產優先於 Worker，所以真的放了 config.js 時這段不會被執行。
+    if (path === "/config.js") {
+      return new Response("/* 沒有 config.js：連線設定已寫死在 checklist.js / buylist.js。 */", {
+        headers: { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" },
+      });
+    }
     // 靜態資產由平台先處理；走到這裡代表既不是資產也不是已知端點。
     // /api/* 給程式呼叫，維持 JSON；其他路徑是人點錯連結，給看得懂的頁面。
     // （2026-09-13 實際發生過：連結後面黏了標點，打開只看到一串 {"error":...}。）
