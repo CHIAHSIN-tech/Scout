@@ -220,17 +220,23 @@ def buyable(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
     而那正是漏收最難察覺的那一面。
     """
     def sellable(row: dict[str, Any]) -> bool:
+        """「買得到」的判準是**有貨架**，不是有標價。
+
+        Stanley 2026-09-20：「不需要必須有價錢，這只是買得到的驗證而已，
+        如果某種原因「買得到但是沒價錢」成立的話，也是可以」。
+
+        所以條件是「有人把它上架在賣」：有購買連結，而且可購性不是
+        mention_only。價格有就存、沒有就留空——**留空跟填 0 是兩件事**。
+        """
+        if not str(row.get("buy_url") or "").strip():
+            return False
+        # 不拿「現在有沒有貨」當門檻：Hot Jawn 這一款實測就是上架、標價 $12、
+        # 但當下缺貨——那仍然是「有地方在賣」。缺貨是 `in_stock` 那一欄的事。
+        # 幣別不是 USD 代表那是別的國家的貨架；沒有價格則不評斷幣別。
         price = str(row.get("price") or "").strip()
-        if not price or not str(row.get("buy_url") or "").strip():
+        if price and str(row.get("price_currency") or "") != "USD":
             return False
-        # 幣別必須是 USD。CAD／GBP／INR 的報價代表那是別的國家的貨架，
-        # 而這份表回答的是「在美國多少錢」。
-        if str(row.get("price_currency") or "") != "USD":
-            return False
-        try:
-            return float(price) > 0     # 0 是贈品或樣品，不是「有在賣」
-        except ValueError:
-            return False
+        return True
 
     return [r for r in build(events, rules_version) if sellable(r)]
 

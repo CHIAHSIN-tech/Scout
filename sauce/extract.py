@@ -73,6 +73,33 @@ def looks_like_review(title: str, url: str) -> bool:
     return not _RECIPE.search(blob)
 
 
+#: 這一篇到底跟辣醬有沒有關係。sitemap 的網址比對會放進來一些
+#: 完全不相干的頁（實測抓到一頁電影配樂）。標題跟網址都沒提到辣醬的，不送進模型。
+_SAUCEISH = re.compile(
+    r"\bhot sauce\b|\bsauces?\b|\bsriracha\b|\bchili\b|\bchile\b|\bchilli\b"
+    r"|\bhabanero\b|\bjalapeno\b|\bpepper\b|\bscoville\b|\bcondiments?\b"
+    r"|\btabasco\b|\bharissa\b|\bsambal\b|\bchamoy\b|\bspicy\b", re.I)
+
+
+def is_about_sauce(title: str, url: str) -> bool:
+    """只看**標題**。網址裡的字不算——sitemap 的目錄結構會讓一頁電影配樂
+    因為路徑上儀好有 pepper 而混進來（實測抓到過）。標題沒提到辣醬，就不是在講辣醬。"""
+    return bool(_SAUCEISH.search(title or ""))
+
+
+def review_rank(title: str, url: str) -> int:
+    """越小越像評測。分層取樣時每一家先拿最像評測的那一篇——
+
+    不排序的話，每一家拿到的是字典序第一篇，而那通常是新聞或知識文，
+    不是「我們試了十五瓶」。golden 樣本用的就是這一批，拿錯了後面全部歪掉。
+    """
+    if _REVIEWISH.search(title or ""):
+        return 0
+    if "review" in (url or "").lower():
+        return 1
+    return 2
+
+
 def _stratify(items: list[dict[str, Any]], key: str = "outlet") -> list[dict[str, Any]]:
     """跨 outlet 輪流取。取前 N 筆會拿到同一家的前 N 篇——
     第一次冷啟動的 20 筆全部來自 America's Test Kitchen，就是這樣來的。"""
@@ -184,7 +211,7 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
     done = {ev.payload.get("review_id")
             for ev in store.all_events() if ev.event_type == contract.EV_VERDICT}
     items: list[dict[str, Any]] = []
-    skipped_recipe = 0
+    skipped_recipe = skipped_offtopic = 0
     for ev in store.all_events():
         if ev.event_type != contract.EV_REVIEW:
             continue
@@ -197,7 +224,11 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
         body = normalize_whitespace(path.read_text(encoding="utf-8", errors="replace"))
         if len(body) < 400:
             continue
-        if not looks_like_review(str(ev.payload.get("title") or ""), ev.source_url or ""):
+        title_text = str(ev.payload.get("title") or "")
+        if not is_about_sauce(title_text, ev.source_url or ""):
+            skipped_offtopic += 1
+            continue
+        if not looks_like_review(title_text, ev.source_url or ""):
             skipped_recipe += 1
             continue
         items.append({
@@ -206,9 +237,12 @@ def review_items(store: Store, home: Home, limit: int | None = None) -> list[dic
             "outlet": str(ev.payload.get("outlet") or ""),
             "url": ev.source_url or "", "body": body,
             "truncated": len(body) > BODY_CHARS,
-            "input": json.dumps({"title": str(ev.payload.get("title") or ""),
+            "rank": review_rank(title_text, ev.source_url or ""),
+            "input": json.dumps({"title": title_text,
                                  "body": body[:BODY_CHARS]}, ensure_ascii=False),
         })
+    # 先排「有多像評測」，再跨 outlet 輪流取
+    items.sort(key=lambda i: (i["rank"], i["outlet"]))
     items = _stratify(items)
     if limit:
         items = items[:limit]

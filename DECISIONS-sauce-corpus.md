@@ -247,3 +247,69 @@ country=US、而且第一頁就有 ≥15 款辣醬），品牌直營店則由得
 
 **沒有重抓那 1,827 篇**：過濾是在抽取端做的，原始正文留著不動——
 語料庫的原始層本來就不該因為下游規則改了而被修剪。
+
+---
+
+## D17 — 我上一則的「FDC／OFF 不值得抓」是錯的，推翻自己的 D14 推論
+
+**怎麼發現的**：Stanley 2026-09-19 要求 double check——挑一批「存在但標記買不到」的，
+逐一去搜怎麼買。抽 14 筆，其中 6 筆根本不是辣醬（過濾器漏的），剩下 7 筆真辣醬裡
+**6 筆現在就買得到**（Hot Jawn $12、Iguana En Fuego $5.99、Spontaneous Combustion $7.99、
+Madame Gougousse、Crippling Limping、Texas Pete），只有 White's Valley 是澳洲品牌、
+美國通路買不到——那一筆我標對了。
+
+**錯在哪**：我量到的「只貢獻 19 列」不是「那些產品沒人賣」，是**我的抓取器只會講兩種 API**
+（Shopify `/products.json`、Woo Store API）。實測搜尋結果裡的 13 家店：
+
+- 抓得到的 4 家：chillychiles.com（124 款）、garlicshoppe.com（188 款）、
+  halfmoonbaytrading.com（34 款）、allthejawns.com
+- **抓不到的 9 家**：hotsauce.com、peppers.com、hotsauceworld.com、hotsaucemall.com、
+  hotsauceplanet.com、mohotta.com、scorchedlizardsauces.com…——Magento／BigCommerce／自建車，
+  而且**連 schema.org 的 Product JSON-LD 都沒有**（逐站驗過）
+
+**所以**：FDC／OFF 的列不是死列，它們是**「有這個產品、但我的爬蟲沒去對的店」的線索**。
+兩個缺口要分開處理：
+1. **發現缺口**（店在、API 也通，只是沒找到網域）——多搜幾輪就好，成本低；
+2. **平台缺口**（店不講我會的兩種語言）——要寫第三條路徑，而且沒有 JSON-LD 可以靠。
+
+**教訓**：拿自己的覆蓋率去證明「那邊沒東西」是循環論證。要否證「買不到」，
+只能一筆一筆去外面找，不能在自己的庫裡查。
+
+---
+
+## D18 — 「必須有價錢」放寬成「有貨架」
+
+**Stanley 2026-09-20**：「不需要『必須有價錢』，這只是買得到的驗證而已，
+如果某種原因『買得到但是沒價錢』成立的話，也是可以」。
+
+`sauce_buyable` 的條件改成：有購買連結（真的商品頁）。價格有就存、沒有就留空——
+**留空跟填 0 是兩件事**。缺貨也照收（Hot Jawn 實測就是上架、標價 $12、當下缺貨），
+缺貨是 `in_stock` 那一欄的事。
+
+結果：1,778 列有貨架，其中 1,252 列當下有貨。
+
+---
+
+## D19 — Q8 驗證：llm-bridge 的視覺支援（v3 的第一個閘）
+
+**結論：可行，但要改 llm-bridge 的批次層。**
+
+- `client.call_provider()` 把 `messages` 原樣送出 → **transport 層本來就支援** OpenAI 格式的
+  多模態 content blocks。
+- `batch._render_messages()` 只會產生純字串的 user message → **批次層不支援**。
+- 實測同一個 NVIDIA 端點、同一把金鑰：
+  - `nvidia/nemotron-3-super-120b-a12b`（目前釘住的文字模型）→ HTTP 400，明說收到多模態資料但沒有處理器
+  - `meta/llama-3.2-11b-vision-instruct` → **可用**（1×1 PNG 測試回 "Pink."）
+  - `meta/llama-3.2-90b-vision-instruct` → 逾時（可能要更長 timeout）
+
+**所以 N4c 不用標 degraded**，但要在 llm-bridge 加一種「item 可以帶圖」的建法。
+那是 Stanley 自己的 repo（不像 evdb 是唯讀），屬於合理的擴充，不是繞過。
+
+## D20 — OFF 影像授權已確認（v3 BOUNDS 唯一一個「沒確認就停」的依賴）
+
+Open Food Facts 的**產品照片**是 **CC BY-SA 3.0**（與資料庫的 ODbL 不同）：
+要署名、衍生作品同條款分享。站方另有提醒：照片本身的授權不涵蓋包裝上的商標與設計，
+那些可能另有第三方權利。
+
+**本專案的用法相容**：照片只落地在 `<HOME>/raw/`（不進版控、不進 view、不重新散布），
+只拿來給模型判讀成分表。`sauce.label.image` 的 payload 要帶 `licence_note` 記下這件事。
