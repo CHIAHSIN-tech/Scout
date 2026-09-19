@@ -1,0 +1,124 @@
+outlet,domain,tier,conflict_of_interest
+America's Test Kitchen,americastestkitchen.com,1_methodology,none
+Cook's Country,cookscountry.com,1_methodology,none
+Consumer Reports,consumerreports.org,1_methodology,none
+NYT Wirecutter,nytimes.com/wirecutter,1_methodology,affiliate
+Good Housekeeping Institute,goodhousekeeping.com,1_methodology,affiliate
+Serious Eats,seriouseats.com,1_methodology,affiliate
+Sporked,sporked.com,1_methodology,none
+Fiery Foods & BBQ Central,fiery-foods.com,1_methodology,none
+The New York Times Food,nytimes.com,1_methodology,none
+The Washington Post Food,washingtonpost.com,1_methodology,none
+Epicurious,epicurious.com,2_editorial,affiliate
+Food & Wine,foodandwine.com,2_editorial,affiliate
+Bon Appetit,bonappetit.com,2_editorial,affiliate
+The Kitchn,thekitchn.com,2_editorial,affiliate
+Food52,food52.com,2_editorial,sells_products
+Simply Recipes,simplyrecipes.com,2_editorial,affiliate
+Delish,delish.com,2_editorial,affiliate
+Tasting Table,tastingtable.com,2_editorial,affiliate
+The Takeout,thetakeout.com,2_editorial,none
+Thrillist,thrillist.com,2_editorial,affiliate
+Eater,eater.com,2_editorial,none
+Chile Pepper Magazine,chilepepper.com,2_editorial,none
+PepperScale,pepperscale.com,2_editorial,affiliate
+Chili Pepper Madness,chilipeppermadness.com,2_editorial,affiliate
+Scott Roberts Hot Sauce Reviews,scottrobertsweb.com,2_editorial,none
+Hot Sauce Daily,hotsaucedaily.com,2_editorial,none
+Pepper Geek,peppergeek.com,2_editorial,affiliate
+I Love It Spicy,iloveitspicy.com,2_editorial,none
+Los Angeles Times Food,latimes.com,2_editorial,none
+San Francisco Chronicle Food,sfchronicle.com,2_editorial,none
+Texas Monthly,texasmonthly.com,2_editorial,none
+Southern Living,southernliving.com,2_editorial,affiliate
+Garden & Gun,gardenandgun.com,2_editorial,none
+The Guardian Food,theguardian.com,2_editorial,none
+BBC Good Food,bbcgoodfood.com,2_editorial,none
+Men's Health,menshealth.com,2_editorial,affiliate
+GQ,gq.com,2_editorial,affiliate
+Esquire,esquire.com,2_editorial,affiliate
+Allrecipes,allrecipes.com,3_listicle,affiliate
+Mashed,mashed.com,3_listicle,affiliate
+The Daily Meal,thedailymeal.com,3_listicle,affiliate
+Chowhound,chowhound.com,3_listicle,affiliate
+Heatonist Journal,heatonist.com,3_listicle,sells_products
+Hot Sauce Depot Blog,hotsaucedepot.com,3_listicle,sells_products
+Fuego Box Blog,fuegobox.com,3_listicle,sells_products
+Grow Hot Peppers,growhotpeppers.com,2_editorial,affiliate
+Eat This Not That,eatthis.com,2_editorial,affiliate
+Taste of Home Test Kitchen,tasteofhome.com,1_methodology,affiliate
+Forbes Vetted,forbes.com,2_editorial,affiliate
+NBC Select,nbcnews.com,2_editorial,affiliate
+Food Network,foodnetwork.com,2_editorial,affiliate
+SheKnows,sheknows.com,3_listicle,affiliate
+Cheapism,cheapism.com,3_listicle,affiliate
+Time Out,timeout.com,2_editorial,none
+NPR,npr.org,2_editorial,none
+American Spice,americanspice.com,3_listicle,sells_products
+Smarter Ranking,smarterranking.com,3_listicle,affiliate
+The Spruce Eats,thespruceeats.com,2_editorial,affiliate
+Business Insider Reviews,businessinsider.com,2_editorial,affiliate
+HuffPost Food,huffpost.com,2_editorial,none
+Salon Food,salon.com,2_editorial,none
+VinePair,vinepair.com,2_editorial,affiliate
+Food Republic,foodrepublic.com,2_editorial,affiliate
+The Manual,themanual.com,2_editorial,affiliate
+SFGate Food,sfgate.com,2_editorial,affiliate
+Phoenix New Times,phoenixnewtimes.com,2_editorial,none
+LA Weekly,laweekly.com,2_editorial,none
+Austin Chronicle,austinchronicle.com,2_editorial,none
+Willamette Week,wweek.com,2_editorial,none
+Portland Mercury,portlandmercury.com,2_editorial,none
+Atlas Obscura,atlasobscura.com,2_editorial,none
+Saveur,saveur.com,2_editorial,affiliate
+EatingWell,eatingwell.com,2_editorial,affiliate
+Real Simple,realsimple.com,3_listicle,affiliate
+Martha Stewart,marthastewart.com,3_listicle,affiliate
+PureWow,purewow.com,3_listicle,affiliate
+Spoon University,spoonuniversity.com,3_listicle,none
+Better Homes & Gardens,bhg.com,3_listicle,affiliate
+Country Living,countryliving.com,3_listicle,affiliate
+Woman's Day,womansday.com,3_listicle,affiliate
+Gear Patrol,gearpatrol.com,2_editorial,affiliate
+InsideHook,insidehook.com,2_editorial,affiliate
+Men's Journal,mensjournal.com,2_editorial,affiliate
+AmazingRibs,amazingribs.com,1_methodology,affiliate
+First We Feast,firstwefeast.com,2_editorial,none
+Complex,complex.com,2_editorial,none
+TASTE,tastecooking.com,2_editorial,none
+The Infatuation,theinfatuation.com,2_editorial,none
+Pepper Palace,pepperpalace.com,3_listicle,sells_products
+The Spice House,thespicehouse.com,3_listicle,sells_products
+Savory Spice Shop,savoryspiceshop.com,3_listicle,sells_products
+Sandia Seed,sandiaseed.com,3_listicle,sells_products
+Delicious Magazine,deliciousmagazine.co.uk,2_editorial,affiliate
+Olive Magazine,olivemagazine.com,2_editorial,affiliate
+Great British Chefs,greatbritishchefs.com,2_editorial,none
+The Independent Indybest,independent.co.uk,2_editorial,affiliate
+Evening Standard,standard.co.uk,2_editorial,affiliate
+Metro UK,metro.co.uk,3_listicle,affiliate
+Good Housekeeping UK,goodhousekeeping.com/uk,2_editorial,affiliate
+Serious Eats Equipment,seriouseats.com/equipment,1_methodology,affiliate
+The Takeout Taste Tests,thetakeout.com/tag/taste-test,2_editorial,none
+Lifehacker Food,lifehacker.com,3_listicle,affiliate
+Uproxx Life,uproxx.com,2_editorial,affiliate
+Paste Magazine,pastemagazine.com,2_editorial,none
+Vice Munchies,vice.com,2_editorial,none
+The Daily Beast Scouted,thedailybeast.com,3_listicle,affiliate
+Wide Open Eats,wideopencountry.com,3_listicle,affiliate
+Mental Floss,mentalfloss.com,3_listicle,affiliate
+Nola.com Food,nola.com,2_editorial,none
+Houston Chronicle Food,houstonchronicle.com,2_editorial,none
+Dallas Morning News Food,dallasnews.com,2_editorial,none
+Seattle Times Food,seattletimes.com,2_editorial,none
+Atlanta Journal-Constitution Food,ajc.com,2_editorial,none
+Sandwich America Hot Sauce,hotsaucesurvey.com,3_listicle,none
+Firebox Blog,firebox.com,3_listicle,sells_products
+Hot Sauce Lovers,hotsaucelovers.com,3_listicle,sells_products
+Sauce Mania,saucemania.com.au,3_listicle,sells_products
+Chilli No 5,chillino5.com,3_listicle,sells_products
+The Chile Man,thechileman.org,2_editorial,none
+Spicy Organic,spicyorganic.com,3_listicle,sells_products
+Burning Desire Foods,burningdesirefoods.com,3_listicle,sells_products
+Culinary Hill,culinaryhill.com,3_listicle,affiliate
+Food & Wine Test Kitchen,foodandwine.com/test-kitchen,1_methodology,affiliate

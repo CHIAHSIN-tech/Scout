@@ -38,12 +38,15 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 | [雙 Tab 視覺統一＋日曆／地圖匯出](TASK-ui-unify-and-calendar-maps-export.md) | 全站 | ✅ done |
 | [Scout MCP Server](spec-scout-mcp-server.md) | 工具鏈 | 🟡 程式完成，AC-1~4 待真實環境驗 |
 | [讓「資料庫被暫停」有人會知道](spec-keepalive-visibility.md) | 全站 / 維運 | ✅ done |
+| [全美辣醬語料庫＋專業評論庫](spec-us-hot-sauce-corpus.md) | 資料層（獨立於 app） | 🟡 管線與驗證器完成；評論抽取停在 llm-bridge 冷啟動人審關卡，數條驗收未達門檻，見 [`ACCEPTANCE-sauce-corpus.md`](../ACCEPTANCE-sauce-corpus.md) |
 
 > **AC 勾選框的說明**：只有我親自逐條驗過的 spec 會把 `- [ ]` 改成 `- [x]`。
 > 其餘標 done 的 spec，依據是 commit 與 `BUYLIST_STATE.md` 的紀錄，AC 框維持未勾——
 > 勾上等於宣稱我驗過，那不是事實。
 
-**目前沒有待執行的 spec**（MCP server 的程式已完成，只剩需要真實環境的驗收步驟，
+**目前待人接手的是辣醬語料庫的兩個人工關卡**：llm-bridge 的 golden 人審、outlet 白名單的證據網址複核（見 [`RUNBOOK-sauce-refresh.md`](../RUNBOOK-sauce-refresh.md) §2 與 §4）。
+
+MCP server 的程式也已完成，只剩需要真實環境的驗收步驟，
 見 [`ACCEPTANCE-mcp-server.md`](../ACCEPTANCE-mcp-server.md)）。
 下一批候選見 [`buylist/BACKLOG.md`](../buylist/BACKLOG.md)
 （最大的缺口是 Streamlit 退役後沒有替代品的「AI 生成行程」，需先決定做不做）。

@@ -1,0 +1,196 @@
+{
+ "artifacts": {
+  "acceptance": "ACCEPTANCE-sauce-corpus.md",
+  "catalog_csv": "sauce/out/sauce_catalog-v1.csv",
+  "coverage_report": "reports/sauce-coverage.md",
+  "decisions": "DECISIONS-sauce-corpus.md",
+  "known_issues": "KNOWN_ISSUES-sauce-corpus.md",
+  "recon": "docs/sauce-recon.md",
+  "reviews_csv": "sauce/out/sauce_reviews-v1.csv",
+  "reviews_report": "reports/sauce-reviews.md",
+  "runbook": "RUNBOOK-sauce-refresh.md"
+ },
+ "contract": {
+  "contract_version": "sauce-contract-1",
+  "domain": "sauce",
+  "entity_id_templates": {
+   "brand": "brand:<brand_key>",
+   "gtin": "gtin:<14 位數字>",
+   "observation": "src:<source>:<key>",
+   "outlet": "outlet:<outlet_key>",
+   "review": "review:<outlet_key>:<url_sha1_12>",
+   "sauce": "sauce:<brand_key>|<product_key>"
+  },
+  "event_types": {
+   "sauce.extraction.parsed": "模型對某筆觀察的解析結果（帶 model_id 與 prompt_version）",
+   "sauce.observation.availability": "一次在美國零售或品牌官網看到上架",
+   "sauce.observation.lineup": "某季某集的選醬名單（含第幾棒與標榜 SHU）",
+   "sauce.observation.mention": "一次提及，只有名字（wikidata / wikipedia / awards / hotones / reddit）",
+   "sauce.observation.product": "一筆目錄型來源記錄（fdc / off / shopify / woo）",
+   "sauce.review.published": "一篇專業評論（payload 只放 metadata，正文在 raw store）",
+   "sauce.review.verdict": "該評論對某一款醬的評語（一篇多款就多筆）"
+  },
+  "link_event": "entity.linked",
+  "namespaces": {
+   "brand": "一個辣醬品牌或製造商：brand:<brand_key>",
+   "gtin": "GTIN-14（UPC 前面補零到 14 位）：gtin:<14 位數字>",
+   "outlet": "一個評論發布單位：outlet:<outlet_key>",
+   "review": "一篇專業評論：review:<outlet_key>:<url_sha1_12>",
+   "sauce": "一款辣醬產品（不分瓶容量）：sauce:<brand_key>|<product_key>"
+  },
+  "sources": {
+   "awards": "Scovie Awards / World Hot Sauce Awards / NYC Hot Sauce Expo 得獎名單",
+   "fdc": "USDA FoodData Central Branded Foods 批次檔（帶 GTIN 的品牌食品母體）",
+   "hotones": "每季選醬名單（來自 Heatonist 的 season pack 商品頁與編輯型報導，不經影音平台）",
+   "off": "Open Food Facts 美國產品匯出（補 FDC 漏掉的進口與小廠）",
+   "outlet_web": "白名單內 outlet 的評論文章",
+   "podcast_transcript": "Podcast RSS 裡發布者自己公開的逐字稿",
+   "print_archive": "有公開線上版的雜誌／報紙評論",
+   "reddit": "Reddit 官方 Data API —— 只用來發現名字，永遠不產生評論事件（A20）",
+   "shopify": "獨立品牌與專賣零售的 Shopify 公開 /products.json",
+   "wikidata": "Wikidata SPARQL：辣醬類別的品項與品牌",
+   "wikipedia": "Wikipedia 條目（List of hot sauces 等）",
+   "woo": "WooCommerce Store API 公開商品端點"
+  },
+  "ugc_sources": [
+   "forum_ugc",
+   "marketplace",
+   "reddit",
+   "retailer_widget"
+  ],
+  "versions": {
+   "matcher": "sauce-match-1",
+   "names": "sauce-names-1",
+   "review_link": "sauce-reviewlink-1"
+  }
+ },
+ "generated_at": "2026-09-19T11:14:46.808263Z",
+ "nodes": {
+  "N1": {
+   "counts": {},
+   "note": "契約凍結；docs/sauce-recon.md",
+   "status": "done"
+  },
+  "N2": {
+   "counts": {
+    "outlets_whitelisted": 44,
+    "storefronts": 83
+   },
+   "status": "done"
+  },
+  "N3a": {
+   "counts": {
+    "fdc": 14996,
+    "off": 16623
+   },
+   "status": "done"
+  },
+  "N3b": {
+   "counts": {
+    "shopify": 4637,
+    "woo": 445
+   },
+   "status": "done"
+  },
+  "N3c": {
+   "counts": {
+    "awards": 102,
+    "hotones": 13,
+    "reddit": 0,
+    "wikidata": 0,
+    "wikipedia": 161
+   },
+   "status": "done"
+  },
+  "N3d": {
+   "counts": {
+    "outlet_web": 1827
+   },
+   "status": "done"
+  },
+  "N4": {
+   "counts": {
+    "parsed": 12189,
+    "verdicts": 0
+   },
+   "status": "done"
+  },
+  "N5": {
+   "counts": {
+    "views": {
+     "sauce_views_build": {
+      "events_in": 38804,
+      "rows": 6675,
+      "rows_sha256": "f0e974304e47662717c9f8016f3fc12e4fdaa62b636e1269b346764fef14eb9d"
+     },
+     "sauce_views_reviews": {
+      "events_in": 38804,
+      "rows": 0,
+      "rows_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+     }
+    }
+   },
+   "status": "done"
+  },
+  "N6": {
+   "counts": {},
+   "status": "done"
+  },
+  "N7": {
+   "counts": {},
+   "status": "done"
+  }
+ },
+ "run_id": "run-2026-09-19",
+ "snapshot_id": "20260919T082412Z",
+ "sources": [
+  {
+   "files": 140,
+   "sha256": "165ebbeeb3f52d31510d5fdcc365e2f4c05a044b3dc27a1aeee1f84485e285b1",
+   "snapshot_path": "state\\snapshot-20260919T082412Z",
+   "sources": [
+    "awards",
+    "fdc",
+    "hotones",
+    "off",
+    "shopify",
+    "wikipedia",
+    "woo"
+   ]
+  }
+ ],
+ "store": {
+  "by_event_type": {
+   "entity.linked": 12189,
+   "sauce.extraction.parsed": 12189,
+   "sauce.observation.lineup": 2,
+   "sauce.observation.mention": 274,
+   "sauce.observation.product": 12323,
+   "sauce.review.published": 1827
+  },
+  "by_source": {
+   "awards": 102,
+   "fdc": 14996,
+   "hotones": 13,
+   "off": 16623,
+   "outlet_web": 1827,
+   "shopify": 4637,
+   "wikipedia": 161,
+   "woo": 445
+  },
+  "entities": 21063,
+  "events": 38804
+ },
+ "views": {
+  "sauce_views_build": {
+   "events_in": 38804,
+   "rows": 6675,
+   "rows_sha256": "f0e974304e47662717c9f8016f3fc12e4fdaa62b636e1269b346764fef14eb9d"
+  },
+  "sauce_views_reviews": {
+   "events_in": 38804,
+   "rows": 0,
+   "rows_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  }
+ }
+}

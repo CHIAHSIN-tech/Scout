@@ -35,3 +35,28 @@ Thumbs.db
 # MCP 設定含 Supabase key，只留 .example 進版控
 .mcp.json
 mcp-server/.env
+
+# ── 辣醬語料庫（sauce/）──
+#
+# 事件庫與原始內容不進版控：`.evdb/raw/` 放的是第三方評論的正文，
+# 進了版控就等於在每一份可分享的產物裡夾帶全文（A28 會擋）。
+.evdb/
+.evdb-*/
+
+# 來源快照本體不進版控（FDC 與 OFF 的批次檔各數百 MB），
+# 但 MANIFEST.json 要進——半年後要靠它分辨「這是新出的辣醬」與「我們這次抓法不一樣」。
+state/snapshot-*/*
+!state/snapshot-*/MANIFEST.json
+state/llm-runs/
+
+# llm-bridge 的待審檔是機器產的，人審過 promote 成 golden.jsonl 之後那份才進版控
+sauce/prompts/*/golden.pending.jsonl
+
+# ── 旅程資料：這份是從 feat/trip-page-and-cloudflare 那邊帶過來的防呆 ──
+#
+# 這兩個資料夾在本分支的工作樹裡是**未追蹤**狀態（切分支不會帶走未追蹤的檔），
+# 而它們裝的是 booking_ref、旅館地址、班機時刻。這個 repo 目前是公開的，
+# 一旦推上去就進 git 歷史，拿不回來。所以在這裡也擋一次。
+trips/
+web/trips/
+.wrangler/

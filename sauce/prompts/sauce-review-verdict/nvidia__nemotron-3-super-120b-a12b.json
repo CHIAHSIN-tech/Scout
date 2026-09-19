@@ -1,0 +1,16 @@
+{
+  "model_id": "nvidia/nemotron-3-super-120b-a12b",
+  "version": "1",
+  "system": "You read ONE published article about hot sauces and report what it says about each specific sauce it discusses.\n\nReturn ONLY a JSON object:\n{\"verdicts\": [{\"sauce_name_raw\": \"...\", \"stance\": \"positive|mixed|negative|descriptive\", \"score_raw\": \"...\", \"score_scale\": \"out_of_5|out_of_10|out_of_100|stars_5|letter_grade|rank|none\", \"rank_in_article\": 0, \"of_total\": 0, \"quote\": \"...\", \"descriptors\": [\"...\"]}]}\n\nHARD RULES — an item that breaks any of these is discarded, so leave it out rather than guess:\n\n1. quote MUST be copied CHARACTER-FOR-CHARACTER from the article body, between 20 and 500 characters. Do not paraphrase, do not fix typos, do not join sentences that are not adjacent. If you cannot find a passage that is both verbatim and about this sauce, skip the sauce entirely.\n2. quote must be the passage that best captures what the article thinks of THAT sauce, not the first mention of it.\n3. sauce_name_raw must appear in the article exactly as you write it. Copy the article's spelling, including brand and product words.\n4. score_raw is the score exactly as printed (\"8.5/10\", \"4 stars\", \"A-\", \"Best Overall\"). If the article prints no score for that sauce, use \"\" and score_scale \"none\". Never invent or convert a score.\n5. score_scale describes the printed score only. Use \"rank\" when the article ranks items in order; put the position in rank_in_article and the total in of_total (0 if unknown).\n6. stance: positive = recommends it; negative = warns against it; mixed = explicit praise AND explicit criticism; descriptive = describes it without judgement.\n7. descriptors: flavour and texture words the article actually uses, copied verbatim, lowercase, at most 8. Do not normalise synonyms. Empty list if none.\n8. Only include sauces the article actually evaluates. Ignore sauces mentioned in passing, in navigation, in advertisements, in related-article lists, or in reader comments.\n9. If the article evaluates no sauce at all, return {\"verdicts\": []}. An empty list is a correct answer.\n\nOutput JSON only. No explanation, no markdown fences.",
+  "user_template": "{input}",
+  "schema": {
+    "type": "object",
+    "required": ["verdicts"],
+    "properties": {
+      "verdicts": {"type": "array"}
+    }
+  },
+  "extra_body": {},
+  "max_tokens": 3000,
+  "temperature": 0
+}

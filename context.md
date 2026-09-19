@@ -251,7 +251,7 @@ TBD（待實際開發中出現時補充）
 - [ ] 行程項目的上移↑／下移↓ 排序 — **刻意不做**：時間軸已能拖曳改時間，目的重疊（`spec-itinerary-restore-edit-delete.md` §4 Could）
 
 **Won't（明確不做）**
-- 自動爬蟲（由使用者主動貼連結）
+- 自動爬蟲（由使用者主動貼連結）——**僅限 app 功能**；辣醬語料庫（`sauce/`）是獨立資料層，見 ADR-018
 - 合併兩個 Supabase 專案（ADR-012）
 - 帳號系統（網址即存取，已接受風險）
 - PWA / 離線
@@ -940,6 +940,47 @@ Stanley 的原話：「anything that needs ai token, we use MCP」「全部先�
 - 負面：Chia 要自己設好 Claude Desktop ＋ Scout MCP 才用得到 AI（步驟見 `mcp-server/README.md`）
 - 需要後續處理：跟 Chia 同步這個決定——她的 AI 生成行程規格仍是 done，只是入口從網頁移到了 Claude
 - 重新啟用網頁 AI：Netlify 設 `GEMINI_API_KEY` ＋ 把 `AI_ENABLED` 改成 `true`，不需要改其他程式
+
+---
+
+### ADR-018: 辣醬語料庫是獨立資料層，不受「不做自動爬蟲」那條 Won't 約束
+
+- **日期：** 2026-09-19
+- **狀態：** Accepted — **Supersedes** §2.2 Won't 清單的「自動爬蟲（由使用者主動貼連結）」**在資料層的部分**
+- **相關方：** Stanley（拍板）/ Claude Code（執行）
+- **取代範圍：** 只取代資料層。**app 那一側完全不變**：買物清單與行程 Tab 仍然只吃使用者主動貼的連結，沒有任何自動抓取。
+
+**情境（Context）:**
+`spec-us-hot-sauce-corpus.md`（approved）要在這個 repo 裡建一份「在美國買得到的辣醬」總表
+加上專業評論語料庫，靠的是自動抓取 USDA 批次檔、Shopify/WooCommerce 的公開商品端點、
+維基條目、得獎名錄，以及白名單內媒體的評論文章。那整個就是一隻自動爬蟲。
+
+原本那條 Won't 講的是 **app 的功能**：不要讓買物清單自己去爬商品頁，改成使用者貼連結。
+它的理由是「不做自動爬蟲」帶來的維護與正確性負擔會落在一個兩人用的小工具上。
+語料庫不是 app 功能——它不進 `index.html`、不碰 `sauces` 表、不影響任何畫面，
+而且它的檢索**日後可能變成獨立工具**（Stanley 2026-09-19 的原話）。
+
+**考慮過的選項:**
+1. **照舊 Won't，不做這份語料庫** — 為什麼沒選：spec 已 approved，而且需求是明確的
+2. **默默做掉，不動 context.md** — 為什麼沒選：`CLAUDE.md` 第 1.5 條要求牴觸時先提出來；
+   而且半年後沒有人會記得這條 Won't 是什麼時候失效的
+3. **補一條 superseding ADR，把界線畫在「app 功能」與「資料層」之間** — 最終採用
+
+**決策:**
+- `sauce/` 是自給自足的套件：只依賴 evdb（隔壁 repo）與標準函式庫，
+  **不 import Scout 的應用程式碼，也不被應用程式碼 import**。
+- 抓取一律走單一出口 `sauce/net.py`：遵守 robots.txt、每主機速率下限、誠實的 user-agent、
+  不繞付費牆、不碰要登入的站。評論只抓 `fixtures/sauce/outlets.csv` 白名單內的網域，
+  而且擋牆在送出請求之前。
+- 節奏是**手動、半年一次**（`RUNBOOK-sauce-refresh.md`），沒有排程、沒有背景服務。
+- app 那一側的 Won't 不變。
+
+**預期後果:**
+- 正面：語料庫可以整包搬走變成獨立工具，搬走之後 Scout 這邊沒有任何東西會壞
+- 正面：抓取的規矩集中在一個檔，驗一次就夠（`tests/sauce/test_net.py`、`test_outlet_gate.py`）
+- 負面：repo 變大，而且多了一個跟旅遊／購物無關的資料域
+- 負面：**`context.md` §2.2 的 Won't 清單從此需要讀這條 ADR 才看得懂**——
+  清單那一行已就地標註指向這裡
 
 ---
 

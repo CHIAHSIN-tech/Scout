@@ -1,0 +1,23 @@
+# FDC 候選列 → 事件（走 evdb 的 bulk 匯入，不是 SDK）。
+#
+# 為什麼這一個來源走 bulk：它是唯一一個「先在本機過濾出幾千列 CSV，再一次灌進去」的來源，
+# 也就是唯一一個**有機會安靜掉列**的地方。bulk 匯入會把每一列的去向記下來
+# （變成事件，或進 rejects/），`sauce.checks.conservation` 就能驗
+# rows_in == events_written + rejects（A5）。走 SDK 的來源沒有這個風險，因為事件是
+# 一筆一筆從記憶體裡的物件產生的，沒有中間檔。
+source: fdc
+entity_type: sauce_observation
+event_type: sauce.observation.product
+entity_id: "src:fdc:{source_key}"
+observed_at: {from: file_mtime}
+required: [source_key, title]
+payload: {columns: "*"}
+register:
+  namespaces:
+    sauce: "一款辣醬產品（不分瓶容量）"
+    brand: "一個辣醬品牌或製造商"
+    gtin: "GTIN-14"
+    review: "一篇專業評論"
+    outlet: "一個評論發布單位"
+  sources:
+    fdc: "USDA FoodData Central Branded Foods 批次檔"

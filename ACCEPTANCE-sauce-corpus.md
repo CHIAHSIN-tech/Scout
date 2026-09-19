@@ -1,0 +1,800 @@
+# 驗收表 — us-hot-sauce-corpus
+
+`29` PASS　`5` FAIL　`1` BLOCKED（共 35 條）
+
+**任何一項 FAIL 或 BLOCKED，整個 run 就是失敗**，不論產出多少列。
+`BLOCKED` 的意思是「這一條這一輪驗不到」，不是「應該會過」。
+
+| 項目 | 判定 | 內容 |
+|---|---|---|
+| A1 | PASS | 乾淨環境跑得起來、測試全綠 |
+| A2 | PASS | 註冊表登記完整、全庫體檢無違規 |
+| A3 | PASS | evdb 核心沒有被領域概念汙染 |
+| A4 | FAIL | evdb 工作樹沒有被這份任務改動 |
+| A5 | PASS | 批次匯入不丟列 |
+| A6 | PASS | 同一份快照跑兩次，事件數不變 |
+| A7 | PASS | 只追加：舊事件都還在 |
+| A8 | PASS | 產品規模 |
+| A9 | PASS | 事件總數天花板 |
+| A10 | PASS | 抽取不變式（三層） |
+| A11 | FAIL | 首輪試樣是交付物 |
+| A12 | PASS | bridge 不吃降級輸出 |
+| A13 | PASS | 同一個 GTIN 不出現在兩列 |
+| A14 | PASS | 不過度合併 |
+| A15 | PASS | 每一列可追溯 |
+| A16 | PASS | 可購性值域與證據 |
+| A17 | FAIL | 召回率 |
+| A18 | PASS | 召回率清單是 held-out 的 |
+| A19 | PASS | 零影音平台 |
+| A20 | PASS | 零 user review |
+| A21 | PASS | outlet 白名單可稽核 |
+| A22 | PASS | 白名單是抓取端的擋牆 |
+| A23 | PASS | 不含語音轉文字、不含付費轉錄 |
+| A24 | PASS | 正文逐字保存、不進 payload |
+| A25 | PASS | 評語是原句 |
+| A26 | PASS | 原生分數不被改寫 |
+| A27 | FAIL | 孤兒不丟 |
+| A28 | PASS | 版控與輸出不外流長正文 |
+| A29 | PASS | 評論覆蓋率報告 |
+| A30 | FAIL | 評論規模 |
+| A31 | PASS | 視圖可重算 |
+| A32 | BLOCKED | 作業書可執行 |
+| A33 | PASS | 沒有繞過共用 session 的直接請求 |
+| A34 | PASS | 沒有密鑰進版控、probe 匯出唯讀 |
+| A35 | PASS | 主要路徑：查得到、看得懂 |
+
+---
+
+## 原始輸出
+
+### A1 — 乾淨環境跑得起來、測試全綠
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m pytest tests/sauce -q
+```
+
+```
+..........................................................               [100%]
+58 passed in 1.78s
+```
+
+### A2 — 註冊表登記完整、全庫體檢無違規
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m evdb --home .evdb validate --json
+```
+
+```
+{
+ "events_checked": 38804,
+ "rules_violated": [],
+ "violations": {},
+ "ok": true
+}
+```
+
+### A3 — evdb 核心沒有被領域概念汙染
+
+**判定：PASS**（exit 1）
+
+```
+git grep -niE sauce|scoville|capsaicin|pepper -- evdb/
+```
+
+> 在 ../1-github/evdb 執行
+
+### A4 — evdb 工作樹沒有被這份任務改動
+
+**判定：FAIL**（exit 0）
+
+```
+git status --porcelain
+```
+
+> 在 ../1-github/evdb 執行
+
+```
+M  DECISIONS.md
+M  KNOWN_ISSUES.md
+A  docs/backfill.md
+A  domains/ma/backfill.py
+M  domains/ma/load.py
+M  domains/ma/views.py
+M  evdb/derive.py
+M  evdb/store.py
+M  pyproject.toml
+A  scripts/check_backfill.py
+M  tests/ma/test_roles.py
+```
+
+### A5 — 批次匯入不丟列
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.conservation --home .evdb
+```
+
+```
+{
+ "check": "A5 conservation",
+ "ok": true,
+ "files": 11,
+ "rejects_total": 0,
+ "detail": [
+  {
+   "file": "bulk-candidates-22520-6eae58ba.jsonl",
+   "kind": "spool",
+   "lines": 5032,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-awards-22520-df4899cf.jsonl",
+   "kind": "spool",
+   "lines": 102,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-extract-rules-22520-08bbd9cf.jsonl",
+   "kind": "spool",
+   "lines": 12189,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-hotones-22520-24d372f3.jsonl",
+   "kind": "spool",
+   "lines": 13,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-match-22520-51700cbf.jsonl",
+   "kind": "spool",
+   "lines": 12189,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-off-22520-ec49b14a.jsonl",
+   "kind": "spool",
+   "lines": 5543,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-reviews-37452-8e381e8a.jsonl",
+   "kind": "spool",
+   "lines": 1833,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-shopify-22520-2569ca7b.jsonl",
+   "kind": "spool",
+   "lines": 1599,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-wikipedia-22520-a958d25b.jsonl",
+   "kind": "spool",
+   "lines": 161,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "sauce-woo-22520-bf9a0fad.jsonl",
+   "kind": "spool",
+   "lines": 149,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
+   "file": "state\\snapshot-20260919T082412Z\\fdc\\candidates.csv",
+   "kind": "bulk",
+   "rows_in": 5032,
+   "spooled": 5032,
+   "rejects": 0
+  }
+ ]
+}
+```
+
+### A6 — 同一份快照跑兩次，事件數不變
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.idempotent --home .evdb --snapshot state/snapshot-20260919T082412Z
+```
+
+```
+{
+ "check": "A6 idempotent",
+ "ok": true,
+ "events_before": 38804,
+ "after_first": 38804,
+ "after_second": 38804,
+ "snapshot": "state/snapshot-20260919T082412Z"
+}
+```
+
+### A7 — 只追加：舊事件都還在
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.append_only --home .evdb --baseline state/events-20260919T082412Z.txt
+```
+
+> 第一次執行時基準就是這一輪自己；真正的證據要等下一輪
+
+```
+{
+ "check": "A7 append_only",
+ "ok": true,
+ "baseline_events": 38804,
+ "events_now": 38804,
+ "added": 0,
+ "missing": 0
+}
+```
+
+### A8 — 產品規模
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.scale --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A8 scale",
+ "ok": true,
+ "products": 6675,
+ "brands": 2286,
+ "min_products": 4000,
+ "min_brands": 800
+}
+```
+
+### A9 — 事件總數天花板
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.ceiling --home .evdb
+```
+
+```
+{
+ "check": "A9 ceiling",
+ "ok": true,
+ "events": 38804,
+ "max_events": 800000,
+ "by_source": {
+  "off": 16623,
+  "fdc": 14996,
+  "shopify": 4637,
+  "outlet_web": 1827,
+  "woo": 445,
+  "wikipedia": 161,
+  "awards": 102,
+  "hotones": 13
+ }
+}
+```
+
+### A10 — 抽取不變式（三層）
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.validate --home .evdb
+```
+
+```
+{
+ "events": 38804,
+ "layer_1_schema": {
+  "ok": true,
+  "problems": [],
+  "total": 0
+ },
+ "layer_2_invariants": {
+  "ok": true,
+  "problems": [],
+  "total": 0
+ },
+ "layer_3_pilot": {
+  "status": "skipped",
+  "problems": [],
+  "reason": "人工裁決只有 0 筆，未達 40；第一次執行時這是預期的（A11 的交付物）",
+  "items": 40,
+  "judged": 0
+ },
+ "ok": true
+}
+```
+
+### A11 — 首輪試樣是交付物
+
+**判定：FAIL**（exit 1）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.pilot check
+```
+
+```
+{
+ "path": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\pilot\\sample-v1.jsonl",
+ "items": 40,
+ "verdicts": 0,
+ "judged_by_human": 0,
+ "problems": [
+  "verdict 只有 0 筆，少於 15"
+ ],
+ "note": "裁決欄位空白是預期的：第一次執行時這份檔案是交付物，不是關卡",
+ "ok": false
+}
+```
+
+### A12 — bridge 不吃降級輸出
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.degraded --home .evdb
+```
+
+```
+{
+ "check": "A12 degraded",
+ "ok": true,
+ "model_id": "nvidia/this-model-does-not-exist",
+ "exit": 1,
+ "events_before": 38804,
+ "events_after": 38804,
+ "stderr_tail": "luke_\\Desktop\\AI\\2-local-only\\llm-bridge\\llm_bridge\\prompts.py\", line 99, in load_asset\n    raise PromptAssetMissing(f\"找不到 prompt 資產：{path}\")\nllm_bridge.prompts.PromptAssetMissing: 找不到 prompt 資產：C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\prompts\\sauce-review-verdict\\nvidia__this-model-does-not-exist.json"
+}
+```
+
+### A13 — 同一個 GTIN 不出現在兩列
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.dupes --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A13 dupes",
+ "ok": true,
+ "rows": 6675,
+ "with_gtin": 5041,
+ "duplicated_gtins": 0
+}
+```
+
+### A14 — 不過度合併
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.confusables --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A14 confusables",
+ "ok": true,
+ "groups": 18,
+ "min_groups": 15,
+ "groups_present_in_view": 10,
+ "catalog_rows": 6675
+}
+```
+
+### A15 — 每一列可追溯
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.provenance --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A15 provenance",
+ "ok": true,
+ "rows": 6675,
+ "rows_without_provenance": 0
+}
+```
+
+### A16 — 可購性值域與證據
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.availability --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A16 availability",
+ "ok": true,
+ "rows": 6675,
+ "by_value": {
+  "discontinued": 1,
+  "retail_listing": 6284,
+  "unknown": 390
+ }
+}
+```
+
+### A17 — 召回率
+
+**判定：FAIL**（exit 1）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.coverage --home .evdb --rules v1 --probe sauce/probe/probe-v1.csv
+```
+
+```
+{
+ "check": "A17 coverage",
+ "ok": false,
+ "recall": 0.7432,
+ "min_recall": 0.9,
+ "list_entries": 74,
+ "hits": 55,
+ "misses": 19,
+ "by_level": {
+  "product_only": 9,
+  "brand+product": 19,
+  "brand+overlap": 27
+ },
+ "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-coverage.md",
+ "missed": [
+  "Original Red Sauce",
+  "Hotter Hot Sauce",
+  "XXXtra Hot Habanero Sauce",
+  "Scotch Bonnet and Ginger",
+  "Bee Sting Honey",
+  "Small Axe Peppers Bronx Greenmarket Hot Sauce",
+  "Pineapple Jalapeno",
+  "Hamajang",
+  "Zombie Apocalypse",
+  "Trinidad Scorpion",
+  "Da Bomb Beyond Insanity",
+  "Rogue Ghost Pepper",
+  "Pineapple Express",
+  "Hot Sauce Verde",
+  "Salsa Valentina",
+  "Salsa Búfalo Clásica",
+  "Iguana Original Red",
+  "Pain Is Good Batch 37",
+  "Blair's After Death Sauce"
+ ]
+}
+```
+
+### A18 — 召回率清單是 held-out 的
+
+**判定：PASS**（exit 1）
+
+```
+git grep -n probe -- sauce/ :!sauce/coverage.py :!sauce/probe/
+```
+
+### A19 — 零影音平台
+
+**判定：PASS**（exit 1）
+
+```
+git grep -niE youtube|youtu\.be|timedtext|yt[-_]?dlp|pytube -- sauce/ tests/sauce/ fixtures/sauce/ requirements-sauce.txt
+```
+
+### A20 — 零 user review
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.no_ugc --home .evdb
+```
+
+```
+{
+ "check": "A20 no_ugc",
+ "ok": true,
+ "review_events": 1827,
+ "ugc_events": 0,
+ "ugc_sources": [
+  "forum_ugc",
+  "marketplace",
+  "reddit",
+  "retailer_widget"
+ ]
+}
+```
+
+### A21 — outlet 白名單可稽核
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.outlets --home .evdb
+```
+
+```
+{
+ "check": "A21 outlets",
+ "ok": true,
+ "whitelist_rows": 44,
+ "min_rows": 40,
+ "outlets_seen": 40
+}
+```
+
+### A22 — 白名單是抓取端的擋牆
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m pytest tests/sauce/test_outlet_gate.py -q
+```
+
+```
+......                                                                   [100%]
+6 passed in 0.13s
+```
+
+### A23 — 不含語音轉文字、不含付費轉錄
+
+**判定：PASS**（exit 1）
+
+```
+git grep -niE whisper|deepgram|assemblyai|speech[-_]to[-_]text|transcribe -- sauce/ requirements-sauce.txt
+```
+
+### A24 — 正文逐字保存、不進 payload
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.bodies --home .evdb
+```
+
+```
+{
+ "check": "A24 bodies",
+ "ok": true,
+ "reviews": 1827,
+ "max_payload_bytes": 4096,
+ "avg_payload_bytes": 874
+}
+```
+
+### A25 — 評語是原句
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.quotes --home .evdb
+```
+
+```
+{
+ "check": "A25 quotes",
+ "ok": true,
+ "verdicts": 0,
+ "bodies": 1827
+}
+```
+
+### A26 — 原生分數不被改寫
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.scores --home .evdb
+```
+
+```
+{
+ "check": "A26 scores",
+ "ok": true,
+ "verdicts": 0,
+ "with_score": 0
+}
+```
+
+### A27 — 孤兒不丟
+
+**判定：FAIL**（exit 1）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.orphans --home .evdb
+```
+
+```
+93% ▕███████████████████████████████████▎  ▏ (~6 seconds remaining)    
+ 93% ▕███████████████████████████████████▎  ▏ (~5 seconds remaining)    
+ 94% ▕███████████████████████████████████▋  ▏ (~5 seconds remaining)    
+ 95% ▕████████████████████████████████████  ▏ (~4 seconds remaining)    
+ 95% ▕████████████████████████████████████  ▏ (~3 seconds remaining)    
+ 96% ▕████████████████████████████████████▍ ▏ (~3 seconds remaining)    
+ 97% ▕████████████████████████████████████▊ ▏ (~2 seconds remaining)    
+ 97% ▕████████████████████████████████████▊ ▏ (~1 second remaining)     
+ 98% ▕█████████████████████████████████████▏▏ (~1 second remaining)     
+ 99% ▕█████████████████████████████████████▌▏ (<1 second remaining)     
+100% ▕██████████████████████████████████████▏ (00:01:32.09 elapsed)     
+
+ 87% ▕█████████████████████████████████     ▏ (~12 seconds remaining)   
+100% ▕██████████████████████████████████████▏ (00:01:33.91 elapsed)     
+{
+ "check": "A27 orphans",
+ "ok": false,
+ "orphans_reported": 2237,
+ "reviews_published": 1827,
+ "reviews_unlinked": 1827,
+ "verdicts": 0,
+ "non_review_orphans": {
+  "sauce.observation.mention / awards": 102,
+  "sauce.observation.product / fdc": 50,
+  "sauce.observation.lineup / hotones": 2,
+  "sauce.observation.mention / hotones": 11,
+  "sauce.observation.product / off": 3,
+  "sauce.observation.product / shopify": 80,
+  "sauce.observation.mention / wikipedia": 161,
+  "sauce.observation.product / woo": 1
+ },
+ "problems_total": 1,
+ "problems": [
+  "evdb orphans 回報 2237，但沒有 verdict 連上的 published 評論有 1827 筆。差額 410 筆的組成：{'sauce.observation.mention / awards': 102, 'sauce.observation.product / fdc': 50, 'sauce.observation.lineup / hotones': 2, 'sauce.observation.mention / hotones': 11, 'sauce.observation.product / off': 3, 'sauce.observation.product / shopify': 80, 'sauce.observation.mention / wikipedia': 161, 'sauce.observation.product / woo': 1}"
+ ]
+}
+```
+
+### A28 — 版控與輸出不外流長正文
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.export_safety
+```
+
+```
+{
+ "check": "A28 export_safety",
+ "ok": true,
+ "csv_files": 2,
+ "cells": 186900,
+ "tracked_files": 46,
+ "max_cell": 500
+}
+```
+
+### A29 — 評論覆蓋率報告
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.reviews_report --home .evdb --rules v1
+```
+
+```
+{
+ "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-reviews.md",
+ "catalog_rows": 6675,
+ "published": 1827,
+ "verdicts": 0,
+ "products_reviewed": 0,
+ "orphans": 1827,
+ "outlets": 40
+}
+```
+
+### A30 — 評論規模
+
+**判定：FAIL**（exit 1）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.review_scale --home .evdb
+```
+
+```
+{
+ "check": "A30 review_scale",
+ "ok": false,
+ "reviews": 1827,
+ "verdicts": 0,
+ "products_reviewed": 0,
+ "thresholds": {
+  "reviews": 1200,
+  "verdicts": 3000,
+  "products": 400
+ },
+ "problems_total": 2,
+ "problems": [
+  "verdict 0 < 3000",
+  "被評到的產品 0 < 400"
+ ]
+}
+```
+
+### A31 — 視圖可重算
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.reproducible --home .evdb --rules v1
+```
+
+```
+{
+ "check": "A31 reproducible",
+ "ok": true,
+ "sauce.views:build": {
+  "rows_sha256": "f0e974304e47662717c9f8016f3fc12e4fdaa62b636e1269b346764fef14eb9d",
+  "runs": 2
+ },
+ "sauce.views:reviews": {
+  "rows_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "runs": 2
+ }
+}
+```
+
+### A32 — 作業書可執行
+
+**判定：BLOCKED**
+
+> 從空的 .evdb 照 RUNBOOK 跑到底
+
+### A33 — 沒有繞過共用 session 的直接請求
+
+**判定：PASS**（exit 1）
+
+```
+git grep -nE requests\.(get|post)\(|httpx\.(get|post)\(|urlopen\( -- sauce/ :!sauce/net.py
+```
+
+### A34 — 沒有密鑰進版控、probe 匯出唯讀
+
+**判定：PASS**（exit 1）
+
+```
+git grep -nE SUPABASE_KEY|service_role|eyJ[A-Za-z0-9_-]{20,} -- sauce/ tests/sauce/ fixtures/sauce/
+```
+
+### A35 — 主要路徑：查得到、看得懂
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.query Secret Aardvark --home .evdb --rules v1
+```
+
+```
+Secret Aardvark Trading Co — Aardvark Habanero Hot Sauce
+  entity_id      sauce:secret-aardvark-trading|aardvark-habanero
+  可購性         retail_listing
+  出處           http://world-en.openfoodfacts.org/product/0853393000030/aardvark-habanero-hot-sauce-secret-aardvark-trading-co
+  來源           off（1 個，single_source:off）
+  GTIN           00853393000030
+  ⚠ 這一列有長得很像的鄰居（duplicate_candidate），沒有合併
+
+（總表上另有 5 列長得很像但沒有合併；加 --all 看全部）
+```
+

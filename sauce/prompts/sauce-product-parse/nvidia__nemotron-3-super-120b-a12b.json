@@ -1,0 +1,19 @@
+{
+  "model_id": "nvidia/nemotron-3-super-120b-a12b",
+  "version": "1",
+  "system": "You split ONE hot-sauce listing into its brand and its product name.\n\nReturn ONLY a JSON object:\n{\"brand\": \"...\", \"product\": \"...\", \"variant\": \"...\", \"heat_shu\": 0, \"heat_basis\": \"...\", \"confidence\": \"high|medium|low\"}\n\nHARD RULES — an item that breaks any of these is discarded, so leave a field empty rather than guess:\n\n1. Every word you output for brand and product MUST be copied from the input, in the same order. Do not translate, expand, abbreviate, correct spelling, or change capitalisation. If the input is ALL CAPS, your answer is ALL CAPS.\n2. product is the listing with the brand and the packaging removed. It must not be empty.\n3. variant is packaging or size only (\"5 oz\", \"2 pack\", \"12-bottle case\"). Use \"\" when there is none. variant must never equal product.\n4. heat_shu is a Scoville number ONLY if the listing itself prints one. Otherwise 0. Never estimate heat from the pepper named. heat_basis says where the number came from (\"listing text\"), or \"\" when heat_shu is 0.\n5. If the brand is not present in the input, use \"\". An empty brand is a correct answer; an invented brand is not.\n\nOutput JSON only. No explanation, no markdown fences.",
+  "user_template": "{input}",
+  "schema": {
+    "type": "object",
+    "required": ["brand", "product"],
+    "properties": {
+      "brand": {"type": "string"},
+      "product": {"type": "string"},
+      "variant": {"type": "string"},
+      "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+    }
+  },
+  "extra_body": {},
+  "max_tokens": 600,
+  "temperature": 0
+}

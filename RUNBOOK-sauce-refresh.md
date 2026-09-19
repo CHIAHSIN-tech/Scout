@@ -1,0 +1,189 @@
+# 半年重跑作業書 — us-hot-sauce-corpus
+
+> 每一行都可以直接複製貼上執行。從空的 `.evdb` 開始，跑到底，最後把驗收表重驗一次。
+> 節奏是**手動、半年一次**——沒有排程、沒有背景服務、沒有 CDC。
+
+環境：Windows + PowerShell，repo 根目錄 `C:\Users\luke_\Desktop\AI\Scout`。
+
+---
+
+## 0. 一次性設定（新機器才要做）
+
+```powershell
+cd C:\Users\luke_\Desktop\AI\Scout
+py -3.14 -m venv .venv                      # 不要用 uv 裝的 3.12，見 DECISIONS D4
+.venv\Scripts\python -m pip install -r requirements-sauce.txt
+```
+
+`requirements-sauce.txt` 會把隔壁的 evdb 以可編輯模式裝進來（`-e ../1-github/evdb`），
+所以 `..\1-github\evdb` 必須存在。
+
+**每次開新 shell 都要設一次**（`evdb` 這個指令列工具不會把目前目錄放進 import 路徑）：
+
+```powershell
+$env:PYTHONPATH = (Get-Location).Path
+```
+
+沒設的話 `evdb derive sauce.views:build` 會說找不到 `sauce` 這個模組。
+不想設的人可以把每一行的 `evdb` 換成 `.venv\Scripts\python -m evdb`，效果一樣。
+
+## 1. 先確認契約還在
+
+```powershell
+.venv\Scripts\python -m pytest tests/sauce -q
+.venv\Scripts\python -m sauce.load --home .evdb --register-only
+.venv\Scripts\python -m evdb --home .evdb validate --json
+```
+
+三個都要 exit 0。第三個的 `rules_violated` 必須是空陣列。
+
+## 2. 更新來源設定（這一步是人做的判斷，不是程式）
+
+1. **FDC 換新版批次檔**：打開 <https://fdc.nal.usda.gov/download-datasets/>，
+   把最新的 `FoodData_Central_branded_food_csv_<日期>.zip` 檔名填進
+   `sauce/sources/fdc.py` 的 `DATASET`，並在 `DECISIONS-sauce-corpus.md` 記一筆。
+2. **得獎名錄換新年度**：在 `fixtures/sauce/awards.csv` 加一列（award / year / url / format）。
+3. **outlet 白名單重新稽核**：
+
+   ```powershell
+   .venv\Scripts\python -m sauce.admit                 # 逐站找證據頁與文章網址
+   .venv\Scripts\python -m sauce.admit --emit          # 印成 outlets.csv 的列
+   ```
+
+   `--emit` 的輸出**不會自己寫進白名單**。人看過、確認每一列的 `evidence_url` 真的打得開
+   再貼進 `fixtures/sauce/outlets.csv`。找不到證據的站就不要收——名單寧可短，不要假。
+4. **店面名單重新推導**：
+
+   ```powershell
+   .venv\Scripts\python -m sauce.storefronts discover
+   ```
+
+## 3. 抓取（會跑很久，開背景跑）
+
+```powershell
+$env:SAUCE_MIN_INTERVAL = "1.0"     # 每主機的最小間隔（秒）；可以調慢，不可以調到 0
+.venv\Scripts\python -m sauce.load --home .evdb --refresh
+```
+
+這一步會：開一個新的 `state/snapshot-<時間戳>/`、下載 FDC 與 OFF 的批次檔（各數百 MB，
+可續傳；同名的檔案如果上一次已經抓過會直接沿用）、抓店面與名單、抓白名單內的評論文章，
+然後 `evdb ingest`、跑規則抽取、比對、產生兩張視圖。
+
+**把 `snapshot_id` 記下來**，後面幾步要用。
+
+## 4. 模型抽取（評論 → 評語）
+
+```powershell
+.venv\Scripts\python -m sauce.extract --home .evdb --what reviews
+```
+
+第一次跑會**停在冷啟動**：llm-bridge 沒有 golden 樣本時只跑前 20 筆、寫出
+`sauce/prompts/sauce-review-verdict/golden.pending.jsonl`、其餘不處理、exit 3。
+這是設計如此。人逐列審過（把 `reviewed` 改成 `true`、必要時修 `expected`）之後：
+
+```powershell
+.venv\Scripts\python -m llm_bridge.prompts promote sauce/prompts sauce-review-verdict
+.venv\Scripts\python -m sauce.extract --home .evdb --what reviews
+```
+
+第二次就會跑完全量。跑完再把比對與視圖重算一次：
+
+```powershell
+.venv\Scripts\python -m sauce.load --home .evdb --stage extract_rules,match,views
+```
+
+## 5. 試樣（第一次執行的交付物）
+
+```powershell
+.venv\Scripts\python -m sauce.pilot build --home .evdb --n 40
+.venv\Scripts\python -m sauce.pilot check
+```
+
+產生 `sauce/pilot/sample-v1.jsonl`。人要看的是兩件**機器驗不到**的事：
+產品那幾筆的名字唸不唸得出來、評語那幾筆是不是那篇評論的重點。
+填完裁決之後，`sauce.validate` 的第三層下次就會啟用。
+
+## 6. 驗收（逐條，順序照這裡）
+
+```powershell
+.venv\Scripts\python -m pytest tests/sauce -q
+.venv\Scripts\python -m evdb --home .evdb validate --json
+.venv\Scripts\python -m sauce.checks.conservation --home .evdb
+.venv\Scripts\python -m sauce.checks.ceiling --home .evdb
+.venv\Scripts\python -m sauce.checks.scale --home .evdb --rules v1
+.venv\Scripts\python -m sauce.validate --home .evdb
+.venv\Scripts\python -m sauce.checks.dupes --home .evdb --rules v1
+.venv\Scripts\python -m sauce.checks.confusables --home .evdb --rules v1
+.venv\Scripts\python -m sauce.checks.provenance --home .evdb --rules v1
+.venv\Scripts\python -m sauce.checks.availability --home .evdb --rules v1
+.venv\Scripts\python -m sauce.coverage --home .evdb --rules v1 --probe sauce/probe/probe-v1.csv
+.venv\Scripts\python -m sauce.checks.no_ugc --home .evdb
+.venv\Scripts\python -m sauce.checks.outlets --home .evdb
+.venv\Scripts\python -m sauce.checks.bodies --home .evdb
+.venv\Scripts\python -m sauce.checks.quotes --home .evdb
+.venv\Scripts\python -m sauce.checks.scores --home .evdb
+.venv\Scripts\python -m sauce.checks.orphans --home .evdb
+.venv\Scripts\python -m sauce.checks.export_safety
+.venv\Scripts\python -m sauce.checks.review_scale --home .evdb
+.venv\Scripts\python -m sauce.reviews_report --home .evdb --rules v1
+```
+
+靜態的那幾條（不需要跑資料）：
+
+```powershell
+git grep -niE "sauce|scoville|capsaicin|pepper" -- ../1-github/evdb/evdb/
+git -C ..\1-github\evdb status --porcelain
+git grep -n "probe" -- sauce/ ":!sauce/coverage.py" ":!sauce/probe/"
+git grep -niE "youtube|youtu\.be|timedtext|yt[-_]?dlp|pytube" -- sauce/ tests/sauce/ fixtures/sauce/ requirements-sauce.txt
+git grep -niE "whisper|deepgram|assemblyai|speech[-_]to[-_]text|transcribe" -- sauce/ requirements-sauce.txt
+git grep -nE "requests\.(get|post)\(|httpx\.(get|post)\(|urlopen\(" -- sauce/ ":!sauce/net.py"
+git grep -nE "SUPABASE_KEY|service_role|eyJ[A-Za-z0-9_-]{20,}" -- sauce/ tests/sauce/ fixtures/sauce/
+git grep -nE "\.(insert|update|upsert|delete)\(" -- sauce/probe/
+```
+
+全部都要**沒有輸出**。
+
+## 7. 只追加與冪等（這一輪與上一輪之間的關係）
+
+第一次跑完之後先存基準：
+
+```powershell
+.venv\Scripts\python -m sauce.checks.append_only --home .evdb --write-baseline state/events-<snapshot_id>.txt
+```
+
+半年後跑完新的一輪，再驗一次：
+
+```powershell
+.venv\Scripts\python -m sauce.checks.append_only --home .evdb --baseline state/events-<上一輪的 snapshot_id>.txt
+```
+
+冪等的驗法是同一份快照重放兩次，事件總數不變：
+
+```powershell
+.venv\Scripts\python -m sauce.load --home .evdb --snapshot state/snapshot-<id>
+.venv\Scripts\python -m evdb --home .evdb stats --json    # 記下 events
+.venv\Scripts\python -m sauce.load --home .evdb --snapshot state/snapshot-<id>
+.venv\Scripts\python -m evdb --home .evdb stats --json    # 必須完全相同
+```
+
+## 8. 視圖可重算
+
+```powershell
+.venv\Scripts\python -m evdb --home .evdb derive sauce.views:build --rules v1
+.venv\Scripts\python -m evdb --home .evdb derive sauce.views:reviews --rules v1
+```
+
+連續跑兩次，四份 `manifest.json` 的 `rows_sha256` 要兩兩相同。
+
+## 9. 產出給人看的東西
+
+```powershell
+Copy-Item .evdb\views\sauce_views_build\v1\rows.csv   sauce\out\sauce_catalog-v1.csv
+Copy-Item .evdb\views\sauce_views_reviews\v1\rows.csv sauce\out\sauce_reviews-v1.csv
+.venv\Scripts\python -m sauce.checks.export_safety
+.venv\Scripts\python -m sauce.query "Secret Aardvark" --reviews
+```
+
+`sauce/out/` 進版控，`.evdb/`（含 `raw/`）與 `state/snapshot-*/` 不進；
+`state/snapshot-*/MANIFEST.json` 要進——半年後要靠它分辨
+「這是新出的辣醬」還是「我們這次抓法不一樣」。

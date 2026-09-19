@@ -1,0 +1,19 @@
+label,brand_a,product_a,brand_b,product_b,why
+Tabasco vs Tapatio 名字像但不同廠,Tabasco,Original Red Sauce,Tapatio,Salsa Picante,兩個都是墨西哥風常見品牌，名字前幾個字母相近
+同名 Sriracha 不同廠,Huy Fong Foods,Sriracha Hot Chili Sauce,Yellowbird,Sriracha,Sriracha 是品類名不是品牌，兩家都做
+同名 Habanero 不同廠,Melinda's,Original Habanero Pepper Sauce,El Yucateco,Red Habanero Hot Sauce,產品名幾乎一樣，品牌不同
+同名 Green 不同廠,Tabasco,Green Jalapeno Sauce,Cholula,Green Pepper Hot Sauce,綠色款在每家都叫 green
+Louisiana 是產地也是品牌,Crystal,Louisiana Hot Sauce,Louisiana Brand,Original Louisiana Hot Sauce,產品名含另一家的品牌名
+Ghost Pepper 是辣椒不是品牌,Dave's Gourmet,Ghost Pepper Naga Jolokia Hot Sauce,Bravado Spice,Ghost Pepper Hot Sauce,同一種辣椒不代表同一款醬
+Reaper 是辣椒不是品牌,Puckerbutt Pepper Company,Reaper Squeezins,Torchbearer Sauces,Garlic Reaper,同上
+Chili Crisp 是品類,Fly By Jing,Chili Crisp,Lao Gan Ma,Sichuan Chili Crisp,品類名被當成產品名時最容易誤併
+Hot Honey 是品類,Mike's Hot Honey,Hot Honey,Bushwick Kitchen,Bee Sting Honey,同上
+Zombie Apocalypse 兩家都有,CaJohns,Zombie Apocalypse,Torchbearer Sauces,Zombie Apocalypse Hot Sauce,產品名完全相同、品牌不同
+Yellowbird 自家兩款不可互相吸收,Yellowbird,Habanero Condiment,Yellowbird,Serrano Condiment,同品牌不同辣椒是不同產品
+Tabasco 自家兩款不可互相吸收,Tabasco,Habanero Sauce,Tabasco,Chipotle Pepper Sauce,同上
+El Yucateco 紅綠不可互相吸收,El Yucateco,Green Habanero Hot Sauce,El Yucateco,Red Habanero Hot Sauce,同上
+Marie Sharp's 兩個辣度不可互相吸收,Marie Sharp's,Habanero Pepper Sauce,Marie Sharp's,Fiery Hot Habanero Sauce,同上
+Truff 兩個辣度不可互相吸收,Truff,Original Black Truffle Hot Sauce,Truff,Hotter Hot Sauce,同上
+Secret Aardvark 紅綠不可互相吸收,Secret Aardvark,Original Habanero Hot Sauce,Secret Aardvark,Serrabanero Green Hot Sauce,同上
+Heartbeat 兩款不可互相吸收,Heartbeat Hot Sauce,Red Habanero Hot Sauce,Heartbeat Hot Sauce,Pineapple Habanero Hot Sauce,同上
+Melinda's 辣度階梯不可互相吸收,Melinda's,Original Habanero Pepper Sauce,Melinda's,XXXtra Hot Habanero,同上
