@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import base64
 import html
 import json
 
@@ -777,6 +778,37 @@ def _attachments_block(trip):
     )
 
 
+def _exports_block(trip):
+    """匯出 .ics 與地圖 CSV。
+
+    為什麼放在頁面上而不是只在主站做：Supabase 那條線的匯出只看得到 Supabase 的資料，
+    這趟行程不在那裡。同一個 Scout，功能不該因為資料存在哪而不一樣。
+
+    檔案內容建置時就算好、base64 內嵌，按下去只是存檔——斷網也能匯出（A9）。
+    """
+    from .exports import build_ics, build_map_csv
+
+    meta = trip.get("trip") or {}
+    name = meta.get("title") or "行程"
+    ics, csv = build_ics(trip), build_map_csv(trip)
+    if ics.count("BEGIN:VEVENT") == 0 and len(csv.splitlines()) <= 1:
+        return None
+    b = lambda t: base64.b64encode(t.encode("utf-8")).decode("ascii")
+    return (
+        '<section class="block" id="exports"><h2>匯出</h2>'
+        '<p class="lede2">把行程放進手機日曆，或把地點丟進 Google 我的地圖。'
+        '兩個檔案都已經在這一頁裡，按下去直接存檔，不需要網路。</p>'
+        '<div class="expbar">'
+        f'<button type="button" class="exp-btn" data-file="{E(name)}.ics" '
+        f'data-mime="text/calendar;charset=utf-8" data-b64="{b(ics)}">⬇ 匯出 .ics（日曆）</button>'
+        f'<button type="button" class="exp-btn" data-file="{E(name)}-地點.csv" '
+        f'data-mime="text/csv;charset=utf-8" data-b64="{b(csv)}">⬇ 匯出地圖 CSV</button>'
+        '</div><p class="lede2" id="exp-note">'
+        '.ics 匯進 Google 日曆要用電腦版瀏覽器；iPhone 直接點開就會問要不要加進日曆。'
+        'CSV 是給 Google 我的地圖手動上傳用的。</p></section>'
+    )
+
+
 def _more_tab(trip):
     blocks = []
     st = _stations_block(trip)
@@ -785,6 +817,9 @@ def _more_tab(trip):
     at = _attachments_block(trip)
     if at:
         blocks.append(("attachments", "附件", at))
+    ex = _exports_block(trip)
+    if ex:
+        blocks.append(("exports", "匯出", ex))
     for key in sorted((trip.get("sections") or {})):
         sec = (trip.get("sections") or {})[key]
         if not isinstance(sec, dict):

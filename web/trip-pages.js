@@ -39,8 +39,10 @@
         + '<span class="tp-meta">' + where + "</span>"
         + '<span class="tp-date">' + range + "</span></a>";
     }).join("");
-    mount.innerHTML = '<h3 class="tp-h">歷次行程表</h3><div class="tp-list">' + html + "</div>"
-      + UPLOAD_LINK;
+    // 標題講清楚這是什麼、跟底下那塊差在哪——同一個畫面上有兩份「旅程」，
+    // 不標的話使用者得自己猜該點哪一個（2026-09-19 Stanley 真的猜錯了）。
+    mount.innerHTML = '<h3 class="tp-h">行程表<small>建置好的完整行程，手機離線也打得開</small></h3>'
+      + '<div class="tp-list">' + html + "</div>" + UPLOAD_LINK;
   }
 
   // 讀一份跟著網站一起部署的靜態 JSON。沒有這個檔（還沒建置過任何行程表）

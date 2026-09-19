@@ -5,6 +5,7 @@
     2. 手機版表格轉卡片時，把 thead 的欄位名寫進 td[data-l]
     3. 主 tab／子 tab 切換，狀態也存 localStorage
     4. 示意地圖（資料與繪製分離，資料由 Python 端算好塞進 MAPDATA）
+    5. 匯出 .ics／地圖 CSV（內容建置時算好、base64 內嵌，這裡只負責存檔）
 
 與參考產品的差異只有兩處，都是刻意的：
   * **地圖只保留「每日路線」模式。** 參考產品的「排隊候補」模式可以點卡片跳到地圖位置，
@@ -197,4 +198,26 @@ JS = r"""
   sticky(); window.addEventListener('resize',sticky);
   go(panels[t0]?t0:'plan',false);
 })();
+(function(){
+  // ── 5. 匯出 .ics / 地圖 CSV ──
+  // 檔案內容在建置時就算好、base64 內嵌在按鈕上，這裡只負責存成檔案：
+  // 不連網、不現算，所以飛機上按下去一樣會下載。
+  function bytes(b64){
+    var bin = atob(b64), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;   // 先轉 bytes 再交給 Blob，中文才不會變亂碼
+  }
+  document.querySelectorAll('.exp-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var url = URL.createObjectURL(new Blob([bytes(btn.dataset.b64)], {type: btn.dataset.mime}));
+      var a = document.createElement('a');
+      a.href = url; a.download = btn.dataset.file;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url);}, 1000);
+      var note = document.getElementById('exp-note');
+      if (note) note.textContent = '已下載 ' + btn.dataset.file + '。';
+    });
+  });
+})();
+
 """

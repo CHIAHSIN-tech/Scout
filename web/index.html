@@ -144,6 +144,12 @@
   <!-- ══════════ 行程 Tab（scout-checklist）══════════
        整段從 witsper-stanley/scout-checklist 的 index.html 搬來，內容由 checklist.js 動態渲染。 -->
   <div id="panel-trip" class="panel hidden">
+    <!-- ── 行程表（build_trip_page 的產出）──
+         排在最前面：這是出門當天真的會打開的東西。
+         讀靜態的 trips/index.json，不碰 Supabase、不依賴 config.js——
+         沒有設定檔、Supabase 掛掉的機器上，這份列表仍然顯示得出來。 -->
+    <div id="trip-pages"></div>
+
     <main id="app">
       <div id="status" class="status">載入中…</div>
     </main>
@@ -177,10 +183,6 @@
       </div>
     </div>
 
-    <!-- ── 歷次行程表（build_trip_page 的產出）──
-         讀靜態的 trips/index.json，不碰 Supabase、不依賴 config.js：
-         沒有設定檔的機器上，這份列表仍然顯示得出來。 -->
-    <div id="trip-pages"></div>
   </div><!-- /panel-trip -->
 
 </div><!-- /app-shell -->

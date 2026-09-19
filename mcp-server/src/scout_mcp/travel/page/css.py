@@ -342,4 +342,11 @@ ol.tl ul.mini b{color:var(--ink)}
 .att-body{display:grid;gap:.6rem;margin-top:.7rem}
 img.att{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
 
+/* 匯出按鈕。手機上要按得到，所以做大、直排。 */
+.expbar{display:flex;flex-wrap:wrap;gap:.6rem}
+.exp-btn{font:inherit;font-size:.92rem;font-weight:700;padding:.7rem 1.1rem;border:1px solid var(--line);
+         border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.exp-btn:active{background:var(--ink);color:var(--ground)}
+@media (max-width:420px){.expbar{display:grid}.exp-btn{width:100%}}
+
 """
