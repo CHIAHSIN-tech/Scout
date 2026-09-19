@@ -324,7 +324,10 @@ async function attachments(request, env) {
   }
 
   const url = new URL(request.url);
-  const id = url.pathname.replace(/^\/api\/attachments\/?/, "");
+  // KV 的 key 形如 `<slug>/<uuid>.<ext>`，斜線在網址裡是 %2F，平台不會幫忙還原，
+  // 直接拿 pathname 會查不到那一筆。這裡自己解一次（uuid 與副檔名不含 %，解兩次的風險不存在）。
+  let id = url.pathname.replace(/^\/api\/attachments\/?/, "");
+  try { id = decodeURIComponent(id); } catch (_) { /* 網址壞掉就照原樣查，結果會是 404 */ }
 
   if (request.method === "GET" && !id) {
     // 列出某一趟的附件。KV 的 list 只給 key 與 metadata，不含內容，所以很輕
