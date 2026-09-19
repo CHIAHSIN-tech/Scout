@@ -93,7 +93,8 @@ FLIGHT_FIELDS = [
     ("arr", _STR, False),
     ("arr_next_day", _BOOL, False),
     ("no", _STR, False),
-    ("terminal", _STR, False),
+    ("airline", _STR, False),      # 航空公司全名，櫃台找報到櫃位時看的是這個
+    ("terminal", _STR, False),     # 「TPE T1 → ICN T1」；航廈決定機場快線搭到哪一站
     ("note", _STR, False),
     ("locked", _BOOL, False),
 ]

@@ -196,7 +196,11 @@ def _header(trip):
             when = f"{f.get('dep') or ''}–{f.get('arr') or ''}"
             if f.get("arr_next_day"):
                 when += "<sup>+1</sup>"
-        note = f'<p class="note">{E(f["note"])}</p>' if f.get("note") else ""
+        # 航空公司、航班號、航廈：出發當天真正要用的三件事。
+        # 少了它們，這一條只是「那天有一班飛機」，到了機場還是得翻訂位信。
+        sub = " · ".join(x for x in (f.get("airline"), f.get("terminal")) if x)
+        note_txt = " · ".join(x for x in (sub, f.get("note")) if x)
+        note = f'<p class="note">{E(note_txt)}</p>' if note_txt else ""
         flights += (
             '<div class="flight" role="listitem">'
             f'<div class="d"><strong>{E(d[5:].replace("-", "/") if len(d) >= 10 else d)}</strong>{E(dow)}</div>'
