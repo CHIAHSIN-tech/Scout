@@ -330,4 +330,16 @@ ol.tl ul.mini b{color:var(--ink)}
 /* 待確認清單的每一條。auto 的那幾筆標出來，人才知道哪些是程式推的。 */
 .autotag{font-size:.68rem;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:.05rem .4rem;margin-left:.4rem;white-space:nowrap}
 
+/* 附件：訂房截圖與機票，內嵌成 data: URI。寬度吃滿、高度自動，
+   手機上直接看得清楚；要更大就用瀏覽器本身的縮放。 */
+.att-d{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:.7rem .9rem}
+.att-d+.att-d{margin-top:.6rem}
+.att-d>summary{cursor:pointer;font-weight:700;list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline}
+.att-d>summary::-webkit-details-marker{display:none}
+.att-d>summary::after{content:"展開";color:var(--accent);font-size:.78rem;font-weight:600;margin-left:auto}
+.att-d[open]>summary::after{content:"收合"}
+.att-d>summary small{font-weight:400;color:var(--faint);font-size:.78rem}
+.att-body{display:grid;gap:.6rem;margin-top:.7rem}
+img.att{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+
 """

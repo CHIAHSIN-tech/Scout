@@ -342,6 +342,41 @@ def merge_auto_questions(trip: dict) -> int:
 
 # ── 建置 ──────────────────────────────────────────────────────────────
 
+def load_attachments(slug: str) -> list:
+    """讀 `trips/<slug>/attachments/index.json` 與那些圖，轉成可以直接內嵌的樣子。
+
+    為什麼在這裡讀而不是放進 trip.json：附件是二進位，base64 之後有一兩 MB，
+    塞進 SSOT 會讓那份檔案沒辦法用眼睛讀、沒辦法 diff。
+    檔案由 `scripts/pull_attachments.py` 從 Cloudflare KV 抓下來（PDF 已轉成 PNG）。
+
+    抓不到就回空陣列——附件是加分項，沒有它行程表照樣要建得出來。
+    """
+    import base64
+
+    root = paths.resolve_trip_path(slug, "attachments")
+    index = root / "index.json"
+    if not index.exists():
+        return []
+    try:
+        rows = json.loads(index.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    out = []
+    for row in rows if isinstance(rows, list) else []:
+        pages = []
+        for name in row.get("pages") or []:
+            f = root / str(name)
+            # 只收這個資料夾底下的檔案；index.json 若被動過手腳也跑不出去
+            if f.parent != root or not f.is_file():
+                continue
+            mime = "image/jpeg" if f.suffix.lower() in (".jpg", ".jpeg") else "image/png"
+            pages.append({"mime": mime, "b64": base64.b64encode(f.read_bytes()).decode("ascii")})
+        if pages:
+            out.append({"label": row.get("label") or "", "name": row.get("name") or "",
+                        "at": row.get("at") or "", "pages": pages})
+    return out
+
+
 def build_trip_page(slug: str) -> dict:
     """產出 `trips/<slug>/index.html` 與 `web/trips/<page_slug>/index.html`，更新索引。
 
@@ -355,7 +390,9 @@ def build_trip_page(slug: str) -> dict:
     if added:
         save(slug, trip)
 
-    html = render(trip)
+    # 附件只在渲染時帶入，不寫回 trip.json（見 load_attachments）
+    attached = load_attachments(slug)
+    html = render(dict(trip, attachments=attached) if attached else trip)
 
     local = paths.resolve_trip_path(slug, "index.html")
     local.parent.mkdir(parents=True, exist_ok=True)
@@ -373,6 +410,7 @@ def build_trip_page(slug: str) -> dict:
         "web_path": str(web_dir / "index.html"),
         "index_path": str(index_path),
         "auto_open_questions_added": added,
+        "attachments_embedded": len(attached),
     }
 
 

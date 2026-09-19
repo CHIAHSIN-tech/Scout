@@ -742,11 +742,49 @@ def _section_block(key, sec):
     return f'<section class="block" id="{E(key)}"><h2>{E(title)}</h2>{"".join(parts)}</section>'
 
 
+def _attachments_block(trip):
+    """附件（訂房確認、機票）。圖片以 data: URI 內嵌，斷網也看得到。
+
+    資料不是來自 trip.json，而是 build_trip_page 讀 `trips/<slug>/attachments/`
+    之後注入的（見 service）。理由：base64 塞進 trip.json 會讓那份 SSOT 變成
+    一個人讀不了、diff 不了的大檔。
+
+    每一份用 <details> 摺起來：機票行程單動輒七頁，全部攤開會把「其他」頁
+    變成一條捲不完的長帶子。摺疊用原生 <details>，不寫 JS。
+    """
+    items = trip.get("attachments") or []
+    if not items:
+        return None
+    cards = []
+    for a in items:
+        label = a.get("label") or a.get("name") or "附件"
+        meta = " · ".join(x for x in (a.get("name"), a.get("at")) if x)
+        imgs = "".join(
+            f'<img class="att" alt="{E(label)} 第 {i} 張" '
+            f'src="data:{E(pg.get("mime") or "image/png")};base64,{pg["b64"]}">'
+            for i, pg in enumerate(a.get("pages") or [], 1)
+        )
+        n = len(a.get("pages") or [])
+        cards.append(
+            f'<details class="att-d"><summary>{E(label)}'
+            f'<small>{E(meta)}{f"　{n} 頁" if n > 1 else ""}</small></summary>'
+            f'<div class="att-body">{imgs}</div></details>'
+        )
+    return (
+        '<section class="block" id="attachments"><h2>附件</h2>'
+        '<p class="lede2">訂房確認與機票。圖片已經存進這個檔案裡，飛機上也打得開。</p>'
+        + "".join(cards) + "</section>"
+    )
+
+
 def _more_tab(trip):
     blocks = []
     st = _stations_block(trip)
     if st:
         blocks.append(("stations", "車站", st))
+    at = _attachments_block(trip)
+    if at:
+        blocks.append(("attachments", "附件", at))
     for key in sorted((trip.get("sections") or {})):
         sec = (trip.get("sections") or {})[key]
         if not isinstance(sec, dict):
