@@ -19,11 +19,16 @@
       .replace(/"/g, "&quot;");
   }
 
+  // 上傳附件的入口。獨立一頁、需要金鑰，所以不直接做在這裡，只放連結——
+  // 沒有入口的話使用者得自己記 /upload 這個網址。
+  var UPLOAD_LINK = '<a class="tp-upload" href="upload">＋ 上傳附件（訂房截圖、機票）</a>';
+
   function render(rows) {
     if (!rows.length) {
       mount.innerHTML =
         '<div class="tp-empty">還沒有建置過的行程表。'
-        + "行程表由 Claude 透過 Scout 的 MCP 工具產生（build_trip_page）。</div>";
+        + "行程表由 Claude 透過 Scout 的 MCP 工具產生（build_trip_page）。</div>"
+        + UPLOAD_LINK;
       return;
     }
     var html = rows.map(function (r) {
@@ -34,7 +39,8 @@
         + '<span class="tp-meta">' + where + "</span>"
         + '<span class="tp-date">' + range + "</span></a>";
     }).join("");
-    mount.innerHTML = '<h3 class="tp-h">歷次行程表</h3><div class="tp-list">' + html + "</div>";
+    mount.innerHTML = '<h3 class="tp-h">歷次行程表</h3><div class="tp-list">' + html + "</div>"
+      + UPLOAD_LINK;
   }
 
   // 讀一份跟著網站一起部署的靜態 JSON。沒有這個檔（還沒建置過任何行程表）

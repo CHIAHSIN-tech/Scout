@@ -296,12 +296,111 @@ function notFoundPage() {
   });
 }
 
+// ── /api/attachments — 訂房截圖、PDF 這類附件 ──
+//
+// 存在 Workers KV，不是 R2：R2 要綁信用卡，KV 在 Workers 免費方案內就有
+// （1 GB 總量、單筆 25 MB）。附件也會在 build_trip_page 時嵌一份進離線單檔，
+// 所以就算 KV 或網路掛了，飛機上那份還是打得開。
+//
+// 保護：一組 UPLOAD_KEY（wrangler secret）。這延續 ADR-013 的「網址即憑證」模型，
+// 只是把憑證從網址換成一把金鑰——Chia 不必註冊任何帳號，知道金鑰就能上傳。
+// **讀跟寫都要金鑰**：訂房截圖含真名與訂房編號，不能像購物清單那樣匿名可讀。
+const MAX_ATTACHMENT = 24 * 1024 * 1024;   // KV 單筆上限 25 MB，留一點餘裕
+
+function authed(request, env) {
+  if (!env.UPLOAD_KEY) return false;
+  const url = new URL(request.url);
+  const given = request.headers.get("X-Scout-Key") || url.searchParams.get("k") || "";
+  // 長度先比，再逐字元比；兩者都不是常數時間，但這裡擋的是隨手試，不是計時攻擊
+  return given.length === env.UPLOAD_KEY.length && given === env.UPLOAD_KEY;
+}
+
+async function attachments(request, env) {
+  if (!env.ATTACHMENTS) {
+    return json(500, { error: "伺服器沒有綁 ATTACHMENTS KV，附件功能不可用。" });
+  }
+  if (!authed(request, env)) {
+    return json(401, { error: "需要上傳金鑰。在上傳頁面輸入金鑰，或在網址加上 ?k=<金鑰>。" });
+  }
+
+  const url = new URL(request.url);
+  const id = url.pathname.replace(/^\/api\/attachments\/?/, "");
+
+  if (request.method === "GET" && !id) {
+    // 列出某一趟的附件。KV 的 list 只給 key 與 metadata，不含內容，所以很輕
+    const slug = url.searchParams.get("trip") || "";
+    if (!slug) return json(400, { error: "缺少 trip 參數。" });
+    const out = await env.ATTACHMENTS.list({ prefix: `${slug}/` });
+    return json(200, {
+      trip: slug,
+      items: out.keys.map((k) => ({ id: k.name, ...(k.metadata || {}) })),
+    });
+  }
+
+  if (request.method === "GET") {
+    const got = await env.ATTACHMENTS.getWithMetadata(id, { type: "arrayBuffer" });
+    if (!got || !got.value) return json(404, { error: "找不到這個附件。" });
+    const meta = got.metadata || {};
+    return new Response(got.value, {
+      headers: {
+        "Content-Type": meta.type || "application/octet-stream",
+        // 附件是私人內容，不讓任何中間層留快取
+        "Cache-Control": "private, no-store",
+      },
+    });
+  }
+
+  if (request.method === "POST") {
+    const form = await request.formData();
+    const slug = String(form.get("trip") || "").trim();
+    const file = form.get("file");
+    const label = String(form.get("label") || "").trim();
+    if (!/^\d{4}-\d{2}-[a-z]{2}-[a-z0-9-]+$/.test(slug)) {
+      return json(400, { error: "trip 必須是旅程資料夾名稱，例如 2026-09-kr-seoul。" });
+    }
+    if (!file || typeof file === "string") return json(400, { error: "沒有選擇檔案。" });
+    const buf = await file.arrayBuffer();
+    if (buf.byteLength > MAX_ATTACHMENT) {
+      return json(413, { error: `檔案太大（${Math.round(buf.byteLength / 1048576)} MB），上限 24 MB。` });
+    }
+    // 檔名由伺服器決定：使用者的檔名可能含路徑分隔字元或奇怪字元，
+    // 直接拿來當 key 會讓「一趟旅程一個前綴」這件事失守
+    const ext = (file.name || "").split(".").pop();
+    const safeExt = /^[A-Za-z0-9]{1,5}$/.test(ext || "") ? `.${ext.toLowerCase()}` : "";
+    const key = `${slug}/${crypto.randomUUID()}${safeExt}`;
+    await env.ATTACHMENTS.put(key, buf, {
+      metadata: {
+        name: String(file.name || "attachment").slice(0, 120),
+        label: label.slice(0, 120),
+        type: file.type || "application/octet-stream",
+        size: buf.byteLength,
+        at: new Date().toISOString().slice(0, 10),
+      },
+    });
+    return json(200, { id: key, size: buf.byteLength });
+  }
+
+  if (request.method === "DELETE") {
+    // 這裡**有**刪除，和 MCP server 的「沒有刪除能力」不衝突：
+    // 那條規則保護的是行程與購物資料（誤刪救不回來，要走網頁的二次確認）。
+    // 附件是隨手上傳的東西，傳錯一張截圖卻只能永遠留著，才是壞設計。
+    if (!id) return json(400, { error: "缺少附件 id。" });
+    await env.ATTACHMENTS.delete(id);
+    return json(200, { deleted: id });
+  }
+
+  return json(405, { error: "只接受 GET、POST 或 DELETE" });
+}
+
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
     if (path === "/api/ai-parse") return aiParse(request, env);
     if (path === "/api/ai-suggest") return aiSuggest(request, env);
     if (path === "/api/share") return share(request, env);
+    if (path === "/api/attachments" || path.startsWith("/api/attachments/")) {
+      return attachments(request, env);
+    }
     // 靜態資產由平台先處理；走到這裡代表既不是資產也不是已知端點。
     // /api/* 給程式呼叫，維持 JSON；其他路徑是人點錯連結，給看得懂的頁面。
     // （2026-09-13 實際發生過：連結後面黏了標點，打開只看到一串 {"error":...}。）

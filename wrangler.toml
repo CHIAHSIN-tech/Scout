@@ -37,3 +37,10 @@ crons = ["17 3 * * 1,4"]
 # （ADR-013「網址即憑證」），但仍留成可覆蓋的變數，換專案不必改程式。
 [vars]
 GEMINI_MODEL = "gemini-2.5-flash"
+
+# 附件（飯店訂位截圖、PDF…）。用 KV 不用 R2：R2 要綁信用卡，KV 在 Workers 免費方案內就有。
+# 單筆上限 25 MB，總量 1 GB。內容會在 build_trip_page 時另外嵌進離線單檔一份，
+# 所以 KV 掛了也不影響「飛機上打得開」。
+[[kv_namespaces]]
+binding = "ATTACHMENTS"
+id = "492ce5e92c12460a9923ccf2610061af"

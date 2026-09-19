@@ -109,8 +109,11 @@ function a25() {
   }
   ck("A25", hits.trim() === "", `版控裡沒有 GEMINI_API_KEY 的值（命中：${hits.trim() || "無"}）`);
   const toml = exists("wrangler.toml") ? read("wrangler.toml") : "";
-  ck("A25", !/[A-Za-z0-9_-]{25,}/.test(toml.replace(/^#.*$/gm, "")),
-    "wrangler.toml 的非註解部分沒有任何像金鑰的長字串");
+  // KV namespace 的 id 是識別碼不是密鑰（Cloudflare 官方就是放在 wrangler.toml 裡），
+  // 所以那一行要排除；擋的是真的會外洩權限的長字串。
+  const tomlBody = toml.replace(/^#.*$/gm, "").replace(/^id\s*=\s*"[0-9a-f]{32}"\s*$/gm, "");
+  ck("A25", !/[A-Za-z0-9_-]{25,}/.test(tomlBody),
+    "wrangler.toml 的非註解部分沒有任何像金鑰的長字串（KV namespace id 除外）");
   ck("A25", /wrangler secret put/.test(toml), "wrangler.toml 註明金鑰走 wrangler secret put");
 }
 

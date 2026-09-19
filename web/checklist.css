@@ -110,6 +110,8 @@
 #panel-trip .banner{
     border-radius: 12px; padding: 12px 16px; margin: 0.4rem 0 0.8rem; font-size: 13px;
 }
+/* 空狀態不是警告：沒選旅程是正常起點，用琥珀色會被讀成出事了 */
+#panel-trip .banner.hint{ background: var(--card-flex); color: var(--muted); border: 1px dashed var(--border); }
 #panel-trip .banner.ok{ background: var(--green-soft); color: var(--brand); }
 #panel-trip .banner.warn{ background: var(--amber-soft); color: var(--warn-ink); font-weight: 600; }
 #panel-trip .banner.error{ background: var(--err-soft); color: var(--err); }
@@ -469,3 +471,17 @@
     color: var(--faint);
     white-space: nowrap;
 }
+#panel-trip .tp-upload{
+    display: block;
+    margin-top: .6rem;
+    padding: .6rem .9rem;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--card-flex);
+    color: var(--brand);
+    font-size: .88rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+#panel-trip .tp-upload:hover{ border-color: var(--brand); }

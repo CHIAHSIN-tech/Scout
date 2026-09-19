@@ -367,7 +367,7 @@ function renderApp() {
         <div class="sub">出發前確認清單</div>
       </div>
       ${renderTripBar()}
-      ${renderBanner("warn", curTrips.length
+      ${renderBanner("hint", curTrips.length
         ? "上面選一趟旅程開始，或按「＋ 新旅程」建立一趟。"
         : "還沒有任何旅程。按「＋ 新旅程」建立第一趟。")}
     `;

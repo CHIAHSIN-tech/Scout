@@ -391,6 +391,9 @@ def write_web_index() -> Path:
         if not (root / r["page_slug"] / "index.html").exists():
             continue
         rows.append({
+            # slug 是資料夾名稱，上傳頁的下拉選單要用它當 value
+            # （page_path 裡的是 page_slug，帶亂碼，不是附件的歸屬 key）
+            "slug": r["slug"],
             "country": r["country"],
             "city": r["city"],
             "start_date": r["start_date"],
