@@ -1,0 +1,29 @@
+{
+ "entries": [
+  {
+   "bytes": 92,
+   "path": "webshop/hotsauceworld.com.json",
+   "sha256": "133d843c12cc106664332c80d6e41c95cc00bf776cfefbc6d886548cb03ae88e"
+  },
+  {
+   "bytes": 84,
+   "path": "webshop/mohotta.com.json",
+   "sha256": "96e59c41e41e85e5c518b5fb858d9e2a2ff6f58533007c129233e0284035379b"
+  },
+  {
+   "bytes": 81,
+   "path": "webshop/peppers.com.json",
+   "sha256": "959287c5aa02d3b2104c01d1108144ba866037b05ff2ec9512347eb491ad9cbe"
+  },
+  {
+   "bytes": 102,
+   "path": "webshop/scorchedlizardsauces.com.json",
+   "sha256": "b92c0922a76a8e0faae235cd2c8b8d8f34881fcde2a78ab4e3305b4ed06e1fac"
+  }
+ ],
+ "files": 4,
+ "snapshot_id": "20260919T180743Z",
+ "sources": [
+  "webshop"
+ ]
+}

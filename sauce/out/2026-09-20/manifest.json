@@ -1,0 +1,9 @@
+{
+ "rules_version": "v1",
+ "run_date": "2026-09-20",
+ "views": {
+  "sauce_buyable": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\out\\2026-09-20\\sauce_buyable-v1.csv",
+  "sauce_catalog": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\out\\2026-09-20\\sauce_catalog-v1.csv",
+  "sauce_reviews": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\out\\2026-09-20\\sauce_reviews-v1.csv"
+ }
+}

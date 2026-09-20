@@ -21,9 +21,9 @@
    "sha256": "3951db3fc0751610a427be8515bd765b1ca5110bf4930b17e47e0f923250176f"
   },
   {
-   "bytes": 1473466,
+   "bytes": 280187,
    "path": "fdc/candidates.csv",
-   "sha256": "348b9e1cb8667c6234a3f5192317de2bd78b184de8c34dadf5e4152c10951c5e"
+   "sha256": "0cc9001c338fc8b370fb45b31a705094b59f57cda8d518e2c05be9bb52089557"
   },
   {
    "bytes": 6686,
@@ -246,9 +246,9 @@
    "sha256": "100a0bb6194fe3d5c4dda91c5f335b6be35838a691438b88119e72bf702e0a7a"
   },
   {
-   "bytes": 148838,
+   "bytes": 148666,
    "path": "shopify/13starshotsauce.com-p1.json",
-   "sha256": "1ee4c89be75ceb63ecb93c663f25549cb681d053fdaf9ba1c10d18786f4f6de0"
+   "sha256": "d62355db9069462ce7af3b28b735f4656850afaa68f8d9dec7770366d278a042"
   },
   {
    "bytes": 30217,
@@ -256,129 +256,134 @@
    "sha256": "bc71097cef5ea6e2353776d7a27ade7ecc0b438756b1500da475110fa2edadb4"
   },
   {
-   "bytes": 504171,
+   "bytes": 503771,
    "path": "shopify/alwaysflavored.com-p1.json",
-   "sha256": "e12891e447acb6cbe408cc29a16a5c80756bc9a92bcdfe9dd33f8bc81e93ddbb"
+   "sha256": "a8eccbd84c642a2df418fcbfff37bc242f005e34fcf0d8b3b823344a051e2c1b"
   },
   {
    "bytes": 40348,
    "path": "shopify/apicklelypse.com-p1.json",
-   "sha256": "bd6c53bc7cdfe1be05598c055945a67b164c04d85ae4c363ac8766a6001e43e4"
+   "sha256": "1df9a0853bf7cb1f15d2334f419122f68e6235e504f99a93de153295b0d7d7ff"
   },
   {
    "bytes": 111178,
    "path": "shopify/barbaromojo.com-p1.json",
-   "sha256": "71c876abf5db97b77d080549573565d30bd06404cb15f67b0203fff9a104fa21"
+   "sha256": "236692ab714d8829f6d25599aba244e30dace5b2a9b9799020c5c6297328e369"
   },
   {
    "bytes": 163590,
    "path": "shopify/barefootkitchen.com-p1.json",
-   "sha256": "1d0754ad1af9ed1d1143398cfa47bcdf8647da3fac63e30a6b2d02ffd74102d9"
+   "sha256": "6c3bc2ce90d9575b136e33ab480ffe4b0a412142d37401cb5e3992246217e515"
   },
   {
    "bytes": 134787,
    "path": "shopify/bitchinsauce.com-p1.json",
-   "sha256": "7e69c1b7a24ae32969152b71cf69a2ac45aa5b7d91105272079b5f0973e49130"
+   "sha256": "dd264995dd2162a8af8ecf30447168c7750924b91dc8ff0326feb07c0bf64319"
   },
   {
-   "bytes": 179668,
+   "bytes": 179421,
    "path": "shopify/bravadospice.com-p1.json",
-   "sha256": "c3c988cc541168ec575ae9998032abaaf958bd23ce790b449874d14b4cae0bcb"
+   "sha256": "13bae8d6fdc412b5da2d637863f4a65b1126525bd342ca023474e0ff2d169e17"
   },
   {
    "bytes": 160626,
    "path": "shopify/brooklyndelhi.com-p1.json",
-   "sha256": "2d5652b529e99bd8b168276fdad45927f3516cdfaee93dba01684b2827a3ddeb"
+   "sha256": "e1b523ef3fdc44d651dd19159d09271b47f7547d9923907051b4bdef280560e6"
   },
   {
    "bytes": 298955,
    "path": "shopify/bushwickkitchen.com-p1.json",
-   "sha256": "08af24ebc9f2f906dfee70a1ff6992dc2eba8091312231fc6e882e7956704318"
+   "sha256": "ee6bdc2f3b8920016840f9b5f1827c6867598bd4542ceb38f68615cb2a0eccc8"
   },
   {
    "bytes": 551552,
    "path": "shopify/butterflybakeryvt.com-p1.json",
-   "sha256": "99e0d54c4b848a2ede00811116c4e1e455dea7e92f0119709d4efcea0719fe6b"
+   "sha256": "34141569780aa3f220d17cd57376b675420697b9e370ff9ae940672773a3e9de"
   },
   {
-   "bytes": 138830,
+   "bytes": 138724,
    "path": "shopify/californiahotsaucesolutions.com-p1.json",
-   "sha256": "fe2d4e3eef310fb2cc7ceb38cc354ce9d3b402cf9ed08f065a0a2b2e0d8939c3"
+   "sha256": "30af7e9464ac3e77fac66ce5930fcd936d65eb5391c6e7e848d76b0980c608b9"
   },
   {
    "bytes": 13620,
    "path": "shopify/calijalapenos.com-p1.json",
-   "sha256": "68bf028df299d14ad232404c8bdccd2b24831c599d2eb375e588015983f12026"
+   "sha256": "ff5f1e08cd9abacad3dbb8a49f02e92c0312c16e2b0447c54c273518c1700f66"
   },
   {
-   "bytes": 57362,
+   "bytes": 664685,
+   "path": "shopify/crafthotsauce.com-p1.json",
+   "sha256": "e5f1f1932f3a72187b147132ae2cf3beabb4ac232f92211bf5b4c739b88aae38"
+  },
+  {
+   "bytes": 57350,
    "path": "shopify/dawsonshotsauce.com-p1.json",
-   "sha256": "fefae672ee1e620662e21cbad23f518d3011786b6828f816e7cb36cc665c49cc"
+   "sha256": "c1a6485bb5907a26a7a1b469fc99d824c4e25249cad9ccd597265bd6359ae5ae"
   },
   {
    "bytes": 238780,
    "path": "shopify/deepforkfoods.com-p1.json",
-   "sha256": "83b86eef721f409db332e8d77b47bf2227fce9fdd8dd9211cc8f2d15f4596b40"
+   "sha256": "7bfa82be42814e9de69ba7a9e99f3b048a3a03c3c632f3c804b026c192a607aa"
   },
   {
    "bytes": 1991362,
    "path": "shopify/delgadosfuego.com-p1.json",
-   "sha256": "1a9d0505639470a07ccca5d44676d14a59bd9a34efa3571568432df1a7ab1b4d"
+   "sha256": "f2d7d1d93e3a062efcc1979e913bf0ac6d834b6c4e4b33459a7c13219527de64"
   },
   {
-   "bytes": 26241,
+   "bytes": 26181,
    "path": "shopify/dirtybirdsauce.com-p1.json",
-   "sha256": "10a6e8659c705c725a514e3cf10e80da4e2022e973db82371d7d1a068602181d"
+   "sha256": "ebade34abce758e3b2c138b4593b4566eabd3a1ddfdfcb5dacdaad1107a315e0"
   },
   {
    "bytes": 164238,
    "path": "shopify/dosmokehouse.com-p1.json",
-   "sha256": "41424634db319204ab87dc44892d22964c4a01d872d6cb36660ce37d19f625a4"
+   "sha256": "ee65d19df57ace023374ed8c948e7d5314e2fd9738803ed13be584e3d1b9b485"
   },
   {
-   "bytes": 200081,
+   "bytes": 199483,
    "path": "shopify/down2ferment.com-p1.json",
-   "sha256": "f982c5ef804aae6cee81ef97d6c0975d893c4b2850e05dadee110d551f325ab3"
+   "sha256": "63e1ae596f7cf6425e5679fcb587736918286013059cef42c336e255064c1811"
   },
   {
-   "bytes": 200081,
+   "bytes": 199483,
    "path": "shopify/downtoferment.com-p1.json",
-   "sha256": "dbc76a8de7d2d942199a77df93c22621a638e1dc5cdd8a80646c9425e2c4524e"
+   "sha256": "04a59e76da70239db497945e575355df975a6c4530c1f809522c696f804f56bd"
   },
   {
    "bytes": 49132,
    "path": "shopify/familytraditionsspecialtyfoods.com-p1.json",
-   "sha256": "fe511f0869499e831145adf9a81af5810c204b3a97e5044b4b7f7dfd95b5e37b"
+   "sha256": "75eae9618aa955c5c66695f12fcd3b460a4f99e521d026a0543cdeaea3fb29a9"
   },
   {
    "bytes": 20620,
    "path": "shopify/fantasticfuego.com-p1.json",
-   "sha256": "34accf28c037b2e804d1202e165cd0b44bae816b882fb2e4c34348ecdf5ecf86"
+   "sha256": "5e662dd99de6cae3de3f28328f23cb63d83f2db20418ead64e588d71a93b5e27"
   },
   {
    "bytes": 95587,
    "path": "shopify/freakyferments.com-p1.json",
-   "sha256": "83911b65586515f20fe6087e0b8c893165ee4e2c0e2c4c4da2d6ce868ff9db1b"
+   "sha256": "5d120a7f8882c723f27694e4a2ab2c0d3d64e2e761a2642d1ba41a951ff59189"
   },
   {
    "bytes": 321563,
    "path": "shopify/funkyshotsaucefactory.com-p1.json",
-   "sha256": "fab8b2e55d47d8a8b75b801c6669cbc3493009b1c8f2b2f7aacdf1a9016f5c4c"
+   "sha256": "bcf51c5713c1087fb28d9ebb183d5445b5a96d0a255a32726d5b530655858039"
   },
   {
    "bytes": 40228,
    "path": "shopify/goodlandsfood.co-p1.json",
-   "sha256": "59c0503720dc58c5949370d66f65003ae9167004e640b15fe0dc743f081940d9"
+   "sha256": "7b6726e1eee1e8aa6f02c5e39cd49f2a25369bf17473da2ed097c8a275ccfb8d"
   },
   {
    "bytes": 7017,
    "path": "shopify/grumpyspice.com-p1.json",
-   "sha256": "a2a38642047686fc47e6b7d4459e8b7788e5eadb1e5f972d74e6928c6fd30568"
+   "sha256": "26221599edbde7feba787a8dba1ead9424e749e02599ad5dcbd3bb48f4d4d07b"
   },
   {
    "bytes": 175603,
    "path": "shopify/harmacyhotsauce.com-p1.json",
-   "sha256": "53506fa37dc1f4bae7dfdfb22e05ad03fcbbd89089ace4ea3b21535dabeeb7b3"
+   "sha256": "312a4f446028621db1d28e8c966f2a9eb22329df1c731434c6ea3c60885ae2cb"
   },
   {
    "bytes": 181070,
@@ -386,149 +391,169 @@
    "sha256": "95868ee9dd6a028eb6dfa369b697d47a7e6687e3591be1c968afd1ada7dea36e"
   },
   {
-   "bytes": 616513,
+   "bytes": 520585,
+   "path": "shopify/heathotsauce.com-p1.json",
+   "sha256": "b9b4608dc8ebac5cb3312910086908bb867a9c4cb1dab1f4ef74d1d5223e7c86"
+  },
+  {
+   "bytes": 570357,
+   "path": "shopify/heathotsauce.com-p2.json",
+   "sha256": "b1ec95b855dab3dc0882c810f326271a801167205ada58acd493788d37ca50c3"
+  },
+  {
+   "bytes": 539450,
+   "path": "shopify/heathotsauce.com-p3.json",
+   "sha256": "457a536fd6dbbb977d9e2b696627cdf2706cc38a1accae731289a461f73341a4"
+  },
+  {
+   "bytes": 330517,
+   "path": "shopify/heathotsauce.com-p4.json",
+   "sha256": "c1ce8602b9cb0063c04215d69ba244ba544317978e13e117a6842ffc76eeb31e"
+  },
+  {
+   "bytes": 616149,
    "path": "shopify/heatonist.com-p1.json",
-   "sha256": "7edf96f95f9e8a04ab16534642d9f27632eef9478e8cdd123f2df6d788bd4d06"
+   "sha256": "1017f95cd448693307eb5f34348de6aaa6fee9df6534cbef6866362ae978d86d"
   },
   {
-   "bytes": 2167517,
+   "bytes": 2155470,
    "path": "shopify/hellfirehotsauce.com-p1.json",
-   "sha256": "4c9f7199c275905985572acabf1fa71e5844208c88d161eaa1fb4b1a9799eaac"
+   "sha256": "f41a7768fe92714baf4becd4e060b33fa9dbca4ff801ae67bdb9ee4d77673b75"
   },
   {
-   "bytes": 577048,
+   "bytes": 576282,
    "path": "shopify/hellfirehotsauce.com-p2.json",
-   "sha256": "9196af76265417328c5e42eb0713b4a1bed37f160e07e0872b88b83f6d522ce7"
+   "sha256": "9c35b6f9eddfc387dbbabb321a014321d36a79783d8efcff07df32601b84aafa"
   },
   {
-   "bytes": 102949,
+   "bytes": 102787,
    "path": "shopify/highmesachile.co-p1.json",
-   "sha256": "4de43604bc508c5c460df2127510542603b06ed044e5b86e51575b1aa73fd91c"
+   "sha256": "f8db80a1a3fa55dafbd9102395bc841803b2ccf39ad49892a9c6a36076a341a9"
   },
   {
-   "bytes": 175535,
+   "bytes": 175428,
    "path": "shopify/hotones.com-p1.json",
-   "sha256": "99f37d5342f062a03c10cdb1390202777abdbeb1ed26e778446669b67932a5f8"
+   "sha256": "630a1d8e1fd4feff922529e7d442372464041ecdaf2c1f558a3e4a248d65a3c0"
   },
   {
    "bytes": 11466,
    "path": "shopify/jackspepperheist.com-p1.json",
-   "sha256": "edd15e9373ce5a92fbf1352958883403a27b91a135169a2072cccc09d7c6dbc5"
+   "sha256": "24bb5ce065203fb9676f9a8f0209cc37e33574bc0c29fccbda637b8f6ae3cf26"
   },
   {
    "bytes": 51249,
    "path": "shopify/joeyshotsauce.com-p1.json",
-   "sha256": "eb12ae363944df943958dc72eddc05b14397e0be551025dadd9b7adea329999b"
+   "sha256": "fa6e896c843e586298cc29d74022cc91b22bf793f8e22bbdc3fe3aeae2675963"
   },
   {
    "bytes": 94654,
    "path": "shopify/julzscreations.com-p1.json",
-   "sha256": "6c4be32ad17cb447189eae24264ec8152343444284c7efab8349e4fd93a95669"
+   "sha256": "0d688900d26a04fadf0d40879b478f39d06edf8fdbf3ce47a11fadcabfc55166"
   },
   {
    "bytes": 215679,
    "path": "shopify/karmasauce.com-p1.json",
-   "sha256": "465d0906978cdc5572c6731db79f10099fabb7d81bfb42d760f02b1fddcb6920"
+   "sha256": "d23a76cf5eb291093e0f8638031f77a44cc8ba8ff7bd464c3e178a541f454511"
   },
   {
    "bytes": 217291,
    "path": "shopify/luckydoghotsauce.com-p1.json",
-   "sha256": "d8cb684bbb8bdaa77b32362690895c45e4e1cfcf5bbb3174fa83e82055f3939d"
+   "sha256": "ec8a86d7f1d8f54fffa92a2d49785d1515903f69e428043a88a2d1f12234dff2"
   },
   {
-   "bytes": 43185,
+   "bytes": 43159,
    "path": "shopify/markshotsauce.com-p1.json",
-   "sha256": "11b13a999ada2aee4495ac1140503a113d247836e4ffa5debafeb6f1563c9a03"
+   "sha256": "e8050b8f7b52b23db38eee89812654eb96f08bca5176e77535565ce29d4c026d"
   },
   {
    "bytes": 23677,
    "path": "shopify/maspeppers.com-p1.json",
-   "sha256": "77415f86235f5640bc5259402289cec6e795362f2f66fb4ebc6db81cf74650a3"
+   "sha256": "0c0eddf2e622d5312aaf2cec4f93471010e9760374b3555d9fab8e0b86e7f433"
   },
   {
    "bytes": 238741,
    "path": "shopify/melindas.com-p1.json",
-   "sha256": "bb82fa0097dffc57732b1bd85f2f35eec3896bbb65b1c8519395e2537257ff38"
+   "sha256": "8117d7209ce29c62e762654f297326f0ac674c83a43cce02467fc03555fe1a04"
   },
   {
    "bytes": 170953,
    "path": "shopify/mikeshothoney.com-p1.json",
-   "sha256": "9508c68663d4978f313872be18c2583892861f19dbc613cdd2ab08afdaacfbbf"
+   "sha256": "5adbe355f296ab3222566db221d25a5bbc2367ed693b02dfa68c1e615dff393b"
   },
   {
    "bytes": 108890,
    "path": "shopify/myspicebuds.com-p1.json",
-   "sha256": "5e1edeee404e4be20b1c770cdcf2f14e0403c26d7797af89896032d097ff912b"
+   "sha256": "f48bb4073ef5afa6c29a43c8dc39023131b0fdc1deedac6a6ae88efc9a0518f4"
   },
   {
    "bytes": 155147,
    "path": "shopify/naaginsauce.com-p1.json",
-   "sha256": "ee4f1c3a6a31f69280b4700cd48db68e2e0e8822668acc278987e6c5db16ac1c"
+   "sha256": "b6c0006d1466917f916f8c1b1556cb66b71c31216f3fb5e1554ff50be91af7e4"
   },
   {
-   "bytes": 133269,
+   "bytes": 133261,
    "path": "shopify/neilsrealdeal.com-p1.json",
-   "sha256": "2b72c9e439e2a8c7df63b354c200c4205053eafd4a50c1f1b55497389eaddbf3"
+   "sha256": "5e43e278e57173fb5d23e1b870c76c74e8045dd9d161c2036d33cc9e6da5af24"
   },
   {
    "bytes": 306837,
    "path": "shopify/newkssauces.com-p1.json",
-   "sha256": "89b9b44c1a9d8c08a982ecb7a78e56bdf068e2d440971e6dd6a53950b9cb16a2"
+   "sha256": "149ec1919bd5ae83459dd8d446d99b8efd74f61ecd0d101b5f4455ddd63852b2"
   },
   {
    "bytes": 100597,
    "path": "shopify/oaksteakbbqsauce.com-p1.json",
-   "sha256": "b5b5096b267fb05685e90cddc061d797562113c29ba62716090395e458f07a92"
+   "sha256": "14f02c1ef8185d3d814006f400503ee8993c5aa6ad97ed97daf577cee6b96691"
   },
   {
-   "bytes": 53677,
+   "bytes": 53655,
    "path": "shopify/oldboneschillico.com-p1.json",
-   "sha256": "e47798d3cc15483e1b7ff860b52b3a0bd3e27ae2ce1fc7162484f497facf9dd5"
+   "sha256": "f76d542b3d4132148a7937890d0c8bedeaf4fdcdeeca5f987e00fcd6d43a6bde"
   },
   {
    "bytes": 20741,
    "path": "shopify/oldcityfire.com-p1.json",
-   "sha256": "40a8749c264495223cdc1892391e0cd61b593d68eeea2df79330b7b132ad60b2"
+   "sha256": "15f13958538d44bf0a47b3203cfe0509b589500b6154b6a9b241830d422761b5"
   },
   {
    "bytes": 102556,
    "path": "shopify/omaandpopies.com-p1.json",
-   "sha256": "24fad8401678b0e4a315e04548ba64a9be41284ad4c6e204edc8c4c37fa557c3"
+   "sha256": "8543fee47b04e48b8720bc6bb7744dfd036812949ac1d5b3e24d882b5cd0eb83"
   },
   {
    "bytes": 104685,
    "path": "shopify/onimapantry.com-p1.json",
-   "sha256": "9b97c7e525fd3fe0e7c130f553c2e428bbf26b8710aa3598d16c6c59750e3bb2"
+   "sha256": "2f40850a69d13a594092d045df3ae666b876fde5b6a4e17ce2d15934dbd57664"
   },
   {
    "bytes": 449925,
    "path": "shopify/pepperpalace.com-p1.json",
-   "sha256": "c03c3b7e1f1007de63867d42d59442d3d33ca451bd0121dee44055750a889e1c"
+   "sha256": "3dd229a52394fcebf4c3701a52361d06dc44a2f48a818189fe48c9585bad56cc"
   },
   {
-   "bytes": 465978,
+   "bytes": 465596,
    "path": "shopify/pexpeppers.com-p1.json",
-   "sha256": "70284b14f4ec2866956866104424238eaddc8f5ea6735c74f6f78126da0253f3"
+   "sha256": "ef6820afaab09f64cc05f10952988a35ddbc49807d335a7c132f506a75352ac5"
   },
   {
    "bytes": 143297,
    "path": "shopify/powerfulpepper.co-p1.json",
-   "sha256": "a5185fede118a468bd53d08d3d77de15f1296256692b47bf458d6cfd8dcb72f1"
+   "sha256": "b3a595fd704bafa8d3b49e2f485ee90dca92fa0c72a36099373ee38592a48e59"
   },
   {
-   "bytes": 471783,
+   "bytes": 471236,
    "path": "shopify/puckerbuttpeppercompany.com-p1.json",
-   "sha256": "8f2cc7eb689fb07b4046e0ccbb917eceeb698907f821ea02bff2770621cbf84e"
+   "sha256": "0d035afb353e1456a37506d049535ef3b3edaccc3ea6579c50eda5686191f4ef"
   },
   {
-   "bytes": 378019,
+   "bytes": 377524,
    "path": "shopify/puckerbuttpeppercompany.com-p2.json",
-   "sha256": "7dff0673e6cd16aec1e158c8de8e6ad9b6de0c742e61956742657babfb583ef4"
+   "sha256": "c86f3c459efdc4a22280b583eb3bfd0827be92926613a40803cd6e67111fb8ba"
   },
   {
-   "bytes": 84615,
+   "bytes": 84547,
    "path": "shopify/queenmajestyhotsauce.com-p1.json",
-   "sha256": "332a166c3a09db2bec187b69c7026952f7a1907f4814e918ac9c60af311690ce"
+   "sha256": "051bbd5e829fc8737d727a983ef81a3139580a464af1820da702dc2cda66492e"
   },
   {
    "bytes": 378807,
@@ -536,94 +561,94 @@
    "sha256": "9a94c54f7bae2583ee9508353a4a3f470b0b56d30ef8c67f0c5fe8629131b632"
   },
   {
-   "bytes": 218729,
+   "bytes": 218554,
    "path": "shopify/risingsmokesauce.com-p1.json",
-   "sha256": "e68cb848fcdb6b88452b574f3ae199944304de603e4f992e5467b4f026d1f8d3"
+   "sha256": "177ecaaa7b8020c2bc87582b0555053d9ef5e80dd3792d871243c5f1cb966416"
   },
   {
-   "bytes": 69567,
+   "bytes": 69524,
    "path": "shopify/samsahouse.com-p1.json",
-   "sha256": "f90d08acdbe8aa2bb649db44b0d1f7dfd3501832d288853f19e81699b7af2a90"
+   "sha256": "cca68d6da2214b7ff4280856d77488e93a0084705c126b260188d1faf66f7e7a"
   },
   {
-   "bytes": 89041,
+   "bytes": 89541,
    "path": "shopify/sauceleopard.com-p1.json",
-   "sha256": "9d8c4f96d157a53bd9bb281886bb0337d3860084c0006f684896ea0e79b5ea34"
+   "sha256": "2a95166411223f1cad15eb7985e7aed9ab813e0fa15ca0205c4200f23ec964f6"
   },
   {
    "bytes": 161057,
    "path": "shopify/sauceshop.co-p1.json",
-   "sha256": "f7caeda3780578c730134c5ec0972a0736dc05d615e5b9e07b22db1a0eb975f3"
+   "sha256": "9e7f40a5d12e03b7468fe1010a907979e0fdd1394aa9e90c195abe5e7029bec8"
   },
   {
    "bytes": 154127,
    "path": "shopify/savirfoods.com-p1.json",
-   "sha256": "3fa8b3fd9c6e125c290414db18c5c0022e63a4941e77d8ed154b3de31882c2b5"
+   "sha256": "de91d4232f7e9951d2e334bd907c8ab008b9c4f11601bff29060b02a8818f6e2"
   },
   {
    "bytes": 130905,
    "path": "shopify/shopelyucateco.com-p1.json",
-   "sha256": "38025109bead2987e1dc7cb6af0d003c79486325a20835c3188506c96855276a"
+   "sha256": "2132a8f2e707f7ee20242da2866c27fdcf885be61ab3ed5fbbccb80c32651ada"
   },
   {
    "bytes": 37833,
    "path": "shopify/springsfireplace.com-p1.json",
-   "sha256": "4cf3f3f3f1e02a2b8fd0a0e2e5ca9b564443aea2ee90960b57df76017a11992f"
+   "sha256": "fd0920beb08b37e7c3666895bdbe60a1b98b2022dd740177ff4a6afdd8c97c21"
   },
   {
    "bytes": 169127,
    "path": "shopify/stillthereshinesauce.com-p1.json",
-   "sha256": "1b7815e8c41bf24b17a03bd7ec190d723ec0ac8f0841fef209c176aa010b0e9f"
+   "sha256": "3626207f78845c4c0da0156781e10afb78ab1d65d6c9a066b7e7c5bfd7e707a2"
   },
   {
    "bytes": 68883,
    "path": "shopify/sweetdiamondfoods.com-p1.json",
-   "sha256": "027107eeaff66090c8a10208a58c34c82821e617f9765fcbca968494cf52c737"
+   "sha256": "d751dda8a3475bc376849eda55ab24f1bbc1cdf64f4523abfde1b3d1e03b95bd"
   },
   {
    "bytes": 70547,
    "path": "shopify/tahitijoeshotsauces.com-p1.json",
-   "sha256": "17c9970a558adf7f4840f085c149142e1a1ced9c75fb76667149cb48d17accc0"
+   "sha256": "1c17e30ddc92cc61dae122525374f65f41b305df7713e9637c7048268282873e"
   },
   {
    "bytes": 57670,
    "path": "shopify/taoshumhotsauce.com-p1.json",
-   "sha256": "f398388ed73535e22fa57fc8684e6c6cc8eda78b3bec509bcf258d02b057a3bc"
+   "sha256": "bcc99e8b523164ca329b1e3a5c22009571f901bf1823b99fc181a150c8415257"
   },
   {
    "bytes": 140642,
    "path": "shopify/texanheartland.com-p1.json",
-   "sha256": "8261fd3af2a6c4f0d0289af97098e348c859ee3439b04a35a8ebd7eebc87a5a2"
+   "sha256": "e08d5ef7383d20193b0d80463ec4aeb1d9e7827a8e3d2387b841882597192db8"
   },
   {
-   "bytes": 46050,
+   "bytes": 46021,
    "path": "shopify/thepepperninja.com-p1.json",
-   "sha256": "2dd6e3ad76caa2014b4fb56b50668bb2dbeb9ff9e345f14d3f478728978ed537"
+   "sha256": "a70e1e0246c03c2a7429afef045b20fa33aac68e0b5e33c3c6506f30fc63ead4"
   },
   {
    "bytes": 1187668,
    "path": "shopify/torchbearersauces.com-p1.json",
-   "sha256": "b012557e4674eca7b93ec77ff5b6f119b4e0f0055e1df3c0bfececf5d76b96f2"
+   "sha256": "2a107eb9a546c017be75b7ae13e9dbe59d9a2dc36fecdab3d1947869d5dcdc56"
   },
   {
    "bytes": 1542574,
    "path": "shopify/traversebayfarms.com-p1.json",
-   "sha256": "163b4e6cf9ac0005cb19f48e278d7e122732faa5f266bcecbdb8cd7327ed0bd6"
+   "sha256": "5b36a074a874af367cc3ffcb3596ad06ac41922a3f2fe37c5ad416dc64b3e533"
   },
   {
    "bytes": 142395,
    "path": "shopify/truff.com-p1.json",
-   "sha256": "bcfe3885e27d9b110e4721bc6e7af9085a02ef373dffc545410f7451ba1088b6"
+   "sha256": "bd946008a0e7a9af5f788d1dbb847cb78502a7564bf08eb9473966137cac6e72"
   },
   {
    "bytes": 168119,
    "path": "shopify/yellowbirdsauce.com-p1.json",
-   "sha256": "5637884ed38df1dd6e6ee30273906083c6b8cb0c568e2465d667818481c778cc"
+   "sha256": "7ccd1952891e5ead5da8f89341f0f92ea4413feb39b3ce6b1ff6cf913bba279c"
   },
   {
    "bytes": 266757,
    "path": "shopify/ziachile.com-p1.json",
-   "sha256": "b7766bbe948c12b3805a3d783c05930f1aa7ca22f4517333f519e2edaa58ac61"
+   "sha256": "79b575a954a78f6b8e9218730618d5f337f7170e1197cecfc13ad7b7bd763c3c"
   },
   {
    "bytes": 65637,
@@ -696,20 +721,14 @@
    "sha256": "009c208c595f4c0288fbc35ef8d7d8246b6eff59da55e9427a2c9276e87156a6"
   },
   {
-   "bytes": 323457,
+   "bytes": 323565,
    "path": "woo/sinaigourmet.com-p1.json",
-   "sha256": "c72dd734f335e8c01320df53104b11c3bac2aef62247a7535acc5b2a59b0e1b5"
+   "sha256": "b4e91890359728cc22bd02718877c19251dcbf9d1005b0f613843f3ab4070751"
   }
  ],
- "files": 140,
+ "files": 145,
  "snapshot_id": "20260919T082412Z",
  "sources": [
-  "awards",
-  "fdc",
-  "hotones",
-  "off",
-  "shopify",
-  "wikipedia",
-  "woo"
+  "fdc"
  ]
 }

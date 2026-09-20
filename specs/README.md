@@ -38,7 +38,7 @@ Chia 出的每一份 spec 都是一份 **`.md`**，放在這個資料夾。這�
 | [雙 Tab 視覺統一＋日曆／地圖匯出](TASK-ui-unify-and-calendar-maps-export.md) | 全站 | ✅ done |
 | [Scout MCP Server](spec-scout-mcp-server.md) | 工具鏈 | 🟡 程式完成，AC-1~4 待真實環境驗 |
 | [讓「資料庫被暫停」有人會知道](spec-keepalive-visibility.md) | 全站 / 維運 | ✅ done |
-| [全美辣醬語料庫＋專業評論庫](spec-us-hot-sauce-corpus.md) | 資料層（獨立於 app） | 🟡 管線與驗證器完成；評論抽取停在 llm-bridge 冷啟動人審關卡，數條驗收未達門檻，見 [`ACCEPTANCE-sauce-corpus.md`](../ACCEPTANCE-sauce-corpus.md) |
+| [全美辣醬語料庫＋專業評論庫](spec-us-hot-sauce-corpus.md) | 資料層（獨立於 app） | 🟡 v3（標籤判讀、成分結構化、辣度五層、代工聚類）已完成；41/49 通過，**兩個 llm-bridge 冷啟動人審關卡各卡 20 筆**，五條驗收等它們，見 [`ACCEPTANCE-sauce-corpus.md`](../ACCEPTANCE-sauce-corpus.md)。**v3 規格全文未進版控**，A36–A49 的編號是重建的（K17） |
 
 > **AC 勾選框的說明**：只有我親自逐條驗過的 spec 會把 `- [ ]` 改成 `- [x]`。
 > 其餘標 done 的 spec，依據是 commit 與 `BUYLIST_STATE.md` 的紀錄，AC 框維持未勾——

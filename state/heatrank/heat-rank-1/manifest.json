@@ -1,0 +1,9 @@
+{
+ "pair_sources": {
+  "brand_line": 134
+ },
+ "pairs": 134,
+ "rows": 15,
+ "rows_sha256": "53f3c615f5b392512d8e1b2dfc1f01b6377eede84ffee85b78d5bb48504d554b",
+ "rules_version": "heat-rank-1"
+}

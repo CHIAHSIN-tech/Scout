@@ -92,16 +92,57 @@ $env:SAUCE_MIN_INTERVAL = "1.0"     # 每主機的最小間隔（秒）；可以
 .venv\Scripts\python -m sauce.load --home .evdb --stage extract_rules,match,views
 ```
 
+## 4b. 標籤照片 → 逐字轉錄 → 結構化欄位（v3）
+
+這一段是 v3 加的，跟第 4 步一樣要過冷啟動閘，但走的是**另一個模型、另一份 prompt 資產**。
+
+**先抓照片。這一步會跑幾小時**，因為一張圖一次請求：
+
+```powershell
+$env:SAUCE_MIN_INTERVAL = "0.4"
+.venv\Scripts\python -m sauce.load --home .evdb --stage harvest --only off_image
+```
+
+**斷了直接重跑就好**：事件每 25 張落盤一次，已經有事件的 GTIN 不重抓（見 DECISIONS D22）。
+跑完 `--stage ingest` 把事件收進庫。
+
+**再判讀。** 視覺模型是 `meta/llama-3.2-11b-vision-instruct`，跟評論抽取的文字模型不是同一個：
+
+```powershell
+.venv\Scripts\python -m sauce.labelread --home .evdb
+```
+
+同樣會停在冷啟動（exit 3），人審 `sauce/prompts/sauce-label-read/golden.pending.jsonl`
+之後 promote，再跑一次。
+
+**最後把字變成欄位。這一步沒有模型**——純規則，同一段字跑兩次一定得到同一個答案：
+
+```powershell
+.venv\Scripts\python -m sauce.composition --home .evdb
+.venv\Scripts\python -m sauce.heat --home .evdb
+.venv\Scripts\python -m sauce.load --home .evdb --stage ingest
+.venv\Scripts\python -m sauce.heatrank --home .evdb
+.venv\Scripts\python -m sauce.copackers --home .evdb
+```
+
+`heatrank` 要在 `heat` 的事件**進庫之後**才跑：它吃的是 `sauce.heat.claim` 事件，
+不是 `heat.py` 的回傳值。
+
 ## 5. 試樣（第一次執行的交付物）
 
 ```powershell
-.venv\Scripts\python -m sauce.pilot build --home .evdb --n 40
+.venv\Scripts\python -m sauce.pilot build --home .evdb --n 60
 .venv\Scripts\python -m sauce.pilot check
 ```
 
-產生 `sauce/pilot/sample-v1.jsonl`。人要看的是兩件**機器驗不到**的事：
-產品那幾筆的名字唸不唸得出來、評語那幾筆是不是那篇評論的重點。
+產生 `sauce/pilot/sample-v1.jsonl`。人要看的是三件**機器驗不到**的事：
+產品那幾筆的名字唸不唸得出來、評語那幾筆是不是那篇評論的重點、
+標籤判讀那 20 筆把圖打開逐字對得上不對得上。
 填完裁決之後，`sauce.validate` 的第三層下次就會啟用。
+
+**標籤那 20 筆是這份試樣裡最不能省的**：評語至少還有「引文必須是正文的子字串」
+（A25）在擋，標籤判讀的原文是一張圖，**連子字串都沒得比**。
+詞庫覆蓋率（A39）只擋得住模型整批造字，擋不住順序錯、數字錯、漏掉一行。
 
 ## 6. 驗收（逐條，順序照這裡）
 
@@ -126,6 +167,26 @@ $env:SAUCE_MIN_INTERVAL = "1.0"     # 每主機的最小間隔（秒）；可以
 .venv\Scripts\python -m sauce.checks.export_safety
 .venv\Scripts\python -m sauce.checks.review_scale --home .evdb
 .venv\Scripts\python -m sauce.reviews_report --home .evdb --rules v1
+```
+
+v3 加的那幾條（標籤、成分、辣度、代工、輸出目錄）：
+
+```powershell
+.venv\Scripts\python -m sauce.checks.fdc_fields --home .evdb
+.venv\Scripts\python -m sauce.checks.label_images --home .evdb
+.venv\Scripts\python -m sauce.checks.label_reads --home .evdb
+.venv\Scripts\python -m sauce.checks.label_lexicon --home .evdb
+.venv\Scripts\python -m sauce.checks.label_degraded --home .evdb
+.venv\Scripts\python -m sauce.checks.composition --home .evdb
+.venv\Scripts\python -m sauce.checks.heat_layers --home .evdb --rules v1
+.venv\Scripts\python -m sauce.checks.copackers --home .evdb
+.venv\Scripts\python -m sauce.checks.run_dirs --home .evdb
+```
+
+或者一次跑完整張表（**這是主要的用法**，會寫出 `ACCEPTANCE-sauce-corpus.md`）：
+
+```powershell
+.venv\Scripts\python -m sauce.acceptance --home .evdb --rules v1
 ```
 
 靜態的那幾條（不需要跑資料）：
@@ -178,12 +239,21 @@ git grep -nE "\.(insert|update|upsert|delete)\(" -- sauce/probe/
 ## 9. 產出給人看的東西
 
 ```powershell
-Copy-Item .evdb\views\sauce_views_build\v1\rows.csv   sauce\out\sauce_catalog-v1.csv
-Copy-Item .evdb\views\sauce_views_reviews\v1\rows.csv sauce\out\sauce_reviews-v1.csv
+.venv\Scripts\python -m sauce.export --home .evdb --rules v1
+.venv\Scripts\python -m sauce.checks.run_dirs --home .evdb
 .venv\Scripts\python -m sauce.checks.export_safety
-.venv\Scripts\python -m sauce.query "Secret Aardvark" --reviews
+.venv\Scripts\python -m sauce.trend
+.venv\Scripts\python -m sauce.query "Secret Aardvark" --reviews --composition --heat
 ```
 
-`sauce/out/` 進版控，`.evdb/`（含 `raw/`）與 `state/snapshot-*/` 不進；
-`state/snapshot-*/MANIFEST.json` 要進——半年後要靠它分辨
-「這是新出的辣醬」還是「我們這次抓法不一樣」。
+`sauce.export` 會把兩張表寫進 `sauce/out/<執行日期>/`，**每次執行一個目錄**。
+不覆蓋上一次是刻意的：半年後要回答「這款醬是這次才出現的，還是上次漏抓」，
+唯一的辦法就是兩次的輸出都還在（A48）。`sauce.trend` 就是拿這些目錄互相比對，
+只有一個 run 的時候它會照實說「無法比較」並 exit 0——**不是失敗，是還沒有可比的東西**。
+
+`sauce/out/` 進版控，`.evdb/`（含 `raw/` 裡的評論正文與標籤照片）與
+`state/snapshot-*/` 不進；`state/snapshot-*/MANIFEST.json` 要進——
+半年後要靠它分辨「這是新出的辣醬」還是「我們這次抓法不一樣」。
+
+**標籤照片一張都不進版控、一張都不重新散布**：它們是 CC BY-SA 3.0，
+而且授權不涵蓋包裝上的商標與設計（見 DECISIONS D20）。
