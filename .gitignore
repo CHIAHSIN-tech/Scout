@@ -60,3 +60,9 @@ sauce/prompts/*/golden.pending.jsonl
 trips/
 web/trips/
 .wrangler/
+
+# 衍生層的大檔不進版控，但每一份的 manifest 要進——
+# `rows_sha256` 是「這一輪算出來的東西跟上一輪一不一樣」唯一的證據，
+# 而 jsonl 本身隨時可以用同一份規則版本重算出來。
+state/composition/*/*.jsonl
+state/heatrank/*/*.jsonl

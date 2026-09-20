@@ -30,16 +30,24 @@ from .names import contains_key, fold, normalize_whitespace
 #: 版本 2：多帶價格、幣別、購買連結、是否有貨（Stanley 2026-09-19 的硬條件）。
 #: 版本一改，同一筆觀察就會被重新抽一次——舊的 parsed 事件留著（append-only），
 #: 新的帶著新版本號，視圖看得出哪一筆是誰產生的。
-VERSION = "rule:sauce-structured-2"
+VERSION = "rule:sauce-structured-3"
 
 #: 有結構化品牌欄位的來源。其餘走模型。
-STRUCTURED_SOURCES = ("fdc", "off", "shopify", "woo")
+#: `webshop` 沒有品牌欄位（它的標題多半來自 `<title>`），但**產品名本身仍然是字面的**，
+#: 所以它走規則而不是模型——模型在這裡沒有任何東西可以判斷。
+STRUCTURED_SOURCES = ("fdc", "off", "shopify", "woo", "webshop")
+
+#: `<title>` 常見的店名尾巴：`Chipotle Hot Sauce - Hot Sauce World`。
+#: 只在尾巴**看得出是店名**時才切（比對店的網域），不靠「最後一段大概是店名」猜。
+_TITLE_TAIL = re.compile(r"\s*[|–—\-·:]\s*([^|–—\-·:]{2,60})\s*$")
 
 #: 規格／包裝：這些是 variant，不是產品名的一部分。
 _VARIANT = re.compile(
     r"\b(\d+(?:\.\d+)?\s*(?:fl\s*)?(?:oz|ounce|ounces|ml|l|g|kg|lb|lbs)"
     r"|\d+\s*(?:pk|pack|ct|count|bottles?))\b", re.I)
-_TRAILING_JUNK = re.compile(r"[\s,\-–—|]+$")
+#: 尾巴的標點。拿掉 variant（`5oz`）之後常常留下 `, .` 這種殘渣——
+#: 它通得過所有檢查（仍然是子字串），但那不是一個人會唸出來的名字。
+_TRAILING_JUNK = re.compile(r"[\s,.;:\-–—|·]+$")
 
 
 def _dedupe_segments(text: str) -> str:
@@ -76,6 +84,33 @@ def _strip_brand(title: str, brand: str) -> str:
     return stripped if stripped.strip() else title
 
 
+def strip_site_tail(title: str, domain: str) -> str:
+    """把 `<title>` 尾巴的店名切掉——**只在切得出來的時候**。
+
+    `Cajohn's Chipotle Hot Sauce - Hot Sauce World` 的後半段不是產品名的一部分，
+    但它通得過所有機器檢查（它確實是來源字串的子字串）。這種名字進了總表，
+    看起來跟真的產品名一模一樣。
+
+    切的依據是**那間店自己的網域**：把網域拆成字（hotsauceworld → hot sauce world
+    比不出來，所以比的是去掉分隔符之後的連續字母）。比不出來就原樣保留，不猜。
+    """
+    host = re.sub(r"^www\.", "", str(domain or "").lower())
+    stem = re.sub(r"[^a-z0-9]+", "", host.rsplit(".", 1)[0] if "." in host else host)
+    if not stem:
+        return title
+    out = title
+    for _ in range(2):          # 最多切兩層：`… - 分類 - 店名`
+        m = _TITLE_TAIL.search(out)
+        if not m:
+            break
+        tail = re.sub(r"[^a-z0-9]+", "", m.group(1).lower())
+        if tail and (tail == stem or tail in stem or stem in tail):
+            out = out[:m.start()].strip()
+        else:
+            break
+    return out or title
+
+
 def parse(title: str, brand: str) -> dict[str, str]:
     """(標題, 品牌) → {brand, product, variant}。名稱一律取自來源字串，不重寫。"""
     title = normalize_whitespace(title)
@@ -84,7 +119,10 @@ def parse(title: str, brand: str) -> dict[str, str]:
     product = _strip_brand(title, brand)
     for v in variants:
         product = product.replace(v, " ")
-    product = _dedupe_segments(_TRAILING_JUNK.sub("", normalize_whitespace(product)))
+    product = normalize_whitespace(product).replace(" ,", ",")
+    while ",," in product:
+        product = product.replace(",,", ",")
+    product = _dedupe_segments(_TRAILING_JUNK.sub("", product))
     if not product.strip():
         product = title
     variant = " ".join(variants)[:60]
@@ -139,8 +177,10 @@ def run(events: Iterable[Event], sources: tuple[str, ...] = STRUCTURED_SOURCES,
         brand = str(ev.payload.get("brand") or "")
         if not title.strip():
             continue
-        parsed = parse(title, brand)
         source_text = f"{title} {brand}"
+        if ev.source == "webshop":
+            title = strip_site_tail(title, str(ev.payload.get("store_domain") or ""))
+        parsed = parse(title, brand)
         # 自己驗自己：抽出來的鍵必須仍然是來源字串的連續詞串（A10 第二層的同一條規則）。
         if not contains_key(source_text, fold(parsed["product"])):
             skipped_no_key += 1

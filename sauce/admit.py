@@ -101,7 +101,9 @@ def sitemap_urls(fetcher: Fetcher, origin: str) -> list[str]:
     if robots.ok:
         for line in robots.text.splitlines():
             if line.lower().startswith("sitemap:"):
-                roots.append(line.split(":", 1)[1].strip())
+                # 規格說這裡要放絕對網址，但真的有站放相對路徑（hotsauceworld.com
+                # 寫的是 `/sitemap.xml`）。不接回去的話那個站會被當成「沒有 sitemap」。
+                roots.append(urljoin(origin + "/", line.split(":", 1)[1].strip()))
     for guess in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"):
         if not roots:
             got = fetcher.get(origin + guess)

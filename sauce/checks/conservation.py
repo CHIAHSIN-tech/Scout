@@ -22,6 +22,7 @@ from pathlib import Path
 from evdb.spool import read_spool
 from evdb.store import Store
 
+from ..contract import EV_PRODUCT
 from . import arg_parser, home_of, report
 
 
@@ -48,6 +49,10 @@ def main(argv: list[str] | None = None) -> int:
 
     with Store(home, read_only=True) as store:
         stored = {r["event_id"] for r in store.rows("SELECT event_id FROM events")}
+        # FDC 的帳要逐筆比對，所以順手把庫裡的 fdc 產品編號撈出來（見下面的說明）
+        fdc_ids = {str(r["source_record_id"]) for r in store.rows(
+            "SELECT source_record_id FROM events WHERE source = 'fdc' "
+            "AND event_type = ?", [EV_PRODUCT])}
 
     problems: list[str] = []
     files: list[dict[str, object]] = []
@@ -70,18 +75,32 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(f"{path.name}：{bad} 行解析失敗，但 rejects 只記了 "
                             f"{rejects_by_file.get(path.name, 0)} 筆")
 
-    # ---- bulk 的 CSV：rows_in == events + rejects ----
+    # ---- FDC 的帳：帳上記 `event` 的那幾列，每一列都要在庫裡找得到 ----
+    #
+    # v3 之前 FDC 走 bulk CSV，所以這裡驗的是 `rows_in == spooled + rejects`。
+    # v3 把它改走 Spool（payload 裡有巢狀的 nutrients，bulk 的扁平 CSV 裝不下），
+    # `candidates.csv` 從此是**帳**而不是輸入：每一列記一個 fdc_id 與它的下場
+    # （`event` / `skipped_category` / `skipped_country`）。
+    #
+    # 所以守恆的說法也換了，而且比原本強：**不是數字對得上，是逐筆對得上**。
+    # 帳上說留下來的那 5,032 筆，要一筆一筆在庫裡指得到；
+    # 只比總數的話，少了 3 筆又多算 3 筆會剛好抵銷掉。
     repo = Path(home.root).parent
     for path in sorted(repo.glob("state/snapshot-*/*/candidates.csv")):
-        rows_in = _csv_rows(path)
-        rejected = rejects_by_file.get(path.name, 0)
-        produced = sum(int(f["lines"]) for f in files
-                       if str(f["file"]).startswith(f"bulk-{path.stem}-"))
-        files.append({"file": str(path.relative_to(repo)), "kind": "bulk",
-                      "rows_in": rows_in, "spooled": produced, "rejects": rejected})
-        if rows_in != produced + rejected:
-            problems.append(f"{path.name}：rows_in={rows_in} != spooled={produced} + "
-                            f"rejects={rejected}")
+        outcomes: dict[str, int] = {}
+        missing: list[str] = []
+        with path.open(encoding="utf-8-sig", newline="") as fh:
+            for row in csv.DictReader(fh):
+                outcome = (row.get("outcome") or "").strip()
+                outcomes[outcome] = outcomes.get(outcome, 0) + 1
+                if outcome == "event" and str(row.get("fdc_id") or "") not in fdc_ids:
+                    missing.append(str(row.get("fdc_id") or ""))
+        files.append({"file": str(path.relative_to(repo)), "kind": "fdc_ledger",
+                      "rows_in": sum(outcomes.values()), "outcomes": outcomes,
+                      "missing_from_store": len(missing)})
+        if missing:
+            problems.append(f"{path.name}：帳上記為 event 的 {len(missing)} 筆在庫裡找不到，"
+                            f"例如 {missing[:5]}")
 
     return report("A5 conservation", not problems,
                   {"files": len(files), "rejects_total": sum(rejects_by_file.values()),
