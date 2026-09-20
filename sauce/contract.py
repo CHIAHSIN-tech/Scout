@@ -95,6 +95,9 @@ EV_AVAILABILITY = "sauce.observation.availability"
 EV_LINEUP = "sauce.observation.lineup"
 EV_REVIEW = "sauce.review.published"
 EV_VERDICT = "sauce.review.verdict"
+#: 一款醬 ↔ 一篇彙整型評比的**連結**。只有出處，沒有評論內容——
+#: 「誰評過它」是事實，「它好不好」是判斷（見 sauce/references.py）。
+EV_REFERENCE = "sauce.reference"
 EV_PARSED = "sauce.extraction.parsed"
 EV_LABEL_IMAGE = "sauce.label.image"
 EV_LABEL_READ = "sauce.label.read"
@@ -109,6 +112,7 @@ EVENT_TYPES: dict[str, str] = {
     EV_LINEUP: "某季某集的選醬名單（含第幾棒與標榜 SHU）",
     EV_REVIEW: "一篇專業評論（payload 只放 metadata，正文在 raw store）",
     EV_VERDICT: "該評論對某一款醬的評語（一篇多款就多筆）",
+    EV_REFERENCE: "一款醬被某篇彙整型評比一起評過（只有連結，沒有評論內容）",
     EV_PARSED: "模型對某筆觀察的解析結果（帶 model_id 與 prompt_version）",
     EV_LABEL_IMAGE: "一張標籤照片（payload 只放 metadata，圖片在 raw store）",
     EV_LABEL_READ: "模型對某張照片的逐字轉錄（帶 model_id 與 prompt_version）",

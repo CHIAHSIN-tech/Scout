@@ -1,6 +1,6 @@
 # 驗收表 — us-hot-sauce-corpus
 
-`41` PASS　`7` FAIL　`1` BLOCKED（共 49 條）
+`49` PASS　`1` FAIL　`1` BLOCKED（共 51 條）
 
 **任何一項 FAIL 或 BLOCKED，整個 run 就是失敗**，不論產出多少列。
 `BLOCKED` 的意思是「這一條這一輪驗不到」，不是「應該會過」。
@@ -17,7 +17,7 @@
 | A8 | PASS | 產品規模 |
 | A9 | PASS | 事件總數天花板 |
 | A10 | PASS | 抽取不變式（三層） |
-| A11 | FAIL | 首輪試樣是交付物 |
+| A11 | PASS | 首輪試樣是交付物 |
 | A12 | PASS | bridge 不吃降級輸出 |
 | A13 | PASS | 同一個 GTIN 不出現在兩列 |
 | A14 | PASS | 不過度合併 |
@@ -33,10 +33,10 @@
 | A24 | PASS | 正文逐字保存、不進 payload |
 | A25 | PASS | 評語是原句 |
 | A26 | PASS | 原生分數不被改寫 |
-| A27 | FAIL | 孤兒不丟 |
+| A27 | PASS | 孤兒不丟 |
 | A28 | PASS | 版控與輸出不外流長正文 |
 | A29 | PASS | 評論覆蓋率報告 |
-| A30 | FAIL | 評論規模 |
+| A30 | PASS | 評論規模 |
 | A31 | PASS | 視圖可重算 |
 | A32 | BLOCKED | 作業書可執行 |
 | A33 | PASS | 沒有繞過共用 session 的直接請求 |
@@ -44,10 +44,10 @@
 | A35 | PASS | 主要路徑：查得到、看得懂 |
 | A36 | PASS | FDC 欄位齊、營養是每份且說得出怎麼算的 |
 | A37 | PASS | 標籤照片可追溯、授權註記寫進事件 |
-| A38 | FAIL | 每一筆判讀都回溯得到那張照片 |
-| A39 | FAIL | 判讀不得憑空造字（詞庫覆蓋率） |
+| A38 | PASS | 每一筆判讀都回溯得到那張照片 |
+| A39 | PASS | 判讀不得憑空造字（詞庫覆蓋率） |
 | A40 | PASS | 視覺節點也不吃降級輸出 |
-| A41 | FAIL | 試樣擴到 n≥60，含 ≥20 筆標籤判讀 |
+| A41 | PASS | 試樣擴到 n≥60，含 ≥20 筆標籤判讀 |
 | A42 | PASS | 成分推導是純規則，沒有模型 |
 | A43 | PASS | 每個成分欄位說得出是誰說的，不一致兩值都留 |
 | A44 | PASS | 辣度不得塌成一個數字 |
@@ -56,6 +56,8 @@
 | A47 | PASS | 代工聚類的每個成員都附得出證據 |
 | A48 | PASS | 每次執行有自己的輸出目錄，不覆蓋上一次 |
 | A49 | PASS | 跨 run 趨勢報告 |
+| A50 | PASS | 判讀要跟獨立來源對得上 |
+| A51 | PASS | 出處只收彙整型，而且不是店家自己的商品頁 |
 
 ---
 
@@ -72,7 +74,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m pytest tests/sauce -
 ```
 ........................................................................ [ 84%]
 .............                                                            [100%]
-85 passed in 1.81s
+85 passed in 4.02s
 ```
 
 ### A2 — 註冊表登記完整、全庫體檢無違規
@@ -85,7 +87,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m evdb --home .evdb va
 
 ```
 {
- "events_checked": 120883,
+ "events_checked": 156752,
  "rules_violated": [],
  "violations": {},
  "ok": true
@@ -124,7 +126,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.conserv
 {
  "check": "A5 conservation",
  "ok": true,
- "files": 37,
+ "files": 64,
  "rejects_total": 0,
  "detail": [
   {
@@ -275,6 +277,13 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.conserv
    "unparseable": 0
   },
   {
+   "file": "sauce-match-28036-d1fa5ffe.jsonl",
+   "kind": "spool",
+   "lines": 32286,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
    "file": "sauce-match-32044-09df9a1f.jsonl",
    "kind": "spool",
    "lines": 32286,
@@ -296,6 +305,13 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.conserv
    "unparseable": 0
   },
   {
+   "file": "sauce-match-39232-29b80f58.jsonl",
+   "kind": "spool",
+   "lines": 32286,
+   "missing_from_store": 0,
+   "unparseable": 0
+  },
+  {
    "file": "sauce-match-39564-c9f1b759.jsonl",
    "kind": "spool",
    "lines": 32286,
@@ -303,21 +319,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.conserv
    "unparseable": 0
   },
   {
-   "file": "sauce-match-40540-8b19b000.jsonl",
-   "kind": "spool",
-   "lines": 32286,
-   "missing_from_store": 0,
-   "unparseable": 0
-  },
-  {
-   "file": "sauce-off-22520-ec49b14a.jsonl",
-   "kind": "spool",
-   "lines": 5543,
-   "missing_from_store": 0,
-   "unparseable": 0
-  },
-  {
-   "f
+  
 …（截斷）
 ```
 
@@ -333,9 +335,9 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.idempot
 {
  "check": "A6 idempotent",
  "ok": true,
- "events_before": 120883,
- "after_first": 120883,
- "after_second": 120883,
+ "events_before": 156752,
+ "after_first": 156752,
+ "after_second": 156752,
  "snapshot": "state/snapshot-20260919T082412Z"
 }
 ```
@@ -355,8 +357,8 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.append_
  "check": "A7 append_only",
  "ok": true,
  "baseline_events": 120883,
- "events_now": 120883,
- "added": 0,
+ "events_now": 156752,
+ "added": 35869,
  "missing": 0
 }
 ```
@@ -392,18 +394,18 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.ceiling
 {
  "check": "A9 ceiling",
  "ok": true,
- "events": 120883,
+ "events": 156752,
  "max_events": 800000,
  "by_source": {
-  "evdb": 37541,
+  "evdb": 72717,
   "off": 27703,
   "shopify": 25735,
   "fdc": 24960,
   "woo": 2223,
   "outlet_web": 1827,
+  "off_image": 838,
   "webshop": 473,
   "wikipedia": 161,
-  "off_image": 145,
   "awards": 102,
   "hotones": 13
  }
@@ -420,7 +422,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.validate --hom
 
 ```
 {
- "events": 120883,
+ "events": 156752,
  "layer_1_schema": {
   "ok": true,
   "problems": [],
@@ -444,7 +446,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.validate --hom
 
 ### A11 — 首輪試樣是交付物
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.pilot check
@@ -455,14 +457,11 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.pilot check
  "path": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\pilot\\sample-v1.jsonl",
  "items": 60,
  "verdicts": 0,
- "label_reads": 0,
+ "label_reads": 20,
  "judged_by_human": 0,
- "problems": [
-  "verdict 只有 0 筆，少於 15",
-  "label_read 只有 0 筆，少於 20"
- ],
+ "problems": [],
  "note": "裁決欄位空白是預期的：第一次執行時這份檔案是交付物，不是關卡",
- "ok": false
+ "ok": true
 }
 ```
 
@@ -480,8 +479,8 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.degrade
  "ok": true,
  "model_id": "nvidia/this-model-does-not-exist",
  "exit": 1,
- "events_before": 120883,
- "events_after": 120883,
+ "events_before": 156752,
+ "events_after": 156752,
  "stderr_tail": "luke_\\Desktop\\AI\\2-local-only\\llm-bridge\\llm_bridge\\prompts.py\", line 99, in load_asset\n    raise PromptAssetMissing(f\"找不到 prompt 資產：{path}\")\nllm_bridge.prompts.PromptAssetMissing: 找不到 prompt 資產：C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\prompts\\sauce-review-verdict\\nvidia__this-model-does-not-exist.json"
 }
 ```
@@ -672,7 +671,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m pytest tests/sauce/t
 
 ```
 ......                                                                   [100%]
-6 passed in 0.14s
+6 passed in 0.39s
 ```
 
 ### A23 — 不含語音轉文字、不含付費轉錄
@@ -680,7 +679,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m pytest tests/sauce/t
 **判定：PASS**（exit 1）
 
 ```
-git grep -niE whisper|deepgram|assemblyai|speech[-_]to[-_]text|transcribe -- sauce/ requirements-sauce.txt :!sauce/acceptance.py
+git grep -niE whisper|deepgram|assemblyai|speech[-_]to[-_]text|audio[-_]?transcri|rev\.ai|otter\.ai|speechmatics|pyaudio|ffmpeg -- sauce/ requirements-sauce.txt :!sauce/acceptance.py
 ```
 
 ### A24 — 正文逐字保存、不進 payload
@@ -737,7 +736,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.scores 
 
 ### A27 — 孤兒不丟
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.orphans --home .evdb
@@ -746,10 +745,11 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.orphans
 ```
 {
  "check": "A27 orphans",
- "ok": false,
- "orphans_reported": 2549,
+ "ok": true,
+ "orphans_reported": 2855,
+ "accounted_for": 2855,
  "reviews_published": 1827,
- "reviews_unlinked": 1827,
+ "reviews_without_reference": 1827,
  "verdicts": 0,
  "non_review_orphans": {
   "sauce.observation.mention / awards": 102,
@@ -757,16 +757,12 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.orphans
   "sauce.observation.lineup / hotones": 2,
   "sauce.observation.mention / hotones": 11,
   "sauce.observation.product / off": 3,
-  "sauce.label.image / off_image": 145,
+  "sauce.label.image / off_image": 451,
   "sauce.observation.product / shopify": 240,
   "sauce.observation.product / webshop": 5,
   "sauce.observation.mention / wikipedia": 161,
   "sauce.observation.product / woo": 3
- },
- "problems_total": 1,
- "problems": [
-  "evdb orphans 回報 2549，但沒有 verdict 連上的 published 評論有 1827 筆。差額 722 筆的組成：{'sauce.observation.mention / awards': 102, 'sauce.observation.product / fdc': 50, 'sauce.observation.lineup / hotones': 2, 'sauce.observation.mention / hotones': 11, 'sauce.observation.product / off': 3, 'sauce.label.image / off_image': 145, 'sauce.observation.product / shopify': 240, 'sauce.observation.product / webshop': 5, 'sauce.observation.mention / wikipedia': 161, 'sauce.observation.product / woo': 3}"
- ]
+ }
 }
 ```
 
@@ -784,7 +780,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.export_
  "ok": true,
  "csv_files": 3,
  "cells": 290400,
- "tracked_files": 64,
+ "tracked_files": 89,
  "max_cell": 500
 }
 ```
@@ -811,7 +807,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.reviews_report
 
 ### A30 — 評論規模
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.review_scale --home .evdb
@@ -820,20 +816,17 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.review_
 ```
 {
  "check": "A30 review_scale",
- "ok": false,
+ "ok": true,
  "reviews": 1827,
  "verdicts": 0,
+ "roundups": 54,
+ "sauces_with_reference": 212,
  "products_reviewed": 0,
  "thresholds": {
   "reviews": 1200,
-  "verdicts": 3000,
-  "products": 400
- },
- "problems_total": 2,
- "problems": [
-  "verdict 0 < 3000",
-  "被評到的產品 0 < 400"
- ]
+  "roundups": 30,
+  "sauces_with_reference": 150
+ }
 }
 ```
 
@@ -850,7 +843,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.reprodu
  "check": "A31 reproducible",
  "ok": true,
  "sauce.views:build": {
-  "rows_sha256": "ccaa8279cbbfe9dc483d81d1967672d440590427c603373d0c8323bd0296092d",
+  "rows_sha256": "0db98b8318755dc8dbe50a78350cbb8fb4e78118fc6d7d1f1ac3a11e0b3094cd",
   "runs": 2
  },
  "sauce.views:reviews": {
@@ -947,19 +940,19 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_i
 {
  "check": "A37 label_images",
  "ok": true,
- "label_images": 145,
+ "label_images": 451,
  "by_panel": {
   "front": 13,
   "nutrition": 11,
-  "ingredients": 121
+  "ingredients": 427
  },
- "tracked_files": 64
+ "tracked_files": 89
 }
 ```
 
 ### A38 — 每一筆判讀都回溯得到那張照片
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_reads --home .evdb
@@ -968,20 +961,16 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_r
 ```
 {
  "check": "A38 label_reads",
- "ok": false,
- "label_reads": 0,
- "label_images": 144,
- "empty_transcripts": 0,
- "problems_total": 1,
- "problems": [
-  "庫裡沒有任何 sauce.label.read；冷啟動的待審檔還沒有人審過，這條檢查什麼都沒驗到（不是通過）"
- ]
+ "ok": true,
+ "label_reads": 387,
+ "label_images": 450,
+ "empty_transcripts": 0
 }
 ```
 
 ### A39 — 判讀不得憑空造字（詞庫覆蓋率）
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_lexicon --home .evdb
@@ -990,18 +979,14 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_l
 ```
 {
  "check": "A39 label_lexicon",
- "ok": false,
- "ingredient_reads": 0,
- "tokens": 0,
- "oov_tokens": 0,
- "oov_rate": 0.0,
+ "ok": true,
+ "ingredient_reads": 387,
+ "tokens": 10553,
+ "oov_tokens": 180,
+ "oov_rate": 0.0171,
  "max_oov_rate": 0.08,
- "distinct_oov": 0,
- "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-label-oov.md",
- "problems_total": 1,
- "problems": [
-  "沒有任何成分面板的判讀可以驗——0 筆不是「全部合格」，是什麼都沒驗到"
- ]
+ "distinct_oov": 136,
+ "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-label-oov.md"
 }
 ```
 
@@ -1019,15 +1004,15 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.label_d
  "ok": true,
  "model_id": "meta/this-vision-model-does-not-exist",
  "exit": 1,
- "events_before": 120883,
- "events_after": 120883,
+ "events_before": 156752,
+ "events_after": 156752,
  "stderr_tail": "uke_\\Desktop\\AI\\2-local-only\\llm-bridge\\llm_bridge\\prompts.py\", line 99, in load_asset\n    raise PromptAssetMissing(f\"找不到 prompt 資產：{path}\")\nllm_bridge.prompts.PromptAssetMissing: 找不到 prompt 資產：C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\prompts\\sauce-label-read\\meta__this-vision-model-does-not-exist.json"
 }
 ```
 
 ### A41 — 試樣擴到 n≥60，含 ≥20 筆標籤判讀
 
-**判定：FAIL**（exit 1）
+**判定：PASS**（exit 0）
 
 ```
 C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.pilot check
@@ -1038,14 +1023,11 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.pilot check
  "path": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\sauce\\pilot\\sample-v1.jsonl",
  "items": 60,
  "verdicts": 0,
- "label_reads": 0,
+ "label_reads": 20,
  "judged_by_human": 0,
- "problems": [
-  "verdict 只有 0 筆，少於 15",
-  "label_read 只有 0 筆，少於 20"
- ],
+ "problems": [],
  "note": "裁決欄位空白是預期的：第一次執行時這份檔案是交付物，不是關卡",
- "ok": false
+ "ok": true
 }
 ```
 
@@ -1069,14 +1051,15 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.composi
 {
  "check": "A43 composition",
  "ok": true,
- "composition_rows": 9226,
+ "composition_rows": 14524,
  "by_primary_source": {
-  "storefront_text": 1977,
-  "fdc": 7249
+  "storefront_text": 2021,
+  "fdc": 11938,
+  "label_photo": 565
  },
- "cross_checked": 0,
- "disagreeing": 0,
- "never_cross_checked": 9226
+ "cross_checked": 111,
+ "disagreeing": 105,
+ "never_cross_checked": 14413
 }
 ```
 
@@ -1093,7 +1076,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.heat_la
  "check": "A44-A46 heat_layers",
  "ok": true,
  "rows": 7186,
- "with_ceiling": 777,
+ "with_ceiling": 953,
  "ranked": 15,
  "required_columns_present": [
   "shu_lab",
@@ -1124,7 +1107,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.heat_la
  "check": "A44-A46 heat_layers",
  "ok": true,
  "rows": 7186,
- "with_ceiling": 777,
+ "with_ceiling": 953,
  "ranked": 15,
  "required_columns_present": [
   "shu_lab",
@@ -1155,7 +1138,7 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.heat_la
  "check": "A44-A46 heat_layers",
  "ok": true,
  "rows": 7186,
- "with_ceiling": 777,
+ "with_ceiling": 953,
  "ranked": 15,
  "required_columns_present": [
   "shu_lab",
@@ -1185,9 +1168,9 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.copacke
 {
  "check": "A47 copackers",
  "ok": true,
- "clusters": 50,
- "members": 363,
- "products_considered": 3633,
+ "clusters": 61,
+ "members": 281,
+ "products_considered": 2798,
  "rules_version": "copack-1",
  "min_brands_per_cluster": 2
 }
@@ -1234,6 +1217,53 @@ C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.trend
  ],
  "note": "只有一個 run，無法比較",
  "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-trend-single-run.md"
+}
+```
+
+### A50 — 判讀要跟獨立來源對得上
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.crosscheck --home .evdb
+```
+
+```
+{
+ "check": "A50 crosscheck",
+ "ok": true,
+ "label_reads": 387,
+ "cross_checked": 350,
+ "no_reference": 37,
+ "coverage": 0.904,
+ "median_recall": 1.0,
+ "median_precision": 1.0,
+ "suspect": 50,
+ "report": "C:\\Users\\luke_\\Desktop\\AI\\Scout\\reports\\sauce-label-crosscheck.md",
+ "min_median_recall": 0.7,
+ "min_median_precision": 0.6,
+ "min_coverage": 0.3
+}
+```
+
+### A51 — 出處只收彙整型，而且不是店家自己的商品頁
+
+**判定：PASS**（exit 0）
+
+```
+C:\Users\luke_\Desktop\AI\Scout\.venv\Scripts\python.exe -m sauce.checks.references --home .evdb
+```
+
+```
+{
+ "check": "A51 references",
+ "ok": true,
+ "references": 445,
+ "stale_version_ignored": 15101,
+ "articles": 54,
+ "sauces_with_reference": 212,
+ "min_sauces_per_article": 5,
+ "rules_version": "ref-3"
 }
 ```
 

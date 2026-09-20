@@ -48,7 +48,7 @@
 | Louisiana Hot Sauce | Crystal | product_only | Louisiana hot sauce | fdc|off |
 | Original Louisiana Hot Sauce | Louisiana Brand | brand+overlap | THE ORIGINAL SOUTHWEST JALAPENO HOT SAUCE | fdc |
 | Sriracha Hot Chili Sauce | Huy Fong Foods | brand+product | Sriracha Hot Chili Sauce | fdc|off |
-| Chili Garlic Sauce | Huy Fong Foods | brand+overlap | Hot Chili Sauce Sriracha Packets, 7 gram Packets | fdc |
+| Chili Garlic Sauce | Huy Fong Foods | brand+overlap | Sriracha Hot Chili Sauce | fdc|off |
 | Sambal Oelek | Huy Fong Foods | brand+product | SAMBAL OELEK | fdc |
 | Original Habanero Hot Sauce | Secret Aardvark | brand+overlap | Aardvark Habanero Hot Sauce | off |
 | Serrabanero Green Hot Sauce | Secret Aardvark | brand+product | Serrabanero Green Hot Sauce | shopify |

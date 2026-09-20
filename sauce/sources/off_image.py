@@ -48,6 +48,12 @@ MAX_PER_PRODUCT = 3
 #: 這台主機一張圖要 25 秒，所以「抓了但用不到」不是浪費一點點，是把整批拖垮。
 DEFAULT_PANELS = ("ingredients", "nutrition")
 
+#: 只抓英文面板。OFF 上同一個 GTIN 常常有法文／西班牙文版本的背標照片，
+#: 判讀出來是對的，但**下游每一樣東西都是英文的**：成分詞庫是英文、
+#: 交叉驗證拿來比的 `ingredients_text` 是英文。
+#: 非英文那幾張會在交叉驗證裡拿到 0 分，看起來像判讀錯了，其實是我們抓錯了圖。
+LANGS = ("en",)
+
 #: OFF 的圖檔名長這樣：`ingredients_en.9.400.jpg`。`.400.` 是縮圖，`.full.` 是原圖。
 #: 成分表是小字，縮圖讀不出來——所以一律換成 full，換不到才退回原網址。
 _RES = re.compile(r"\.(\d+)\.(400|200|100)\.jpg$", re.I)
@@ -153,6 +159,9 @@ def harvest_all(fetcher: Fetcher, recorder: Any, snapshot: harvest.Snapshot,
                 continue
             raw_url = (row.get(field) or "").strip()
             if not raw_url:
+                continue
+            if LANGS and _lang(raw_url) and _lang(raw_url) not in LANGS:
+                reasons["wrong_language"] = reasons.get("wrong_language", 0) + 1
                 continue
             url = full_resolution(raw_url)
             got = fetcher.get(url, accept="image/*")

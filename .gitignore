@@ -66,3 +66,5 @@ web/trips/
 # 而 jsonl 本身隨時可以用同一份規則版本重算出來。
 state/composition/*/*.jsonl
 state/heatrank/*/*.jsonl
+# 交叉驗證的參照索引：從 OFF 全量匯出抽出來的，掃一遍幾分鐘就能重建（62MB）
+state/crosscheck/

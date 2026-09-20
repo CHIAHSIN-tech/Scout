@@ -106,6 +106,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="列出結構化成分／營養，以及每個欄位是誰說的")
     ap.add_argument("--heat", action="store_true",
                     help="列出辣度五層（含互相矛盾的宣稱）")
+    ap.add_argument("--references", action="store_true",
+                    help="列出評過這款醬的彙整型文章連結")
     ap.add_argument("--all", action="store_true", help="列出所有長得像的列，不只最像的那一列")
     ap.add_argument("--json", action="store_true")
     ns = ap.parse_args(argv)
@@ -128,6 +130,10 @@ def main(argv: list[str] | None = None) -> int:
                 if row.get(f"{k}_source")}
         if ns.heat:
             item["heat"] = {k: row.get(k, "") for k in HEAT_FIELDS}
+        if ns.references:
+            item["references"] = [
+                r for r in (row.get("references") or "").split(" | ") if r]
+            item["reference_outlets"] = row.get("reference_outlets", "")
         if ns.reviews:
             item["verdicts"] = [
                 {k: v.get(k, "") for k in ("outlet", "published_at", "stance", "score_raw",
@@ -177,6 +183,13 @@ def main(argv: list[str] | None = None) -> int:
                 print("    ⚠ 含辣椒萃取物，上界無意義——萃取物可以拉到任意辣度")
             if not heat.get("heat_rank"):
                 print("    （沒有 heat_rank：排序事實少於兩筆，不給點估計）")
+        if ns.references:
+            refs = item.get("references") or []
+            print(f"  出處（{len(refs)} 篇彙整型評比）")
+            for ref in refs:
+                print(f"    {ref}")
+            if not refs:
+                print("    （沒有：沒有任何一篇一次評很多款的文章提到它）")
         if ns.reviews:
             verdicts = item.get("verdicts") or []
             print(f"  專業評語       {len(verdicts)} 筆")

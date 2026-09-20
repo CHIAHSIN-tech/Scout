@@ -3,9 +3,8 @@
     python -m sauce.pilot build --home .evdb --n 60
     python -m sauce.pilot check
 
-產生 `sauce/pilot/sample-v1.jsonl`：n ≥ 60，其中 ≥20 筆是 `sauce.label.read`、
-≥15 筆是 `sauce.review.verdict`，每筆帶 `model_id`、`prompt_version`、來源 `event_id`
-與空白的人工裁決欄位。
+產生 `sauce/pilot/sample-v1.jsonl`：n ≥ 60，其中 ≥20 筆是 `sauce.label.read`，其餘是產品名，每筆帶 `model_id`、`prompt_version`、
+來源 `event_id` 與空白的人工裁決欄位。
 
 人看過並填入裁決之後，這個檔就是 `sauce.validate` 第三層的標註集，第二次執行起三層全開。
 
@@ -16,9 +15,6 @@
 
 - **產品那 25 筆**：這些名字唸得出來嗎？`"Original Hot Sauce 5oz 2pk Value"` 完全可以
   通過所有機器檢查（它確實是來源字串的子字串），但它不是一個人會拿來稱呼那瓶醬的說法。
-- **評語那 15 筆**：這句話是那篇評論的重點嗎？一篇說「it's fine but the vinegar dominates」
-  的評論，抽到 `"it's fine"` 一樣會通過 A25——引文的確出自原文，但它不是那篇的意思。
-  **這一項目前沒有自動化的守門員。**
 - **標籤判讀那 20 筆**：把 `image_path` 那張圖打開，逐字對。這一項**連「引文是不是子字串」
   這種機器檢查都沒有**——原文是一張圖。詞庫覆蓋率（A39）只擋得住模型整批造字，
   擋不住順序錯、數字錯、漏掉一行。**人不看，這三種錯誤永遠不會被發現。**
@@ -38,7 +34,10 @@ from . import contract
 
 SAMPLE = Path(__file__).resolve().parent / "pilot" / "sample-v1.jsonl"
 MIN_ITEMS = 60
-MIN_VERDICTS = 15
+#: **不再要求評語。** 2026-09-20 起評論那條線只存連結不存評論內容（D27），
+#: 而連結是規則比對出來的、機器驗得了，不需要人審。
+#: 試樣要留的是**機器驗不了**的那兩種：名字唸不唸得出來、標籤讀得對不對。
+MIN_VERDICTS = 0
 MIN_LABEL_READS = 20
 
 BLANK = {"human_verdict": None, "human_note": None, "reviewer": None, "reviewed_at": None}

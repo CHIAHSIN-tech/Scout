@@ -71,26 +71,19 @@ $env:SAUCE_MIN_INTERVAL = "1.0"     # 每主機的最小間隔（秒）；可以
 
 **把 `snapshot_id` 記下來**，後面幾步要用。
 
-## 4. 模型抽取（評論 → 評語）
+## 4. 評論 → 出處連結（**沒有模型**）
 
 ```powershell
-.venv\Scripts\python -m sauce.extract --home .evdb --what reviews
+.venv\Scripts\python -m sauce.references --home .evdb
+.venv\Scripts\python -m sauce.load --home .evdb --stage ingest
 ```
 
-第一次跑會**停在冷啟動**：llm-bridge 沒有 golden 樣本時只跑前 20 筆、寫出
-`sauce/prompts/sauce-review-verdict/golden.pending.jsonl`、其餘不處理、exit 3。
-這是設計如此。人逐列審過（把 `reviewed` 改成 `true`、必要時修 `expected`）之後：
+2026-09-20 起這一步不用模型了（D27）：我們留的是**連結**，不是評論內容。
+一篇文章對上幾個相異的醬名，就是「這是不是彙整型評比」的判準——
+那是一個數字，不是一個判斷。
 
-```powershell
-.venv\Scripts\python -m llm_bridge.prompts promote sauce/prompts sauce-review-verdict
-.venv\Scripts\python -m sauce.extract --home .evdb --what reviews
-```
-
-第二次就會跑完全量。跑完再把比對與視圖重算一次：
-
-```powershell
-.venv\Scripts\python -m sauce.load --home .evdb --stage extract_rules,match,views
-```
+規則改過就要升 `RULES_VERSION`（`ref-1` → `ref-2` → …），
+因為舊版的關聯永遠留在庫裡（只追加），視圖只收當前版本。
 
 ## 4b. 標籤照片 → 逐字轉錄 → 結構化欄位（v3）
 
@@ -112,12 +105,20 @@ $env:SAUCE_MIN_INTERVAL = "0.4"
 .venv\Scripts\python -m sauce.labelread --home .evdb
 ```
 
-同樣會停在冷啟動（exit 3），人審 `sauce/prompts/sauce-label-read/golden.pending.jsonl`
-之後 promote，再跑一次。
+同樣會停在冷啟動（exit 3）。**審之前先跑交叉驗證**——
+`sauce.crosscheck` 會拿同一個 GTIN 在 OFF 上的成分文字比詞的回收率與精確率，
+低分的那幾筆列在 `reports/sauce-label-crosscheck.md` 最前面，人先看那些就好。
+promote 之後再跑一次。
+
+**golden 一定要帶著 `item`**（llm-bridge 已經修好）：只留 `input` 的話，
+暖啟動重播時圖片會不見，模型在沒有圖的情況下被要求轉錄，
+一致率會掉到個位數——而那看起來像模型壞掉（D32）。
 
 **最後把字變成欄位。這一步沒有模型**——純規則，同一段字跑兩次一定得到同一個答案：
 
 ```powershell
+.venv\Scripts\python -m sauce.crosscheck --build-index      # 第一次才要，掃 1.27GB
+.venv\Scripts\python -m sauce.crosscheck --home .evdb
 .venv\Scripts\python -m sauce.composition --home .evdb
 .venv\Scripts\python -m sauce.heat --home .evdb
 .venv\Scripts\python -m sauce.load --home .evdb --stage ingest

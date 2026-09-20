@@ -11,7 +11,7 @@
 ## 編號怎麼來的（A36–A49）
 
 A1–A35 照 `specs/spec-us-hot-sauce-corpus.md` 原文，一個都沒有動。
-A36–A49 是 v3 追加的那批（標籤判讀、成分結構化、辣度五層、代工聚類、每次執行輸出、趨勢）。
+A36–A51 是 v3 之後追加的那批（標籤判讀、成分結構化、辣度五層、代工聚類、每次執行輸出、趨勢）。
 **v3 的規格全文沒有進版控**——它是貼在對話裡的，對話一壓縮就沒了。
 所以這十四條的編號是照實作順序接在 A35 後面的**重建**，不是抄自規格原文。
 第一次跟 Stanley 對規格時要做的第一件事，就是把這十四條的編號對回去；
@@ -100,7 +100,11 @@ def items(home: str, rules: str) -> list[Item]:
              [PY, "-m", "pytest", "tests/sauce/test_outlet_gate.py", "-q"]),
         Item("A23", "不含語音轉文字、不含付費轉錄", "grep_empty",
              ["git", "grep", "-niE",
-              r"whisper|deepgram|assemblyai|speech[-_]to[-_]text|transcribe",
+              # `transcribe` 拿掉了：v3 起我們**確實**在做轉錄——把標籤照片轉成字。
+              # A23 要擋的是**語音**轉文字與付費轉錄服務，不是「轉錄」這兩個字。
+              # 留著的話這條會被自己的 prompt 觸發，而一條長期紅著的檢查等於沒有檢查。
+              r"whisper|deepgram|assemblyai|speech[-_]to[-_]text|audio[-_]?transcri"
+              r"|rev\.ai|otter\.ai|speechmatics|pyaudio|ffmpeg",
               "--", "sauce/", "requirements-sauce.txt", SELF]),
         Item("A24", "正文逐字保存、不進 payload", "exit0", chk("bodies")),
         Item("A25", "評語是原句", "exit0", chk("quotes")),
@@ -144,6 +148,10 @@ def items(home: str, rules: str) -> list[Item]:
         Item("A47", "代工聚類的每個成員都附得出證據", "exit0", chk("copackers")),
         Item("A48", "每次執行有自己的輸出目錄，不覆蓋上一次", "exit0", chk("run_dirs")),
         Item("A49", "跨 run 趨勢報告", "exit0", [PY, "-m", "sauce.trend"]),
+
+        # --- 2026-09-20 改版：評論改存連結、判讀要交叉驗證 ---
+        Item("A50", "判讀要跟獨立來源對得上", "exit0", chk("crosscheck")),
+        Item("A51", "出處只收彙整型，而且不是店家自己的商品頁", "exit0", chk("references")),
     ]
 
 

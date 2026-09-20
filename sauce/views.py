@@ -99,7 +99,8 @@ def _duplicate_candidates(rows: dict[str, dict[str, Any]]) -> dict[str, list[str
 FORBIDDEN_COLUMNS = ("heat_shu", "scoville")
 
 #: 視圖只認這一版的成分規則（見 build() 裡的說明）
-from .composition import RULES_VERSION as COMP_RULES_VERSION  # noqa: E402
+from .composition import RULES_VERSION as COMP_RULES_VERSION
+from .references import RULES_VERSION as REF_RULES_VERSION  # noqa: E402
 
 
 def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
@@ -178,6 +179,7 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
     composition: dict[str, dict[str, Any]] = {}
     heat: dict[str, dict[str, Any]] = {}
     ranks: dict[str, dict[str, Any]] = {}
+    refs: dict[str, list[dict[str, Any]]] = {}
     for ev in events:
         if ev.event_type == contract.EV_COMPOSITION:
             # **只收目前這一版規則的產出。** 舊版本的事件留在庫裡（append-only），
@@ -189,6 +191,11 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
             heat[ev.entity_id] = ev.payload
         elif ev.event_type == contract.EV_HEAT_ORDER:
             ranks[ev.entity_id] = ev.payload
+        elif ev.event_type == contract.EV_REFERENCE:
+            # 只收當前規則版本，理由跟成分那一段一樣：被新規則淘汰掉的關聯
+            # （商品頁、撞名的分類詞）還留在庫裡，混進來就看不出差別了。
+            if str(ev.payload.get("ref_rules_version", "")) == REF_RULES_VERSION:
+                refs.setdefault(ev.entity_id, []).append(ev.payload)
 
     dupes = _duplicate_candidates(rows)
     out: list[dict[str, Any]] = []
@@ -244,6 +251,26 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
         row["heat_rank_ci_low"] = r.get("heat_rank_ci_low", "")
         row["heat_rank_ci_high"] = r.get("heat_rank_ci_high", "")
         row["heat_rank_facts"] = r.get("facts", "")
+
+        # 出處連結。**存的是連結，不是評論內容**——「誰評過它」是事實，
+        # 「它好不好」是判斷（Stanley 2026-09-20）。
+        # 一列一個連結會讓 CSV 爆開，所以壓成「標題 <網址>」用 | 分隔，
+        # 但每一筆都完整保留，不截斷、不挑一個代表。
+        # 同一篇只留一筆：重跑會產生新的 event_id（observed_at 不同），
+        # 不去重的話一篇文章會在同一列裡出現幾十次。
+        seen_urls: set[str] = set()
+        my_refs = []
+        for payload in sorted(refs.get(sid, []),
+                              key=lambda p: -int(p.get("sauces_in_article") or 0)):
+            u = str(payload.get("url") or "")
+            if u and u not in seen_urls:
+                seen_urls.add(u)
+                my_refs.append(payload)
+        row["reference_count"] = len(my_refs)
+        row["references"] = " | ".join(
+            f"{p.get('article_title')} <{p.get('url')}>" for p in my_refs)
+        row["reference_outlets"] = "|".join(
+            sorted({str(p.get("outlet") or "") for p in my_refs if p.get("outlet")}))
         row["rules_version"] = rules_version
         out.append(row)
     out.sort(key=lambda r: r["entity_id"])

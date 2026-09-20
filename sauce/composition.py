@@ -38,12 +38,12 @@ from evdb.spool import Spool
 from evdb.store import Store
 
 from . import contract
-from .names import fold
+from .names import fold, gtin14
 
 #: 版本 2：只有「長得像成分表」的文字才解析（見 looks_like_ingredients）。
 #: 版本 1 把商品標題也當成分表，`first_ingredient` 會是「Habanero Hot Sauce」這種假值。
 #: **同一個版本號必須對應同一套規則**，所以規則改了就換號，舊事件留著不覆寫。
-RULES_VERSION = "sauce-comp-2"
+RULES_VERSION = "sauce-comp-3"
 OUT_DIR = Path(__file__).resolve().parent.parent / "state" / "composition"
 
 SOURCE_PRIORITY = ("label_photo", "fdc", "storefront_text")
@@ -193,7 +193,7 @@ def collect(events: list[Event]) -> dict[str, dict[str, Any]]:
         for r in ev.related:
             if r["role"] == "observation":
                 obs_to_sauce[r["entity_id"]] = ev.entity_id
-        gtin = str(ev.payload.get("gtin") or "")
+        gtin = gtin14(str(ev.payload.get("gtin") or ""))
         if gtin:
             sauce_of_gtin.setdefault(gtin, ev.entity_id)
 
@@ -212,7 +212,11 @@ def collect(events: list[Event]) -> dict[str, dict[str, Any]]:
                 slot.setdefault("store_text", str(ev.payload.get("title") or ""))
                 slot.setdefault("store_ref", ev.event_id)
         elif ev.event_type == contract.EV_LABEL_READ:
-            gtin = str(ev.payload.get("gtin") or "")
+            # **兩邊都要補零到 14 位。** OFF 的 code 是 13 位、FDC 那邊是 14 位，
+            # 不正規化的話 109 筆標籤判讀一筆都接不回產品，
+            # 而 `by_primary_source` 只會顯示「label_photo: 0」——
+            # 看起來像沒讀到標籤，其實是讀到了接不上。
+            gtin = gtin14(str(ev.payload.get("gtin") or ""))
             sid = sauce_of_gtin.get(gtin)
             if not sid or str(ev.payload.get("panel_kind")) != "ingredients":
                 continue
