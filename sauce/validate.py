@@ -5,7 +5,10 @@
 1. **schema**（必須 100% 通過）
    每個 `sauce.extraction.parsed` 要有 `brand`、`product`、`model_id`、`prompt_version`；
    每個 `sauce.review.verdict` 要有 `review_id`、`sauce_entity_id`、`stance`、`quote`、
-   `model_id`、`prompt_version`。
+   `model_id`、`prompt_version`；
+   每個 `sauce.label.read` 要有 `label_image_sha256`、`panel_kind`、`transcript`、
+   `model_id`、`prompt_version`——**照片判讀沒有子字串可以驗，所以出處欄位不能缺**：
+   缺了就沒有人回答得出「這段字是哪張圖、哪個模型、哪版 prompt 讀出來的」。
 
 2. **任務不變式**（機械可判）
    折疊後的鍵是來源字串的連續詞串、`heat_shu` 空或正整數、`us_availability` 與 `stance`
@@ -37,6 +40,14 @@ MIN_SAMPLE = 40
 PARSED_REQUIRED = ("brand", "product", "model_id", "prompt_version")
 VERDICT_REQUIRED = ("review_id", "sauce_entity_id", "stance", "quote", "model_id",
                     "prompt_version")
+LABEL_READ_REQUIRED = ("label_image_sha256", "panel_kind", "transcript", "model_id",
+                       "prompt_version")
+
+#: 判讀出來的面板種類。**`front` 與 `other` 不進成分推導**——正面印的是行銷字。
+PANEL_KINDS = ("ingredients", "nutrition", "front", "other")
+
+#: 轉錄短於這個長度就不算讀到東西（與 `labelread.MIN_TRANSCRIPT` 同一條線）。
+MIN_TRANSCRIPT = 12
 
 
 def layer_schema(events: list[Any]) -> list[str]:
@@ -50,6 +61,10 @@ def layer_schema(events: list[Any]) -> list[str]:
             missing = [k for k in VERDICT_REQUIRED if k not in ev.payload]
             if missing:
                 problems.append(f"schema:verdict_required {ev.event_id} 缺 {missing}")
+        elif ev.event_type == contract.EV_LABEL_READ:
+            missing = [k for k in LABEL_READ_REQUIRED if k not in ev.payload]
+            if missing:
+                problems.append(f"schema:label_read_required {ev.event_id} 缺 {missing}")
     return problems
 
 
@@ -84,6 +99,20 @@ def layer_invariants(events: list[Any]) -> list[str]:
             scale = str(ev.payload.get("score_scale") or "none")
             if scale not in SCALES:
                 problems.append(f"invariant:score_scale_enum {ev.event_id} {scale!r}")
+        elif ev.event_type == contract.EV_LABEL_READ:
+            kind = str(ev.payload.get("panel_kind") or "")
+            if kind not in PANEL_KINDS:
+                problems.append(f"invariant:panel_kind_enum {ev.event_id} {kind!r}")
+            transcript = str(ev.payload.get("transcript") or "").strip()
+            if len(transcript) < MIN_TRANSCRIPT:
+                problems.append(f"invariant:transcript_min_length {ev.event_id} "
+                                f"只有 {len(transcript)} 個字元")
+            if ev.payload.get("legible") is False and transcript:
+                # 宣稱看不清楚卻同時給了字，代表那些字不是從圖上讀來的
+                problems.append(f"invariant:illegible_without_transcript {ev.event_id}")
+            sha = str(ev.payload.get("label_image_sha256") or "")
+            if len(sha) != 64:
+                problems.append(f"invariant:label_image_sha256_shape {ev.event_id} {sha!r}")
     return problems
 
 
@@ -95,7 +124,7 @@ def layer_pilot(events: list[Any], path: Path = PILOT) -> tuple[str, list[str], 
     judged = [i for i in items if i.get("human_verdict") in ("correct", "incorrect")]
     if len(judged) < MIN_SAMPLE:
         return "skipped", [], {"reason": f"人工裁決只有 {len(judged)} 筆，未達 {MIN_SAMPLE}；"
-                                          "第一次執行時這是預期的（A11 的交付物）",
+                                          "第一次執行時這是預期的（A41 的交付物）",
                                "items": len(items), "judged": len(judged)}
     by_id = {ev.event_id: ev for ev in events}
     disagreements: list[str] = []

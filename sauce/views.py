@@ -94,6 +94,14 @@ def _duplicate_candidates(rows: dict[str, dict[str, Any]]) -> dict[str, list[str
     return {k: sorted(v) for k, v in out.items()}
 
 
+#: 辣度五層要並存，**不得塌成一個數字**（A21）。所以視圖裡不准有叫 `heat_shu`
+#: 或 `scoville` 的欄位——那種欄位一出現，下游就會拿它當事實排序。
+FORBIDDEN_COLUMNS = ("heat_shu", "scoville")
+
+#: 視圖只認這一版的成分規則（見 build() 裡的說明）
+from .composition import RULES_VERSION as COMP_RULES_VERSION  # noqa: E402
+
+
 def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
     """`sauce_catalog`：一列一款產品（不分瓶容量）。"""
     rows: dict[str, dict[str, Any]] = {}
@@ -122,8 +130,6 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
             "product_key": ev.payload.get("product_key", ""),
             "product": ev.payload.get("product", ""),
             "variant": ev.payload.get("variant", ""), "gtin": ev.payload.get("gtin", ""),
-            "heat_shu": ev.payload.get("heat_shu", ""),
-            "heat_basis": ev.payload.get("heat_basis", ""),
             "us_availability": "unknown", "evidence_url": "",
             "price": "", "price_currency": "", "buy_url": "", "in_stock": False,
             "store_domain": "",
@@ -137,7 +143,7 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
         row["_tiers"].add(contract.SOURCE_TIER.get(ev.source, "unknown"))
         row["first_observed_at"] = min(row["first_observed_at"], ev.observed_at)
         row["last_observed_at"] = max(row["last_observed_at"], ev.observed_at)
-        for field in ("brand", "product", "variant", "gtin", "heat_shu", "heat_basis"):
+        for field in ("brand", "product", "variant", "gtin"):
             if not row[field] and ev.payload.get(field):
                 row[field] = ev.payload[field]
         candidate = str(ev.payload.get("us_availability") or "unknown")
@@ -167,6 +173,22 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
     for ev in events:
         if ev.event_type == contract.EV_MENTION and ev.source == "hotones":
             seasons.setdefault(ev.entity_id, set()).add(str(ev.payload.get("season") or ""))
+
+    # v3：成分（規則算的）與辣度五層（規則算的）掛回每一列。
+    composition: dict[str, dict[str, Any]] = {}
+    heat: dict[str, dict[str, Any]] = {}
+    ranks: dict[str, dict[str, Any]] = {}
+    for ev in events:
+        if ev.event_type == contract.EV_COMPOSITION:
+            # **只收目前這一版規則的產出。** 舊版本的事件留在庫裡（append-only），
+            # 但新版沒有產出的實體代表新規則認為「這裡沒有成分表」——用舊值補等於
+            # 把已經judged為錯的判斷留在表上。
+            if str(ev.payload.get("comp_rules_version", "")) == COMP_RULES_VERSION:
+                composition[ev.entity_id] = ev.payload
+        elif ev.event_type == contract.EV_HEAT_CLAIM:
+            heat[ev.entity_id] = ev.payload
+        elif ev.event_type == contract.EV_HEAT_ORDER:
+            ranks[ev.entity_id] = ev.payload
 
     dupes = _duplicate_candidates(rows)
     out: list[dict[str, Any]] = []
@@ -199,6 +221,29 @@ def build(events: list[Event], rules_version: str) -> list[dict[str, Any]]:
         row["review_count"] = len(verdicts)
         row["review_outlets"] = "|".join(sorted(o for o in outlets if o))
         row["review_stance_mix"] = "|".join(f"{k}={v}" for k, v in sorted(stances.items()) if k)
+        # ---- 成分（`sauce-comp-1`，純規則）----
+        comp = composition.get(sid, {})
+        for key, value in comp.items():
+            if key in ("entity_id",):
+                continue
+            row[key] = ("|".join(str(v) for v in value) if isinstance(value, list)
+                        else value)
+        # ---- 辣度五層（L0–L4）----
+        h = heat.get(sid, {})
+        for key in ("shu_lab", "capsaicinoid_ppm", "lab_method", "tested_on", "coa_url",
+                    "heat_ceiling_shu", "heat_ceiling_basis", "has_capsaicin_extract",
+                    "heat_shu_claim_count", "heat_shu_disagreement", "heat_band_label",
+                    "brand_line_rank", "heat_rules_version"):
+            row[key] = h.get(key, "")
+        claims = h.get("heat_shu_claims") or []
+        # 宣稱是多筆並存的事實，壓成一欄字串只是為了 CSV——**不取平均、不挑一個**。
+        row["heat_shu_claims"] = "|".join(
+            f"{c.get('shu')}@{c.get('source')}" for c in claims if isinstance(c, dict))
+        r = ranks.get(sid, {})
+        row["heat_rank"] = r.get("heat_rank", "")
+        row["heat_rank_ci_low"] = r.get("heat_rank_ci_low", "")
+        row["heat_rank_ci_high"] = r.get("heat_rank_ci_high", "")
+        row["heat_rank_facts"] = r.get("facts", "")
         row["rules_version"] = rules_version
         out.append(row)
     out.sort(key=lambda r: r["entity_id"])

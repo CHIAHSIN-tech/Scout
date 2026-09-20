@@ -29,13 +29,13 @@ from . import contract, extract_rules, match, storefronts
 from .harvest import STATE, Snapshot, new_snapshot_id
 from .net import Fetcher
 from .outlets import load as load_outlets
-from .sources import awards, fdc, hotones, off, outlet_web, reddit, shopify, wikidata, \
-    wikipedia, woo
+from .sources import awards, fdc, hotones, off, off_image, outlet_web, reddit, shopify, \
+    webshop, wikidata, wikipedia, woo
 
 MAPPINGS = Path(__file__).resolve().parent / "mappings"
 STAGES = ("register", "harvest", "ingest", "extract_rules", "match", "views")
-HARVEST_SOURCES = ("fdc", "off", "shopify", "woo", "wikipedia", "wikidata", "awards",
-                   "hotones", "reddit", "outlet_web")
+HARVEST_SOURCES = ("fdc", "off", "shopify", "woo", "webshop", "wikipedia", "wikidata", "awards",
+                   "hotones", "reddit", "outlet_web", "off_image")
 
 
 def register(home: Home) -> dict[str, Any]:
@@ -68,7 +68,8 @@ def _review_plan(limit_per_outlet: int | None = None) -> list[tuple[dict[str, st
 
 
 def harvest(home: Home, snapshot: Snapshot, only: tuple[str, ...] = HARVEST_SOURCES,
-            log: Any = None, limit_per_outlet: int | None = None) -> dict[str, Any]:
+            log: Any = None, limit_per_outlet: int | None = None,
+            limit_label_products: int | None = None) -> dict[str, Any]:
     log = log or sys.stdout
     fetcher = Fetcher()
     recorder = Recorder(source="outlet_web", home=home.root, tag="sauce-review")
@@ -79,17 +80,16 @@ def harvest(home: Home, snapshot: Snapshot, only: tuple[str, ...] = HARVEST_SOUR
         return Spool(home, tag=tag).write(events) if events else 0
 
     if "fdc" in only:
-        got = fdc.download(fetcher, snapshot)
-        if got["ok"]:
-            csv_path = snapshot.dir_for("fdc") / "candidates.csv"
-            written = fdc.write_candidates_csv(Path(got["path"]), csv_path)
-            from evdb.bulk.importer import import_file
-            imported = import_file(home, csv_path, MAPPINGS / "fdc.yaml", ingest_now=False)
-            summary["sources"]["fdc"] = {**written, "import": {
-                "rows_in": imported["rows_in"], "events": imported["events_written"],
-                "rejects": imported["rejects"], "accounted": imported["accounted"]}}
-        else:
-            summary["sources"]["fdc"] = {"reason": got["reason"], "rows": 0}
+        # v3：FDC 改走 spool 而不是 bulk CSV——payload 有巢狀的 nutrients 子物件（A10），
+        # 而 bulk 的 CSV 只能放平的字串。守恆的帳改由 candidates.csv 記，A5 照樣驗得到。
+        got = fdc.harvest_all(fetcher, snapshot, observed_at, log=log)
+        summary["sources"]["fdc"] = {
+            "candidates": got.get("candidates", 0), "rows_in": got.get("rows_in", 0),
+            "kept": got.get("kept", 0), "with_nutrients": got.get("with_nutrients", 0),
+            "skipped_category": got.get("skipped_category", 0),
+            "skipped_country": got.get("skipped_country", 0),
+            "reason": got.get("reason", ""),
+            "spooled": spool("sauce-fdc", got.get("events", []))}
         print(f"  fdc {summary['sources']['fdc']}", file=log, flush=True)
 
     if "off" in only:
@@ -108,6 +108,13 @@ def harvest(home: Home, snapshot: Snapshot, only: tuple[str, ...] = HARVEST_SOUR
         summary["sources"]["woo"] = {"stores": len(domains), "stores_ok": got["stores_ok"],
                                      "kept": got["kept"],
                                      "spooled": spool("sauce-woo", got["events"])}
+    if "webshop" in only:
+        # 第三條路徑：認不出平台的店。讀不到也要記，見 sources/webshop.py 的模組說明。
+        domains = storefronts.by_platform("webshop") + storefronts.by_platform("unknown")
+        got = webshop.harvest_all(fetcher, domains, snapshot, observed_at, log=log)
+        summary["sources"]["webshop"] = {"stores": got["stores"], "kept": got["kept"],
+                                         "unreadable_stores": got["unreadable_stores"],
+                                         "spooled": spool("sauce-webshop", got["events"])}
     if "wikipedia" in only:
         got = wikipedia.harvest_all(fetcher, snapshot, observed_at, log=log)
         summary["sources"]["wikipedia"] = {"kept": got["kept"],
@@ -128,6 +135,14 @@ def harvest(home: Home, snapshot: Snapshot, only: tuple[str, ...] = HARVEST_SOUR
         got = reddit.harvest_all(fetcher, snapshot, observed_at, log=log)
         summary["sources"]["reddit"] = {"kept": got["kept"], "status": got["status"],
                                         "reason": got["reason"]}
+    if "off_image" in only:
+        image_recorder = Recorder(source="off_image", home=home.root, tag="sauce-label")
+        got = off_image.harvest_all(fetcher, image_recorder, snapshot, observed_at,
+                                    limit_products=limit_label_products, log=log)
+        summary["sources"]["off_image"] = {
+            "products": got.get("products", 0), "kept": got["kept"],
+            "reasons": got.get("reasons", {}), "reason": got.get("reason", ""),
+            "spooled": spool("sauce-label-images", got["events"])}
     if "outlet_web" in only:
         plan = _review_plan(limit_per_outlet)
         got = outlet_web.harvest_all(fetcher, recorder, plan, snapshot, observed_at, log=log)
@@ -141,14 +156,16 @@ def harvest(home: Home, snapshot: Snapshot, only: tuple[str, ...] = HARVEST_SOUR
 
 def run(home: Home, stages: tuple[str, ...] = STAGES, snapshot_id: str | None = None,
         only: tuple[str, ...] = HARVEST_SOURCES, rules: str = "v1",
-        log: Any = None, limit_per_outlet: int | None = None) -> dict[str, Any]:
+        log: Any = None, limit_per_outlet: int | None = None,
+        limit_label_products: int | None = None) -> dict[str, Any]:
     log = log or sys.stdout
     out: dict[str, Any] = {}
     if "register" in stages:
         out["register"] = register(home)
     if "harvest" in stages:
         snapshot = Snapshot(snapshot_id or new_snapshot_id())
-        out["harvest"] = harvest(home, snapshot, only, log, limit_per_outlet)
+        out["harvest"] = harvest(home, snapshot, only, log, limit_per_outlet,
+                                 limit_label_products)
     if "ingest" in stages:
         out["ingest"] = ingest(home)
     if "extract_rules" in stages:

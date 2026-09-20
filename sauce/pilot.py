@@ -1,10 +1,11 @@
-"""A11：首輪試樣。**第一次執行的交付物，不是關卡。**
+"""A41：首輪試樣。**第一次執行的交付物，不是關卡。**
 
-    python -m sauce.pilot build --home .evdb --n 40
+    python -m sauce.pilot build --home .evdb --n 60
     python -m sauce.pilot check
 
-產生 `sauce/pilot/sample-v1.jsonl`：n ≥ 40，其中 ≥15 筆是 `sauce.review.verdict`，
-每筆帶 `model_id`、`prompt_version`、來源 `event_id` 與空白的人工裁決欄位。
+產生 `sauce/pilot/sample-v1.jsonl`：n ≥ 60，其中 ≥20 筆是 `sauce.label.read`、
+≥15 筆是 `sauce.review.verdict`，每筆帶 `model_id`、`prompt_version`、來源 `event_id`
+與空白的人工裁決欄位。
 
 人看過並填入裁決之後，這個檔就是 `sauce.validate` 第三層的標註集，第二次執行起三層全開。
 
@@ -18,6 +19,9 @@
 - **評語那 15 筆**：這句話是那篇評論的重點嗎？一篇說「it's fine but the vinegar dominates」
   的評論，抽到 `"it's fine"` 一樣會通過 A25——引文的確出自原文，但它不是那篇的意思。
   **這一項目前沒有自動化的守門員。**
+- **標籤判讀那 20 筆**：把 `image_path` 那張圖打開，逐字對。這一項**連「引文是不是子字串」
+  這種機器檢查都沒有**——原文是一張圖。詞庫覆蓋率（A39）只擋得住模型整批造字，
+  擋不住順序錯、數字錯、漏掉一行。**人不看，這三種錯誤永遠不會被發現。**
 """
 from __future__ import annotations
 
@@ -33,8 +37,9 @@ from evdb.store import Store
 from . import contract
 
 SAMPLE = Path(__file__).resolve().parent / "pilot" / "sample-v1.jsonl"
-MIN_ITEMS = 40
+MIN_ITEMS = 60
 MIN_VERDICTS = 15
+MIN_LABEL_READS = 20
 
 BLANK = {"human_verdict": None, "human_note": None, "reviewer": None, "reviewed_at": None}
 
@@ -47,14 +52,20 @@ def _stride(items: list[Any], n: int) -> list[Any]:
     return [items[int(i * step)] for i in range(n)]
 
 
-def build(home: Home, n: int = MIN_ITEMS, min_verdicts: int = MIN_VERDICTS) -> list[dict[str, Any]]:
+def build(home: Home, n: int = MIN_ITEMS, min_verdicts: int = MIN_VERDICTS,
+          min_label_reads: int = MIN_LABEL_READS) -> list[dict[str, Any]]:
     with Store(home, read_only=True) as store:
         events = store.all_events()
     parsed = [ev for ev in events if ev.event_type == contract.EV_PARSED]
     verdicts = [ev for ev in events if ev.event_type == contract.EV_VERDICT]
+    reads = [ev for ev in events if ev.event_type == contract.EV_LABEL_READ]
+    # 判讀要附圖給人開，所以先把「這張圖的雜湊 → 原始檔位置」查表建好
+    image_ref = {str(ev.payload.get("image_sha256") or ""): (ev.raw_ref or "")
+                 for ev in events if ev.event_type == contract.EV_LABEL_IMAGE}
 
     want_verdicts = min(min_verdicts, len(verdicts))
-    want_parsed = max(n - want_verdicts, 0)
+    want_reads = min(min_label_reads, len(reads))
+    want_parsed = max(n - want_verdicts - want_reads, 0)
     items: list[dict[str, Any]] = []
     for ev in _stride(parsed, want_parsed):
         items.append({
@@ -85,6 +96,22 @@ def build(home: Home, n: int = MIN_ITEMS, min_verdicts: int = MIN_VERDICTS) -> l
             "prompt_version": ev.payload.get("prompt_version", ""),
             "ask_the_reviewer": "這句話是那篇評論對這款醬的重點嗎？（引文出自原文已由 A25 驗過）",
             **BLANK})
+    for ev in _stride(reads, want_reads):
+        sha = str(ev.payload.get("label_image_sha256") or "")
+        items.append({
+            "id": len(items) + 1, "kind": "label_read", "event_id": ev.event_id,
+            "source": ev.source, "source_url": ev.source_url,
+            "label_image_sha256": sha,
+            "image_path": image_ref.get(sha, ""),
+            "gtin": ev.payload.get("gtin", ""),
+            "product_hint": ev.payload.get("product_hint", ""),
+            "panel_kind": ev.payload.get("panel_kind", ""),
+            "transcript": ev.payload.get("transcript", ""),
+            "model_id": ev.payload.get("model_id", ""),
+            "prompt_version": ev.payload.get("prompt_version", ""),
+            "ask_the_reviewer": "把 image_path 那張圖打開，逐字對：順序、數字、有沒有漏行。"
+                                "（這一項沒有任何機器檢查蓋得到）",
+            **BLANK})
     return items
 
 
@@ -103,9 +130,10 @@ def read(path: Path = SAMPLE) -> list[dict[str, Any]]:
 
 
 def check(path: Path = SAMPLE) -> dict[str, Any]:
-    """A11 只檢查「檔案在、筆數夠、欄位齊」——裁決欄位允許是空白（那是給人填的）。"""
+    """A41 只檢查「檔案在、筆數夠、欄位齊」——裁決欄位允許是空白（那是給人填的）。"""
     items = read(path)
     verdicts = [i for i in items if i.get("kind") == "verdict"]
+    reads = [i for i in items if i.get("kind") == "label_read"]
     required = ("event_id", "model_id", "prompt_version", "human_verdict")
     missing = [i.get("id") for i in items if any(k not in i for k in required)]
     judged = [i for i in items if i.get("human_verdict") in ("correct", "incorrect")]
@@ -114,9 +142,12 @@ def check(path: Path = SAMPLE) -> dict[str, Any]:
         problems.append(f"只有 {len(items)} 筆，少於 {MIN_ITEMS}")
     if len(verdicts) < MIN_VERDICTS:
         problems.append(f"verdict 只有 {len(verdicts)} 筆，少於 {MIN_VERDICTS}")
+    if len(reads) < MIN_LABEL_READS:
+        problems.append(f"label_read 只有 {len(reads)} 筆，少於 {MIN_LABEL_READS}")
     if missing:
         problems.append(f"這些筆缺必要欄位：{missing[:10]}")
     return {"path": str(path), "items": len(items), "verdicts": len(verdicts),
+            "label_reads": len(reads),
             "judged_by_human": len(judged), "problems": problems,
             "note": "裁決欄位空白是預期的：第一次執行時這份檔案是交付物，不是關卡",
             "ok": not problems}

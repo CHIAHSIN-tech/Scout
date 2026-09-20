@@ -25,6 +25,26 @@ from .names import fold, tokens
 
 URL_FIELDS = ("evidence_url",)
 
+#: `--composition` 要印的欄位。每一個都另外印「這是誰說的」——
+#: 一個沒有出處的成分欄位，跟讀過實物標籤的長得一模一樣。
+COMPOSITION_FIELDS = (
+    "first_ingredient", "water_first", "ingredient_count", "peppers", "pepper_ordinal",
+    "pepper_form", "acidifier", "fermented", "thickener", "oil_type", "sweetener",
+    "preservative", "colorant", "umami_adds", "allergens", "has_capsaicin_extract",
+    "manufacturer_name", "manufacturer_location", "is_copacked",
+    "sodium_per_100g", "sugar_per_100g", "calories_per_100g", "fat_per_100g",
+    "carbs_per_100g", "protein_per_100g",
+    "organic_certified", "non_gmo_verified", "kosher", "gluten_free_claim", "vegan_claim",
+    "composition_disagreement", "comp_rules_version")
+
+#: `--heat` 要印的五層。**沒有一個叫 heat_shu**——那個數字沒有人量過。
+HEAT_FIELDS = (
+    "shu_lab", "lab_method", "tested_on", "coa_url",
+    "heat_ceiling_shu", "heat_ceiling_basis", "has_capsaicin_extract",
+    "heat_rank", "heat_rank_ci_low", "heat_rank_ci_high", "heat_rank_facts",
+    "heat_shu_claims", "heat_shu_claim_count", "heat_shu_disagreement",
+    "heat_band_label", "brand_line_rank", "heat_rules_version")
+
 
 def _score(row: dict[str, str], needle: str) -> tuple[int, int]:
     """比對強度。完全相同 > 前綴 > 包含；同分時來源多的排前面。"""
@@ -82,6 +102,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--home", default=None)
     ap.add_argument("--rules", default="v1")
     ap.add_argument("--reviews", action="store_true", help="一併列出這款醬的所有評語")
+    ap.add_argument("--composition", action="store_true",
+                    help="列出結構化成分／營養，以及每個欄位是誰說的")
+    ap.add_argument("--heat", action="store_true",
+                    help="列出辣度五層（含互相矛盾的宣稱）")
     ap.add_argument("--all", action="store_true", help="列出所有長得像的列，不只最像的那一列")
     ap.add_argument("--json", action="store_true")
     ns = ap.parse_args(argv)
@@ -97,6 +121,13 @@ def main(argv: list[str] | None = None) -> int:
                 ("entity_id", "brand", "product", "variant", "gtin", "heat_shu",
                  "us_availability", "evidence_url", "sources", "source_count",
                  "corroboration", "duplicate_candidate", "review_count", "review_outlets")}
+        if ns.composition:
+            item["composition"] = {k: row.get(k, "") for k in COMPOSITION_FIELDS}
+            item["composition_sources"] = {
+                k: row.get(f"{k}_source", "") for k in COMPOSITION_FIELDS
+                if row.get(f"{k}_source")}
+        if ns.heat:
+            item["heat"] = {k: row.get(k, "") for k in HEAT_FIELDS}
         if ns.reviews:
             item["verdicts"] = [
                 {k: v.get(k, "") for k in ("outlet", "published_at", "stance", "score_raw",
@@ -125,6 +156,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  標榜 SHU       {item['heat_shu']}")
         if item.get("duplicate_candidate") in ("True", "true", True):
             print("  ⚠ 這一列有長得很像的鄰居（duplicate_candidate），沒有合併")
+        if ns.composition:
+            comp = item.get("composition") or {}
+            print("  成分／營養")
+            for key, value in comp.items():
+                if value in ("", None, "False", False):
+                    continue
+                src = (item.get("composition_sources") or {}).get(key, "")
+                print(f"    {key:<26} {value}" + (f"   ← {src}" if src else ""))
+            if not any(v not in ("", None, "False", False) for v in comp.values()):
+                print("    （沒有成分資料——沒有標籤照片也沒有 FDC 的成分表）")
+        if ns.heat:
+            heat = item.get("heat") or {}
+            print("  辣度（五層並存，沒有單一 SHU）")
+            for key, value in heat.items():
+                if value in ("", None):
+                    continue
+                print(f"    {key:<26} {value}")
+            if heat.get("heat_ceiling_shu") == "unbounded":
+                print("    ⚠ 含辣椒萃取物，上界無意義——萃取物可以拉到任意辣度")
+            if not heat.get("heat_rank"):
+                print("    （沒有 heat_rank：排序事實少於兩筆，不給點估計）")
         if ns.reviews:
             verdicts = item.get("verdicts") or []
             print(f"  專業評語       {len(verdicts)} 筆")

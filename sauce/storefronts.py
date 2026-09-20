@@ -27,10 +27,11 @@ from evdb.home import now_iso
 from .harvest import Snapshot
 from .net import Fetcher
 from .outlets import FIXTURES
-from .sources import filters, shopify, woo
+from .sources import filters, shopify, webshop, woo
 
 STOREFRONTS = FIXTURES / "storefronts.csv"
-COLUMNS = ("domain", "platform", "discovered_via", "verified_on", "sauce_products")
+COLUMNS = ("domain", "platform", "discovered_via", "verified_on", "sauce_products",
+           "product_urls")
 
 #: **聚合站**：一間店就是別人的貨架，一頁就有四五十個品牌、而且每一筆都有價格。
 #:
@@ -83,7 +84,19 @@ def _woo_tags(product: dict[str, Any]) -> str:
 
 
 def _inspect_store(fetcher: Fetcher, domain: str) -> dict[str, Any]:
-    """這個網域是不是一間賣辣醬的店。回傳 {platform, sauce_products}；不是就 platform=''。"""
+    """這個網域是不是一間賣辣醬的店。回傳 {platform, sauce_products}。
+
+    三種可能的結果，**三種都要回得出來**：
+
+    - `shopify` / `woo`：認得出平台，有 API 可以讀整份商品清單。
+    - `webshop`：平台認不出來，但站上有長得像商品頁的網址（走 sitemap 找到的）。
+      讀得到多少要到 `sources/webshop.py` 才知道，這裡只負責「這裡是一間店」。
+    - `""`：連商品頁都找不到。
+
+    **第三條路徑是 D17 補的**：先前認不出平台就回空字串、整筆丟掉，
+    於是用搜尋找得到的那 9 間店在資料上等於不存在——
+    而「我們沒去過」跟「那裡沒有辣醬」長得一模一樣。
+    """
     got = fetcher.get(shopify.products_url(domain, 1), accept="application/json")
     if got.ok:
         try:
@@ -105,6 +118,12 @@ def _inspect_store(fetcher: Fetcher, domain: str) -> dict[str, Any]:
             n = sum(1 for p in payload if filters.keep((p or {}).get("name"), "", _woo_tags(p)))
             if n:
                 return {"platform": "woo", "sauce_products": n}
+
+    # 第三條路徑：平台認不出來，但 sitemap 裡有商品頁。
+    origin = domain if domain.startswith("http") else f"https://{domain}"
+    urls = webshop.product_urls(fetcher, origin)
+    if urls:
+        return {"platform": "webshop", "sauce_products": 0, "product_urls": len(urls)}
     return {"platform": "", "sauce_products": 0}
 
 
@@ -149,7 +168,8 @@ def discover(out: Path | None = None, log: Any = None,
         if found["platform"] and domain not in rows:
             rows[domain] = {"domain": domain, "platform": found["platform"],
                             "discovered_via": via, "verified_on": today,
-                            "sauce_products": str(found["sauce_products"])}
+                            "sauce_products": str(found["sauce_products"]),
+                            "product_urls": str(found.get("product_urls", ""))}
 
     for domain in SEED_RETAILERS + SEED_BRANDS:
         add(domain, "seed", _inspect_store(fetcher, domain))
