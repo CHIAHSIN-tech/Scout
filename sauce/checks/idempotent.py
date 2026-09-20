@@ -6,12 +6,12 @@ evdb 的 event_id 是內容的 SHA-256，所以「同樣的輸入產生同樣的
 """
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
 from evdb.store import Store
 
+from ..proc import run as proc_run
 from . import REPO, arg_parser, home_of, report
 
 PY = str(REPO / ".venv" / "Scripts" / "python.exe")
@@ -30,9 +30,8 @@ def main(argv: list[str] | None = None) -> int:
     before = _count(home)
     runs = []
     for _ in range(2):
-        proc = subprocess.run(
-            [PY, "-m", "sauce.load", "--home", str(home.root), "--snapshot", ns.snapshot],
-            cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        proc = proc_run(
+        [PY, "-m", "sauce.load", "--home", str(home.root), "--snapshot", ns.snapshot], cwd=REPO)
         runs.append({"exit": proc.returncode, "events_after": _count(home)})
     problems = []
     if runs[0]["exit"] or runs[1]["exit"]:

@@ -7,9 +7,9 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 
+from ..proc import run as proc_run
 from . import REPO, arg_parser, home_of, report
 
 PY = str(REPO / ".venv" / "Scripts" / "python.exe")
@@ -22,10 +22,9 @@ def main(argv: list[str] | None = None) -> int:
     seen: dict[str, list[str]] = {v: [] for v in VIEWS}
     for _ in range(2):
         for view in VIEWS:
-            proc = subprocess.run(
-                [PY, "-m", "evdb", "--home", str(home.root), "derive", view,
-                 "--rules", ns.rules],
-                cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace")
+            proc = proc_run(
+        [PY, "-m", "evdb", "--home", str(home.root), "derive", view,
+                 "--rules", ns.rules], cwd=REPO)
             if proc.returncode:
                 return report("A31 reproducible", False, {"view": view},
                               [f"derive {view} 失敗：{proc.stderr[-300:]}"])

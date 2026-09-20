@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -162,7 +161,8 @@ def run_item(item: Item, cwd: Path) -> dict[str, Any]:
     if "在 ../1-github/evdb 執行" in item.note:
         where = (REPO.parent / "1-github" / "evdb").resolve()
     try:
-        proc = subprocess.run(item.command, cwd=where, capture_output=True, text=True,
+        proc = proc_run(
+        item.command, cwd=where, capture_output=True, text=True,
                               timeout=1800, encoding="utf-8", errors="replace")
     except Exception as exc:
         return {"verdict": "FAIL", "output": f"{type(exc).__name__}: {exc}", "exit": None}

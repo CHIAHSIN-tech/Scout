@@ -11,11 +11,11 @@ prompt 資產、不同的模型、不同的驗證器。文字那條過了，不�
 """
 from __future__ import annotations
 
-import subprocess
 import sys
 
 from evdb.store import Store
 
+from ..proc import run as proc_run
 from . import REPO, arg_parser, home_of, report
 
 PY = str(REPO / ".venv" / "Scripts" / "python.exe")
@@ -27,10 +27,9 @@ def main(argv: list[str] | None = None) -> int:
     home = home_of(ns)
     with Store(home, read_only=True) as store:
         before = store.count()
-    proc = subprocess.run(
+    proc = proc_run(
         [PY, "-m", "sauce.labelread", "--home", str(home.root), "--limit", "3",
-         "--model-id", BOGUS],
-        cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace")
+         "--model-id", BOGUS], cwd=REPO)
     with Store(home, read_only=True) as store:
         after = store.count()
     problems = []

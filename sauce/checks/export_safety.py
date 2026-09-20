@@ -9,10 +9,10 @@
 from __future__ import annotations
 
 import csv
-import subprocess
 import sys
 from pathlib import Path
 
+from ..proc import run as proc_run
 from . import REPO, report
 
 MAX_CELL = 500
@@ -32,8 +32,8 @@ def main(argv: list[str] | None = None) -> int:
                         problems.append(
                             f"{path.name}:{lineno} 欄位 {key} 長度 {len(value)} > {MAX_CELL}")
     try:
-        tracked = subprocess.run(["git", "ls-files", "sauce/"], cwd=REPO, check=False,
-                                 capture_output=True, text=True).stdout.splitlines()
+        tracked = proc_run(
+        ["git", "ls-files", "sauce/"], cwd=REPO).stdout.splitlines()
     except OSError:
         tracked = []
     for line in tracked:

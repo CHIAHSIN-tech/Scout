@@ -10,9 +10,9 @@
 from __future__ import annotations
 
 import hashlib
-import subprocess
 import sys
 
+from ..proc import run as proc_run
 from ..contract import EV_LABEL_IMAGE
 from . import REPO, arg_parser, events, home_of, report
 
@@ -50,8 +50,8 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(f"{ev.event_id}：圖片 sha256 與 payload 記的不一致")
 
     try:
-        tracked = subprocess.run(["git", "ls-files", "sauce/"], cwd=REPO, check=False,
-                                 capture_output=True, text=True).stdout.splitlines()
+        tracked = proc_run(
+        ["git", "ls-files", "sauce/"], cwd=REPO).stdout.splitlines()
     except OSError:
         tracked = []
     for line in tracked:
