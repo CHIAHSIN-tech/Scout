@@ -6,14 +6,18 @@
    --green 等變數（值不同），外殼不能跟著用同一批名字，否則會被 panel 繼承關係搞混。 */
 
 :root{
-  /* Scout CIS 米色系，對照 scout_cis.html */
-  --sh-bg:#F5F0EA;
+  /* 2026-09-19 起改用行程表那一套（trips/<slug>/index.html）：
+     那份配色是上一趟首爾行程在真手機上改了 45 版留下來的，深色文字配冷灰底，
+     戶外強光下比原本的米色系好讀。三個 token 區塊（這裡、#panel-shop、#panel-trip）
+     一起換，才不會出現半新半舊的畫面。 */
+  --sh-bg:#F3F4F7;
   --sh-card:#FFFFFF;
-  --sh-ink:#3C3830;
-  --sh-muted:#6B6558;
-  --sh-line:#DCD8D0;
-  --sh-green:#3D6B54;
-  --sh-font:'Noto Sans TC',sans-serif;
+  --sh-ink:#18202E;
+  --sh-muted:#5A6376;
+  --sh-line:#DCE0E8;
+  --sh-green:#2F4A8A;
+  --sh-font:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,-apple-system,sans-serif;
+  --sh-serif:'Noto Serif TC','Songti TC','PMingLiU','Source Han Serif TC',serif;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}

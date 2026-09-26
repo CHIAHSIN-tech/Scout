@@ -5,6 +5,48 @@ typo / 純機械調整不必寫。最新在上。詳細「為什麼」在 `conte
 
 ## [Unreleased]
 
+### 2026-09-13 — 旅程頁：開放街區不再被問營業時間、補回「回旅館」那一段
+
+- **schema 新增 `kind: "area"`**（開放街區、公園、河濱這種沒有門的地點）。
+  標成 area 的地點不自動發問、頁面不印「營業時間尚未查證」、排程也不檢查它的營業時間。
+  首爾那趟待確認從 **19 筆降到 11 筆**，剩下的都是真的有門的地方。
+- **首爾行程補上 D2／D3 的收尾**（21:30、21:40 回 Oriens）。
+  頁面現在看得到「這天幾點回到旅館」，夜間動線檢查也拿得到最後一站。
+- 以上兩項對應 `REVIEW.md` 首跑標成 `WRONG` 的第 12、14、25 條，現在都是 `OK`。
+
+### 2026-09-12 — 旅程頁模組 ＋ 託管遷移至 Cloudflare Workers
+
+- **🗺️ 旅程頁模組**：每趟旅程一份本機 `trip.json`（`context.md` ADR-019），
+  MCP 新增十個工具（`create_trip_file` / `upsert_place` / `upsert_event` / `upsert_leg` /
+  `upsert_open_question` / `set_trip_section` / `read_trip` / `list_trip_files` /
+  `check_schedule` / `build_trip_page`）。**既有 8 個工具一字未改。**
+  - `build_trip_page` 產出**自含單檔 HTML**：沒有外部 script／樣式表／字體／圖片，
+    沒有 fetch，斷網打得開、可以存到手機。CSS 與示意地圖移植自
+    2026/9 首爾行程 artifact 的原始檔。
+  - **改一處，多處一起改**：時間軸、日標題摘要、快捷 nav、地圖文字轉乘表、正餐一覽表
+    五個區塊全部由 `events` 算出來。同樣輸入建兩次位元相同。
+  - `check_schedule` **只回報不修改**，五類衝突各附「要解掉它得犧牲什麼」的選項。
+  - 查不到的營業時間不會變成頁面上的數字；來源打架時兩個都印、不挑一個當正確答案，
+    兩種情況都自動變成一筆待確認。
+  - 行程 Tab 底部新增「歷次行程表」列表（`web/trip-pages.js`），不碰 Supabase、
+    不依賴 `config.js`。
+- **☁️ 託管改 Cloudflare Workers（Static Assets）**（ADR-018，取代 ADR-011）。
+  四支 Netlify Function 合併成一支 Worker，行為與錯誤訊息逐字等價；
+  前端路徑 `/.netlify/functions/*` → `/api/*`，舊網址留一行 308 相容轉址。
+  保活排程改用 `[triggers] crons`，cron 值不變。
+  **選 Workers 不選 Pages 是因為 Pages 不支援 Cron Trigger。**
+  ⚠️ 本次**只寫設定檔，沒有部署**；Cloudflare 後台的步驟與網址變更的影響
+  寫在 `for-chia-cloudflare.md`。
+- **🔑 基礎設施權限收回 Stanley**（ADR-020，取代 ADR-014）。當初把 repo 轉給 Chia 的理由
+  是「她的 Netlify 接著她的 GitHub」，託管搬到 Cloudflare 之後那個理由就沒了；
+  而實際分工一直是「Chia 出 spec、Stanley 執行」。
+  GitHub repo、Cloudflare、行程 Supabase 都歸 Stanley，Chia 保留 repo 寫入權。
+  ⚠️ **代價要講清楚：她失去部署自主權**，那正是 ADR-014 想給她的。
+  文件拆成兩份：`for-chia-handover.md`（只剩三件只有她做得到的事）
+  與 `runbook-cloudflare.md`（Stanley 自己做的部分）。
+- ⚠️ **`trips/` 與 `web/trips/` 暫時不進版控**：repo 是公開的，而 `trip.json` 含訂位編號、
+  旅館地址、班機時刻。代價是行程表目前不會跟著網站部署。見 `DECISIONS-trip-page.md`。
+
 ### 2026-08-01 — 架構收斂：Streamlit 退役、三個 app 併成一個
 
 - **決定把 buylist ＋ scout-checklist 合併成單一雙 Tab 靜態 app**，Streamlit 退役（`context.md` ADR-010）。

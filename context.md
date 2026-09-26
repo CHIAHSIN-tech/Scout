@@ -672,6 +672,15 @@ Stanley 有意識地覆寫了 spec 的三項技術指定（框架、後端、落
 
 ### ADR-010: 收斂為單一靜態雙 Tab web app，Streamlit 退役
 
+> **補註（2026-09-12，ADR-018）：引入 `wrangler` 作為部署工具，不推翻「零 build step」。**
+> 界線是這樣劃的：**前端仍然沒有 build step、沒有打包器、沒有模組化**——
+> `web/` 底下每一個檔案仍然是瀏覽器直接讀得懂的傳統 script 與 CSS。
+> `wrangler` 只做兩件事：把 `web/` 當靜態資產上傳、把 `worker/index.js` 部署成 Worker。
+> 它不碰前端檔案、不轉譯、不打包。開發時不需要它（直接開 HTML 檔案就能改），
+> 只有「要把東西送上去」時才用得到，和過去用 Netlify 的拖放上傳是同一個位階的東西。
+> 唯一的例外是 Worker 那一支：wrangler 會用 esbuild 把 `import "../web/ai-suggest-core.js"`
+> 打包進去——那是**後端**的打包，前端讀的仍是同一個原始檔（ADR-018 的 A23）。
+
 - **日期：** 2026-08-01
 - **狀態：** Accepted — **Supersedes ADR-003**
 - **相關方：** Stanley（拍板）/ Claude Code（調查與提案）/ Chia（原合併需求提出者，2026-07-25）
@@ -708,7 +717,7 @@ Stanley 的原始提問假設「Scout 放在 Cloudflare」，經查證為誤記�
 ### ADR-011: 部署採 Netlify，AI 金鑰以 Netlify Function 代理
 
 - **日期：** 2026-07-26（buylist 上線）／2026-07-26（checklist 改 Function proxy，commit `9bf6a62`）
-- **狀態：** Accepted
+- **狀態：** Superseded by ADR-018（2026-09-12，託管改 Cloudflare Workers）
 - **相關方：** Stanley
 
 **情境（Context）:**
@@ -797,7 +806,10 @@ ADR-006 當時就寫明「若日後公開部署，需重新評估」。實際公
 ### ADR-014: Scout repo 所有權轉移給 Chia，部署由她自主operate
 
 - **日期：** 2026-08-01
-- **狀態：** Accepted（等待 Chia 接受轉移請求）
+- **狀態：** **Superseded by ADR-020**（2026-09-12，權限收回 Stanley）／
+  在那之前，理由已部分受 ADR-018 影響——
+  本 ADR 的前提是「Chia 的 **Netlify** 接著她的 GitHub」，ADR-018 把託管換成 Cloudflare，
+  她需要自己的 Cloudflare 存取權，否則部署自主權會退回 Stanley 身上。見 ADR-018。
 - **相關方：** Stanley（拍板）/ Claude Code
 
 **情境（Context）:**
@@ -943,12 +955,267 @@ Stanley 的原話：「anything that needs ai token, we use MCP」「全部先�
 
 ---
 
+### ADR-018: 託管由 Netlify 遷移至 Cloudflare Workers（Static Assets）
+
+- **日期：** 2026-09-12
+- **狀態：** Accepted（設定檔已寫好、本機驗過；**尚未部署**，供應商後台的步驟由人執行）
+- **相關方：** Stanley（拍板）/ Claude Code / Chia（實際要操作後台的人）
+- **Supersedes:** ADR-011
+
+**情境（Context）:**
+Stanley 決定把託管收斂到既有的 Cloudflare 帳號。這不是設定調整——它推翻 ADR-011，
+並且影響 ADR-014：那筆 ADR 把 repo 轉給 Chia 的理由正是「她的 **Netlify** 接著她的 GitHub」。
+而且時間點很尖銳：Chia 在 **2026-09-11**（前一天）才剛把 Netlify 接上 GitHub 自動部署，
+那是她待辦清單上最重要的一件，也剛解掉「公開站版本落後」那個老問題。
+
+風險很具體：Scout 是兩人每天在用的正式系統，`share` 是家人在看的唯讀連結，
+`keepalive` 是唯一擋住 Supabase 閒置暫停的東西（2026-07、2026-08 已被暫停兩次）。
+
+**考慮過的選項:**
+1. **維持 Netlify** — 什麼都不動
+   - 優點：零風險；Chia 前一天才接好
+   - 缺點：與 Stanley「託管收斂到 Cloudflare」的決定相違
+   - 為什麼沒選：Stanley 已拍板
+2. **Cloudflare Pages** — 介面最像 Netlify，遷移心智成本最低
+   - 優點：靜態託管 ＋ Functions，概念一對一
+   - 缺點：**Pages 不支援 Cron Trigger**（2026-09-12 查證：Cloudflare 社群官方回覆、
+     官方遷移文件的相容性對照表 Pages ❌ / Workers ✅）。保活排程會死，
+     或者要為了一支排程另開第二個 Cloudflare 專案
+   - 為什麼沒選：保活排程比「介面像不像」重要得多
+3. **Cloudflare Workers（Static Assets）** — 最終採用
+   - 優點：Cron Trigger 支援；官方明白把它定位為 Pages 的後繼；
+     `_headers` / `_redirects` 原生支援；靜態資產與後端在同一個專案
+   - 缺點：四支 Netlify Function 要改寫成一支 Worker 的多路由
+
+**決策:**
+選 **Workers（Static Assets）**。四支 Function（`ai-parse` / `ai-suggest` / `share` / `keepalive`）
+合併成 `worker/index.js` 的 `fetch()` 三路由 ＋ `scheduled()`，行為與錯誤訊息逐字等價。
+前端路徑 `/.netlify/functions/*` → `/api/*`，並留 `web/_redirects` 一行相容轉址。
+
+**選 Workers 不選 Pages 的唯一理由就是 Cron Trigger。** 這句話要留著，
+因為半年後看到「為什麼不用比較像 Netlify 的 Pages」時，答案不會再是顯而易見的。
+
+**預期後果:**
+- 正面：託管收斂到一個帳號；保活排程有平台原生支援；靜態與後端同一個部署單位
+- 負面：**網址會變**（`shoppingtool.netlify.app` → `scout.<帳號>.workers.dev`），
+  已經發給家人的分享連結會失效，切換後要重發。本次不處理自訂網域
+- 負面：**ADR-014 的部署自主權受影響**——Chia 需要自己的 Cloudflare 存取權，
+  否則每次部署都要回頭找 Stanley。這件事必須先跟她講清楚，不能默默搬走
+- 負面：引入 `wrangler` 這個工具（界線見 ADR-010 補註）
+- 需要後續處理：`for-chia-cloudflare.md` 的六個步驟；`GEMINI_API_KEY` 用
+  `wrangler secret put` 設（可先跳過，ADR-017 已讓網頁 AI 預設隱藏）；
+  **Netlify 後台的站台要人自己停用**，刪 repo 裡的設定檔不會讓它消失
+
+**補充決策（2026-09-12，同日）：行程表以 Cloudflare Access（Google SSO）保護。**
+Stanley 在 review 介面時決定，行程表要登入才看得到，**購物的分享連結維持公開**——
+後者是刻意要給家人隨手打開的，加登入等於把它廢掉。
+查證結果：Access 可掛在 `workers.dev` 的主機名 ＋ 單一路徑（`/trips/*`）上，
+**不需要自訂網域**，所以 NON-GOALS 的「不動 DNS」仍然成立。
+SSO 保護不到公開的 GitHub repo，Stanley 因此進一步決定 **repo 轉私有**——
+網站照樣公開部署，只有原始碼與旅程資料不公開（`DECISIONS-trip-page.md` D13 選項 B）。
+⚠️ **尚未執行：改可見性需要 admin，Stanley 在這個 repo 只有 push，只有 Chia 做得到。**
+在她改完之前，`trips/` 與 `web/trips/` 仍擋在版控外。
+
+**分歧與轉折紀錄:**
+規格草案原本寫 `web/_redirects` 用 `200`（代理）。本機 `wrangler dev` 實測**不行**：
+Workers static assets 的 200 是代理，而代理目標必須是靜態資產，`/api/*` 是 Worker 程式碼，
+打過去回 404。改用 **308**——它保留 HTTP 方法與 body，用 301/302 會把 POST 降級成 GET，
+`ai-parse` 與 `ai-suggest` 兩支就壞了。這是規格與現實不符、以實測為準的一次修正。
+
+拆除 Netlify 設定刻意留到最後一個獨立 commit：**遷移失敗的定義不是「Cloudflare 沒起來」，
+是「Netlify 已經拆掉而 Cloudflare 沒起來」。**
+
+---
+
+### ADR-019: 旅程頁模組以本機 `trip.json` 為單一事實來源，不進 Supabase
+
+- **日期：** 2026-09-12
+- **狀態：** Accepted
+- **相關方：** Stanley（拍板）/ Claude Code
+- **與 ADR-012（不合併兩個 Supabase 專案）、ADR-016（MCP server）並存，不取代**
+
+**情境（Context）:**
+2026/9 那次「首爾中秋五日」的 HTML artifact 改了 45 版，最大的成本不是排版，
+而是**同一筆資訊出現在頁面上 13 個地方**（時間軸、日標題、頁首摘要、快捷 nav、
+地圖路線點序、地圖每段標籤、地圖文字轉乘表、地圖地點集合、車站三語對照表、
+訂位狀態表、正餐一覽表、出發前待確認、頁尾來源）——改一個行程漏改其中一處，
+頁面就自相矛盾，而且**是使用者自己發現的**。
+附帶的問題是留檔：那次的成果只活在一個 artifact 網址裡，下一趟得整個重來。
+
+**考慮過的選項:**
+1. **存進既有的行程 Supabase（`trips` / `itinerary_items`）** — 沿用現成的資料層
+   - 優點：與網頁行程 Tab 同一份資料，兩邊看得到同一件事
+   - 缺點：schema 完全對不上。行程頁需要 `places[]`（營業時間的多來源、價位帶、
+     訂位規則、經緯度）、`legs[]`（交通段、線號、轉乘站）、`open_questions[]`、
+     `days[].sunset`——要嘛大改既有 schema（動到兩人每天在用的資料），
+     要嘛塞進 `notes` 變成不可查詢的字串
+   - 為什麼沒選：規格 NON-GOALS 明確不動既有 schema；而且旅程頁是「一趟一份、
+     做完就凍結」的文件，不是即時協作的清單，放進即時資料庫沒有好處
+2. **新開第三個 Supabase 專案** — 資料層獨立
+   - 缺點：ADR-012 已經在承受「兩個專案」的代價，第三個只會更糟；
+     而且旅程頁不需要即時同步、不需要多人寫入
+   - 為什麼沒選：付出資料庫的代價，換不到資料庫的好處
+3. **本機 `trips/<YYYY>-<MM>-<國碼>-<城市>/trip.json`** — 最終採用
+
+**決策:**
+每趟旅程一個資料夾、一份 `trip.json`，**它是唯一的事實來源**；
+頁面上那 13 個地方全部由它算出來，「漏改」在結構上不可能發生。
+`trip.json` 可以選填 `supabase_trip_id`，**單向**、只用來把既有候選撈進來當素材，
+不做雙向同步。
+
+**預期後果:**
+- 正面：改一處多處一起改；每趟一份、格式一致、可比對；離線單檔可以存到手機
+- 正面：不動既有 Supabase 的任何欄位，兩人每天在用的東西零風險
+- 負面：**行程頁的資料只在本機**，網頁那邊看不到（只看得到建置好的 HTML）
+- 負面：`trip.json` 含 `booking_ref`、旅館地址、班機時刻。repo 目前是**公開的**
+  （2026-09-11、09-12 兩次以未登入 API 查證 `private=false`），
+  所以 `trips/` 與 `web/trips/` 暫時都在 `.gitignore` 裡——
+  這表示**行程表暫時不會跟著網站部署**，與規格 Q3 的原始設計不同
+- 需要後續處理：**Stanley 已決定 repo 轉私有（D13 選項 B），但他沒有 admin 權限，
+  要 Chia 執行**（`for-chia-cloudflare.md` 步驟 0.5）。她改完之後刪掉那兩段 ignore、
+  `git add trips/ web/trips/`，就回到規格 Q2／Q3 的原始設計；
+  行程表也就能跟著自動部署走。**順序不能反**——公開時進版控，推上去就進歷史了
+
+**分歧與轉折紀錄:**
+規格 INTERVIEW 的 Q2 假設「repo 僅 Stanley 與 Chia 使用、不公開，`trip.json` 可安全進版控」。
+**這個前提是錯的**，執行前查證為公開。風險不對稱——推上公開 repo 不可逆（git 歷史留存，
+2026-09-11 已有個人 email 誤入公開 repo 的前例），而「先不推、之後補推」隨時可做——
+所以採用「先擋住」的預設。2026-09-12 以語音向 Stanley 確認，120 秒無回應，
+依規格「沉默即採預設」繼續。
+
+---
+
+### ADR-020: 基礎設施權限收回 Stanley，Chia 專職出規格
+
+- **日期：** 2026-09-12
+- **狀態：** Accepted（**GitHub repo 轉移需 Chia 發起，尚未執行**）
+- **相關方：** Stanley（拍板）/ Claude Code / Chia（要執行轉移的人）
+- **Supersedes:** ADR-014
+
+**情境（Context）:**
+ADR-014 把 repo 轉給 Chia，唯一的理由是「她的 **Netlify** 接著她的 GitHub，
+轉過去她就不需要安裝任何 GitHub App，剩餘部署步驟都能自己完成」。
+
+**ADR-018 把託管搬到 Cloudflare，那個理由就整個消失了**——Cloudflare 專案還沒建，
+誰的帳號都可以，不存在「已經接好的帳號」這個既成事實。
+
+同時，分工實際上一直是另一個樣子：**Chia 寫 spec、Stanley 用 Claude Code 執行**
+（`specs/README.md` 開宗明義就是這句）。而權限散在她那邊的結果是，
+每一次基礎設施異動都要等她——2026-09-12 這一天就撞到兩次：
+repo 要轉私有（Stanley 只有 push，沒有 admin），以及 Cloudflare 要開在誰名下。
+ADR-014 當初擔心的「所有權與實際操作者不一致」現在反過來成立了。
+
+**考慮過的選項:**
+1. **維持現狀，請 Chia 逐次授權** — 每次要動基礎設施就找她
+   - 優點：不用做任何轉移
+   - 缺點：把她變成一個她自己不想當的守門員——她的角色是出題，不是按按鈕；
+     而且每次都要等，2026-09-12 一天就卡了兩次
+   - 為什麼沒選：這正是 ADR-014 想解決的問題，只是方向相反
+2. **Chia 把 Stanley 升為 admin，repo 仍在她名下** — 最小改動
+   - 優點：一個設定就好，不用轉移、不用改 remote
+   - 缺點：所有權與實際維護者仍然不一致；她哪天停用帳號或改設定，Stanley 又會被卡
+   - 為什麼沒選：Stanley 要的是「權限主要在我身上」，不是「借用權限」
+3. **repo 轉回 Stanley 的個人帳號 `witsper-stanley`，Chia 降為協作者** — 最終採用
+
+**決策:**
+**基礎設施的擁有權回到 Stanley**，Chia 保留寫入權限（協作者），角色專注在出 spec。
+
+| 資產 | 轉移後 | 誰能執行 |
+|---|---|---|
+| GitHub `Scout` | `witsper-stanley`（Stanley 個人帳號） | **只有 Chia 能發起轉移**，Stanley 接受 |
+| Cloudflare 專案 | Stanley 的個人 Cloudflare 帳號 | Stanley 自己建，**不需要任何人** |
+| Netlify 站台 | 退役，不轉移 | Chia 停用 |
+| Supabase 行程專案 `uarkccyqcqvgxukjcrey` | Stanley 的 Supabase organization | **只有 Chia 能發起** project transfer |
+
+**Supabase 行程專案也要拿回來**（Stanley 2026-09-12 追加決定）。
+ADR-009 就記著「Scout 那個專案是 Chia 的，**Stanley 沒有後台權限，無法自己建表改欄位**」——
+那正是當初另開購物專案的原因，而那個限制到今天還在。
+
+**一定要走「轉移」，不要走「重建 ＋ 搬資料」。** 兩者差別很大：
+
+| | 轉移（Supabase 的 Transfer project） | 重建 ＋ 搬資料 |
+|---|---|---|
+| project ref | **不變**，仍是 `uarkccyqcqvgxukjcrey` | 變成新的 |
+| 要改的程式 | **零** | `web/checklist.js:33`、`worker/index.js:29`（keepalive 目標）、本機 `.mcp.json`、`.streamlit/secrets.toml` |
+| anon key | 不變 | 全部要換 |
+| 停機 | 幾乎沒有 | 搬資料期間兩人都不能用 |
+| 風險 | 低 | 高——兩人每天在用那份資料 |
+
+**執行前要在後台確認的兩件事**（我沒有帳號，查不到）：
+1. Supabase 免費方案對「一個 organization 幾個 active project」有上限。
+   Stanley 名下已經有購物專案，再收一個會不會撞到上限，要先看後台。
+2. Transfer 通常要求發起者在**來源與目標 organization 都有足夠權限**，
+   所以可能要先把其中一方加進另一方的 org。順序以後台畫面為準。
+
+**預期後果:**
+- 正面：基礎設施異動不再需要等人；repo 轉私有、Cloudflare 建置、Access 設定都由 Stanley 一手完成
+- 正面：與實際分工一致（`specs/README.md`：Chia 出題、Stanley 執行）
+- 負面：**Chia 失去部署自主權**。這是 ADR-014 明確想給她的東西，現在收回去了，
+  必須跟她講清楚，不能默默搬走
+- 負面：轉移仍然要她按兩次（發起轉移、停用 Netlify），**收回權限這件事本身還是得經過她**
+- 需要後續處理：轉移生效後更新本機 git remote；`for-chia-cloudflare.md` 改寫成「Chia 要做的事」；
+  Supabase 轉移完成後，`.mcp.json` 與 `web/config.js` 不用改（ref 不變），但要重跑一次
+  `check-cf-migration.mjs --worker` 確認 keepalive 仍打得到
+
+**分歧與轉折紀錄:**
+Claude Code 兩度把 `witsper-stanley` 誤判為公司帳號（名字與 commit email 都是 `witsper`），
+ADR-014 的分歧紀錄裡有過一次，2026-09-12 又一次。Stanley 更正：**那是他的個人帳號。**
+已在第 6 章的帳號紀律條目直接寫明，避免第三次。
+
+---
+
 ## 5. 開發日誌
 
 > **只增不改（但會週期性壓縮舊內容）。**
 > **倒序排列：最新在最上面。**
 
 <!-- LOG_INSERTION_POINT -->
+
+### [2026-09-12] 基礎設施權限收回 Stanley（ADR-020）
+
+**類型：** 決策
+**關聯 ADR：** ADR-020（新）、ADR-014（被取代）、ADR-018、ADR-009
+
+同一天之內撞到兩次「要等 Chia 才能動」：repo 要轉私有（Stanley 只有 push 沒有 admin）、
+Cloudflare 要開在誰名下。Stanley 的話是「Chia 是寫 Spec 的人，我是建程式的人，
+權限應該全部主要在我身上」，隨後追加「Supabase 也都拿回來」。
+
+ADR-014 把 repo 轉給她的唯一理由是「她的 Netlify 接著她的 GitHub」——
+ADR-018 把託管搬走之後那個理由就不存在了，所以這不是推翻，是前提消失。
+
+**盤點的結果比想像中不平均**：Cloudflare 還沒建，Stanley 自己建就好，不用等任何人；
+但 GitHub repo 與 Supabase 專案的轉移**都只有擁有者能發起**，還是要 Chia 按。
+行程 Supabase 一定要走 transfer 不能重建——ref 不變的話程式一行都不用改，
+重建的話前端、保活排程、本機設定全要跟著換，而且搬資料期間兩人都不能用。
+
+**誠實的代價：Chia 失去部署自主權**，那正是 ADR-014 想給她的東西。
+`for-chia-handover.md` 直接寫明這件事，並請她有意見就說，不要默默照做。
+
+順帶更正一個踩了兩次的誤判：`witsper-stanley` 是 Stanley 的**個人** GitHub 帳號，
+不是公司帳號。名字與 commit email 都是 `witsper` 所以很容易看錯，
+已經寫進第 6 章的帳號紀律條目。
+
+### [2026-09-12] 旅程頁模組上線，託管設定改 Cloudflare Workers
+
+**類型：** 進度
+**關聯 ADR：** ADR-018（新）、ADR-019（新）、ADR-010（補註）、ADR-011（被取代）、ADR-014（理由受影響）
+
+一次做兩件事，規格是 `specs/spec-scout-trip-page.md`。
+
+**旅程頁模組**：每趟一份 `trips/<YYYY>-<MM>-<國碼>-<城市>/trip.json`，由 MCP 的十個新工具寫，
+`build_trip_page` 產出**自含單檔、斷網可開、手機可讀**的 HTML。既有 8 個工具一字未改
+（有凍結快照的測試盯著）。CSS 與示意地圖直接移植參考產品，沒有重寫。
+把首爾那趟重建了一次，`check_schedule` 在真實資料上抓到一個參考產品沒察覺的衝突：
+Mamalee 只留 80 分鐘卻要求 90 分鐘。逐條核對寫在 `trips/2026-09-kr-seoul/REVIEW.md`，
+其中五條需要 Stanley 在真手機上看過才填得下去。
+
+**Cloudflare**：只寫設定檔、不進後台、不部署，Netlify 設定留到最後一個 commit 才拆。
+選 Workers 不選 Pages 的唯一理由是 Pages 不支援 Cron Trigger，保活排程會死。
+規格寫 `_redirects` 用 200，本機實測不行（代理目標必須是靜態資產），改用 308。
+
+**卡住的一件事**：規格假設 repo 不公開，實測是公開的。`trip.json` 含訂位編號、旅館地址、
+班機時刻，所以 `trips/` 與 `web/trips/` 先擋在版控外——**代價是行程表暫時不會跟著網站部署**。
+語音問了 Stanley，120 秒無回應，依規格「沉默即採預設」繼續。
 
 ### [2026-09-11] 決定：需要 AI token 的一律走 MCP（ADR-017）
 
@@ -1169,7 +1436,10 @@ _(目前尚無壓縮紀錄)_
 - **Google Gemini API**：Streamlit 端有 503 重試；靜態 app 端失敗只顯示紅字、無重試。
 - **CDN 相依**：buylist 從 jsdelivr 載 supabase-js，CDN 掛掉整個購物 tab 不能用。
 - **Netlify 免費方案**：Functions 有每月執行次數上限；兩人用不會碰到，但值得知道。
-- **⚠️ 帳號紀律**：Netlify 與 Supabase 一律用**個人帳號**，絕不用公司（witsper）帳號。
+- **⚠️ 帳號紀律**：Netlify、Cloudflare 與 Supabase 一律用**個人帳號**，絕不用公司（witsper）帳號。
+  **但 `witsper-stanley` 這個 GitHub 帳號是 Stanley 的個人帳號，不是公司帳號**——
+  名字和 commit email（`@witsper.com`）都容易讓人誤判成公司號，ADR-014 的分歧紀錄裡
+  已經誤判過一次，2026-09-12 又誤判一次。**不要再把它當成違反紀律的證據。**
 
 ---
 

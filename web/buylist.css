@@ -3,12 +3,12 @@
    同頁並存會互相污染（spec-scout-app-merge.md §5.2）。前綴讓兩邊完全隔離，不必逐個改名。
    原本的 :root 變數改定義在 #panel-shop 上——CSS 變數會往下繼承，等於自動作用域化。 */
 #panel-shop{
-  /* Scout CIS 配色（sage/linen/wheat）— 對照 scout_cis.html */
-  --bg:#F5F0EA; --card:#FFFFFF; --ink:#3C3830; --muted:#6B6558; --faint:#A8A298;
-  --line:#DCD8D0; --line-soft:#F5F0EA; --blue:#3D6B54; --blue-d:#2A4D3A;
-  --green:#5C8C72; --amber:#C4915A; --red:#7A5230;
-  --need:#7A5230; --want:#C4915A; --maybe:#6B6558;
-  --r-lg:18px; --r-md:12px; --font:'Noto Sans TC',sans-serif;
+  /* 配色與行程表同一套（見 shell.css 的說明）。形狀與版型不動，只換顏色。 */
+  --bg:#F3F4F7; --card:#FFFFFF; --ink:#18202E; --muted:#5A6376; --faint:#8A92A3;
+  --line:#DCE0E8; --line-soft:#F3F4F7; --blue:#2F4A8A; --blue-d:#24386A;
+  --green:#2E6B45; --amber:#9A6F12; --red:#9B3B1E;
+  --need:#9B3B1E; --want:#9A6F12; --maybe:#5A6376;
+  --r-lg:18px; --r-md:12px; --font:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,-apple-system,sans-serif;
 }
 #panel-shop *{box-sizing:border-box;margin:0;padding:0;}
 /* [scoped] body/html 規則已移到 shell.css */

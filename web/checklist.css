@@ -10,28 +10,31 @@
    為什麼不把兩邊的 token 上移到 shell.css 變成單一來源：規格 NON-GOALS 明確不做，
    本次只要求「同名同值」，消滅『改一邊以為改到兩邊』這個真正的缺陷。 */
 #panel-trip{
-    /* 與 #panel-shop 同名同值 */
-    --bg: #F5F0EA;
+    /* 與 #panel-shop 同名同值（check-style.mjs 的 A3 在守這件事）。
+       2026-09-19 整批換成行程表那一套配色，理由見 shell.css。 */
+    --bg: #F3F4F7;
     --card: #FFFFFF;
-    --muted: #6B6558;      /* 原本叫 --sub */
-    --faint: #A8A298;      /* 原本叫 --muted，與購物端的 --muted 同名不同值，故改名 */
-    --green: #5C8C72;      /* 原本叫 --green-line */
-    --amber: #C4915A;      /* 原本是 #A85C32，改用購物端色票 */
+    --muted: #5A6376;
+    --faint: #8A92A3;
+    --green: #2E6B45;
+    --amber: #9A6F12;
 
     /* 行程端專用（購物端沒有同名 token，不會衝突） */
-    --border: #C2DDD1;
-    --brand: #3D6B54;      /* 行程端主色。原本叫 --green，值與購物端 --blue 相同 */
-    --brand-d: #2A4D3A;    /* hover 用的深色，同購物端 --blue-d */
-    --green-soft: #EAF2ED;
-    --amber-soft: #F6E8DD;
-    --warn-ink: #7A5230;   /* 警示「文字」色。--amber 當文字對比不足，改用購物端 --red 的值 */
-    --text: #3C3830;
+    --border: #DCE0E8;
+    --brand: #2F4A8A;       /* 行程端主色＝行程表的 --accent */
+    --brand-d: #24386A;
+    --green-soft: #E3F0E7;
+    --amber-soft: #F6EDD5;
+    --warn-ink: #9B3B1E;
+    --text: #18202E;
     --white: #FFFFFF;
-    --err: #B23B2E;
-    --err-soft: #FBE4E0;
-    --card-warm: #FFFDFB;
-    --card-flex: #FAF8F4;
-    --card-conflict: #FFF7F2;
+    --err: #9B3B1E;
+    --err-soft: #F8E6DF;
+    --card-warm: #FFFFFF;
+    --card-flex: #F7F8FB;
+    --card-conflict: #FDF2EE;
+    --serif: 'Noto Serif TC','Songti TC','PMingLiU','Source Han Serif TC',serif;
+    --mono: ui-monospace,'SFMono-Regular',Menlo,Consolas,'Courier New',monospace;
 }
 
 #panel-trip *{ box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,6 +113,8 @@
 #panel-trip .banner{
     border-radius: 12px; padding: 12px 16px; margin: 0.4rem 0 0.8rem; font-size: 13px;
 }
+/* 空狀態不是警告：沒選旅程是正常起點，用琥珀色會被讀成出事了 */
+#panel-trip .banner.hint{ background: var(--card-flex); color: var(--muted); border: 1px dashed var(--border); }
 #panel-trip .banner.ok{ background: var(--green-soft); color: var(--brand); }
 #panel-trip .banner.warn{ background: var(--amber-soft); color: var(--warn-ink); font-weight: 600; }
 #panel-trip .banner.error{ background: var(--err-soft); color: var(--err); }
@@ -426,3 +431,79 @@
 #panel-trip .as-name{ font-size: 14.5px; font-weight: 600; word-break: break-word; }
 #panel-trip .as-meta{ font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 #panel-trip .as-note{ font-size: 12px; color: var(--faint); margin-top: 3px; word-break: break-word; }
+
+/* ── 歷次行程表列表（web/trip-pages.js）──
+   行程 Tab 底部的入口，連到 build_trip_page 產出的單檔行程表。
+   顏色一律走上面的 token，不出現裸 hex（check-style.mjs 的 A2）。 */
+#panel-trip .tp-h{
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 .6rem;
+}
+#panel-trip .tp-empty{
+    margin-top: 1.5rem;
+    padding: .9rem 1rem;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--card-flex);
+    color: var(--muted);
+    font-size: .88rem;
+    line-height: 1.6;
+}
+#panel-trip .tp-list{ display: grid; gap: .5rem; }
+#panel-trip .tp-item{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .1rem .8rem;
+    padding: .7rem .9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+}
+#panel-trip .tp-item:hover{ border-color: var(--brand); }
+#panel-trip .tp-title{ font-weight: 700; font-size: .95rem; }
+#panel-trip .tp-meta{ grid-column: 1; font-size: .8rem; color: var(--muted); }
+#panel-trip .tp-date{
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    font-size: .8rem;
+    color: var(--faint);
+    white-space: nowrap;
+}
+#panel-trip .tp-upload{
+    display: block;
+    margin-top: .6rem;
+    padding: .6rem .9rem;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--card-flex);
+    color: var(--brand);
+    font-size: .88rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+#panel-trip .tp-upload:hover{ border-color: var(--brand); }
+
+/* ── 2026-09-19：排版對齊行程表（trips/<slug>/index.html）──
+   顏色在 token 區塊換完了，這裡補的是「讀起來像不像同一份東西」：
+   大標用襯線、時間與日期用等寬數字。版型（間距、卡片形狀）刻意不動。 */
+#panel-trip .header .title{ font-family: var(--serif); font-weight: 900; letter-spacing: .02em; }
+#panel-trip .section-title{ font-family: var(--serif); font-weight: 900; }
+#panel-trip .day-head{ font-family: var(--serif); font-weight: 900; color: var(--text); }
+#panel-trip .plan-time,
+#panel-trip .tl-item-time,
+#panel-trip .tl-hourlabel,
+#panel-trip .tl-daysel{ font-family: var(--mono); font-variant-numeric: tabular-nums; }
+/* #trip-pages 在 #app 外面（它不依賴 checklist.js），所以要自己吃同一組左右留白，
+   不然標題會貼著螢幕邊緣，只有卡片有縮排。 */
+#panel-trip #trip-pages{ max-width: 640px; margin: 0 auto; padding: 1.5rem 1.1rem 0; }
+#panel-trip #trip-pages + #app{ padding-top: .5rem; }
+#panel-trip .tp-h{ font-family: var(--serif); font-weight: 900; font-size: 1.15rem; margin-top: .6rem; }
+/* 副標另起一行、不要跟標題黏成一句話 */
+#panel-trip .tp-h small{ display: block; font-family: var(--font, inherit); font-size: .78rem;
+                         font-weight: 400; color: var(--faint); margin-top: .15rem; }

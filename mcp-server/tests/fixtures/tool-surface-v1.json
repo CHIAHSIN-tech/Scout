@@ -1,0 +1,580 @@
+{
+  "add_itinerary_item": {
+    "properties": {
+      "address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Address"
+      },
+      "booking_ref": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Booking Ref"
+      },
+      "category": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "confirm_required": {
+        "default": false,
+        "title": "Confirm Required",
+        "type": "boolean"
+      },
+      "day_number": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Day Number"
+      },
+      "duration_minutes": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Duration Minutes"
+      },
+      "location": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Location"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Notes"
+      },
+      "start_time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Start Time"
+      },
+      "trip_id": {
+        "title": "Trip Id",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "trip_id"
+    ]
+  },
+  "add_wishlist_item": {
+    "properties": {
+      "category": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "link": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Link"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "note": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Note"
+      },
+      "price": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Price"
+      },
+      "quantity": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Quantity"
+      },
+      "tag": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Tag"
+      },
+      "urgency": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Urgency"
+      }
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "create_trip": {
+    "properties": {
+      "end_date": {
+        "title": "End Date",
+        "type": "string"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Notes"
+      },
+      "start_date": {
+        "title": "Start Date",
+        "type": "string"
+      }
+    },
+    "required": [
+      "end_date",
+      "name",
+      "start_date"
+    ]
+  },
+  "list_itinerary_items": {
+    "properties": {
+      "day_number": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Day Number"
+      },
+      "only_candidates": {
+        "default": false,
+        "title": "Only Candidates",
+        "type": "boolean"
+      },
+      "only_unconfirmed": {
+        "default": false,
+        "title": "Only Unconfirmed",
+        "type": "boolean"
+      },
+      "trip_id": {
+        "title": "Trip Id",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "trip_id"
+    ]
+  },
+  "list_trips": {
+    "properties": {},
+    "required": []
+  },
+  "list_wishlist": {
+    "properties": {
+      "status": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Status"
+      }
+    },
+    "required": []
+  },
+  "update_itinerary_item": {
+    "properties": {
+      "address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Address"
+      },
+      "booking_ref": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Booking Ref"
+      },
+      "category": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "confirm_required": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Confirm Required"
+      },
+      "day_number": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Day Number"
+      },
+      "duration_minutes": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Duration Minutes"
+      },
+      "is_confirmed": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Is Confirmed"
+      },
+      "item_id": {
+        "title": "Item Id",
+        "type": "integer"
+      },
+      "location": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Location"
+      },
+      "name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Name"
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Notes"
+      },
+      "start_time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Start Time"
+      },
+      "to_candidate": {
+        "default": false,
+        "title": "To Candidate",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "item_id"
+    ]
+  },
+  "update_wishlist_item": {
+    "properties": {
+      "actual_price": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Actual Price"
+      },
+      "category": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Category"
+      },
+      "item_id": {
+        "title": "Item Id",
+        "type": "integer"
+      },
+      "link": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Link"
+      },
+      "name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Name"
+      },
+      "note": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Note"
+      },
+      "price": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Price"
+      },
+      "purchased": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Purchased"
+      },
+      "quantity": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Quantity"
+      },
+      "tag": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Tag"
+      },
+      "urgency": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Urgency"
+      }
+    },
+    "required": [
+      "item_id"
+    ]
+  }
+}

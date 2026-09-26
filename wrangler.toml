@@ -1,0 +1,46 @@
+# wrangler.toml — Scout 在 Cloudflare Workers（Static Assets）上的部署設定。
+#
+# 為什麼是 Workers 而不是 Pages（ADR-018）：
+#   Cloudflare **Pages 不支援 Cron Trigger**，Workers 支援。保活排程（keepalive）是
+#   唯一擋住 Supabase 閒置暫停的東西，2026-07 與 2026-08 各被暫停過一次。
+#   選 Pages 就得為了一支排程另開第二個 Cloudflare 專案，那比現狀更糟。
+#   Cloudflare 官方也已把「Workers with Static Assets」定位為 Pages 的後繼。
+#
+# 沒有 build command：整包仍是無 build step 的靜態檔（ADR-010）。wrangler 只是
+# **部署工具**，不是打包器——前端沒有模組化、沒有 npm 相依。
+#
+# compatibility_date 取本機 wrangler 4.110.0 支援的最新日期；升 wrangler 時可以往後推，
+# 但不要無故改——它決定 Workers runtime 的行為版本，改了等於換 runtime。
+#
+# ⚠️ 本檔只是設定。建專案、接 GitHub、設 secret 都是人的步驟，見 for-chia-cloudflare.md。
+
+name = "scout"
+main = "worker/index.js"
+compatibility_date = "2026-07-15"
+
+# 靜態資產 = 原本 Netlify 的 publish = "web"。
+# 平台會先看有沒有對得上的靜態檔，對不上才把請求交給 Worker 的 fetch()；
+# `_headers` / `_redirects` 放在這個目錄裡原生支援，不需要額外設定。
+[assets]
+directory = "./web"
+binding = "ASSETS"
+
+# 保活排程 = 原本 netlify.toml 的 [functions."keepalive"] schedule，同一個 cron 值。
+# 每週一、四 03:17 UTC（台灣時間 11:17）。
+# 為什麼一週兩次而不是一次：Supabase 的門檻就是閒置 7 天，排程也 7 天一次等於零餘裕，
+# 單次延遲或失敗就會被暫停。一、四各一次 = 間隔 3～4 天，失敗還有下一次補救。
+[triggers]
+crons = ["17 3 * * 1,4"]
+
+# GEMINI_API_KEY 用 `wrangler secret put GEMINI_API_KEY` 設定，**絕不寫在這個檔案裡**。
+# 下面只放非敏感的預設值；兩個 Supabase 的 publishable key 本來就隨前端原始碼公開
+# （ADR-013「網址即憑證」），但仍留成可覆蓋的變數，換專案不必改程式。
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash"
+
+# 附件（飯店訂位截圖、PDF…）。用 KV 不用 R2：R2 要綁信用卡，KV 在 Workers 免費方案內就有。
+# 單筆上限 25 MB，總量 1 GB。內容會在 build_trip_page 時另外嵌進離線單檔一份，
+# 所以 KV 掛了也不影響「飛機上打得開」。
+[[kv_namespaces]]
+binding = "ATTACHMENTS"
+id = "492ce5e92c12460a9923ccf2610061af"
